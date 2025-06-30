@@ -1,0 +1,174 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Manage Courses - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>Manage Courses</h1>
+            <div class="admin-actions">
+                <a href="{% url 'courses:admin_course_create' %}" class="btn-primary">
+                    <span class="material-icons">add</span>
+                    Create Course
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-content">
+    <div class="tile-wrap">
+        <!-- Filters -->
+        <div class="admin-filters">
+            <form method="get" class="filter-form">
+                <div class="filter-row">
+                    <input type="text" name="search" placeholder="Search courses..." value="{{ search }}" class="search-input">
+                    <select name="status" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                        <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                    <button type="submit" class="btn-secondary">Filter</button>
+                    <a href="{% url 'courses:admin_courses_list' %}" class="btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Courses Table -->
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Students</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>
+                            <div class="course-info">
+                                <strong>{{ course.title }}</strong>
+                                <div class="course-meta">
+                                    <span class="difficulty {{ course.difficulty }}">{{ course.get_difficulty_display }}</span>
+                                    <span>{{ course.duration_hours }}h</span>
+                                    <span>{{ course.module_count }} modules</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="course-type {{ course.course_type }}">
+                                {{ course.get_course_type_display }}
+                                {% if not course.is_free %}
+                                    <small>${{ course.effective_price }}</small>
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ course.status }}">
+                                {{ course.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="enrollment-count">{{ course.enrollment_count }}</span>
+                        </td>
+                        <td>
+                            <span class="date">{{ course.created_at|date:"M d, Y" }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'courses:admin_course_detail' course.slug %}" class="btn-sm btn-primary" title="View Details">
+                                    <span class="material-icons">visibility</span>
+                                </a>
+                                <a href="{% url 'courses:admin_course_edit' course.slug %}" class="btn-sm btn-secondary" title="Edit">
+                                    <span class="material-icons">edit</span>
+                                </a>
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-sm btn-secondary" title="Preview" target="_blank">
+                                    <span class="material-icons">open_in_new</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="no-data">
+                            <div class="no-data-content">
+                                <span class="material-icons">school</span>
+                                <h3>No courses found</h3>
+                                <p>Create your first course to get started.</p>
+                                <a href="{% url 'courses:admin_course_create' %}" class="btn-primary">Create Course</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if courses.has_other_pages %}
+        <div class="pagination-container">
+            <nav class="pagination">
+                {% if courses.has_previous %}
+                    <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="page-link">
+                        <span class="material-icons">first_page</span>
+                    </a>
+                    <a href="?page={{ courses.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="page-link">
+                        <span class="material-icons">chevron_left</span>
+                    </a>
+                {% endif %}
+
+                <span class="page-info">
+                    Page {{ courses.number }} of {{ courses.paginator.num_pages }}
+                </span>
+
+                {% if courses.has_next %}
+                    <a href="?page={{ courses.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="page-link">
+                        <span class="material-icons">chevron_right</span>
+                    </a>
+                    <a href="?page={{ courses.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="page-link">
+                        <span class="material-icons">last_page</span>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form on filter change
+    const filterSelects = document.querySelectorAll('.filter-select');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+    
+    // Search with debounce
+    const searchInput = document.querySelector('.search-input');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            this.form.submit();
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

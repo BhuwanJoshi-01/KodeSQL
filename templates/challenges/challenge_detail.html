@@ -1,0 +1,749 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <!-- Challenge Header -->
+        <div class="challenge-header">
+            <div class="breadcrumb">
+                <a href="{{ url('challenges:challenges_list') }}">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Challenges
+                </a>
+            </div>
+
+            <div class="challenge-title-section">
+                <div class="challenge-icon">
+                    <span class="material-icons">emoji_events</span>
+                </div>
+                <div class="challenge-title-info">
+                    <h1>{{ challenge.title }}</h1>
+                    <div class="challenge-meta">
+                        <span class="difficulty difficulty-{{ challenge.difficulty }}">
+                            {{ challenge.get_difficulty_display() }}
+                        </span>
+                        {% if user.is_authenticated and user_progress %}
+                            {% if user_progress.is_completed %}
+                                <span class="status-badge completed">
+                                    <span class="material-icons">check_circle</span>
+                                    Completed
+                                </span>
+                            {% else %}
+                                <span class="status-badge attempted">
+                                    {{ user_progress.attempts }} attempt{{ user_progress.attempts|pluralize }}
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Challenge Content -->
+        <div class="challenge-content-section">
+            <div class="challenge-main-content">
+                <!-- Problem Description -->
+                <div class="problem-section card">
+                    <h2>
+                        <span class="material-icons">assignment</span>
+                        Problem Description
+                    </h2>
+                    <div class="problem-description">
+                        {{ challenge.description|linebreaks }}
+                    </div>
+
+                    <div class="problem-question">
+                        <h3>Question:</h3>
+                        <p>{{ challenge.question }}</p>
+                    </div>
+                </div>
+
+                <!-- SQL Editor -->
+                <div class="editor-section card">
+                    <h2>
+                        <span class="material-icons">code</span>
+                        Your Solution
+                    </h2>
+                    <div class="editor-container">
+                        <div id="challenge-editor"></div>
+                        <div class="editor-actions">
+                            <button id="run-query-btn" class="btn btn-primary">
+                                <span class="material-icons">play_arrow</span>
+                                Run Query
+                            </button>
+                            <button id="submit-solution-btn" class="btn btn-success" disabled>
+                                <span class="material-icons">send</span>
+                                Submit Solution
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-section" class="results-section card" style="display: none;">
+                    <h2>
+                        <span class="material-icons">table_chart</span>
+                        Query Results
+                    </h2>
+                    <div id="results-content"></div>
+                </div>
+            </div>
+
+            <!-- Challenge Sidebar -->
+            <div class="challenge-sidebar">
+                {% if user.is_authenticated and user_progress and user_progress.attempts >= 3 and challenge.hint %}
+                    <div class="hint-section card">
+                        <h3>
+                            <span class="material-icons">lightbulb</span>
+                            Hint
+                        </h3>
+                        <p>{{ challenge.hint }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="progress-section card">
+                    <h3>
+                        <span class="material-icons">analytics</span>
+                        Your Progress
+                    </h3>
+                    {% if user.is_authenticated and user_progress %}
+                        <div class="progress-stats">
+                            <div class="stat">
+                                <span class="stat-label">Attempts</span>
+                                <span class="stat-value">{{ user_progress.attempts }}</span>
+                            </div>
+                            {% if user_progress.is_completed %}
+                                <div class="stat">
+                                    <span class="stat-label">Completed</span>
+                                    <span class="stat-value success">
+                                        <span class="material-icons">check_circle</span>
+                                        Yes
+                                    </span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Completed At</span>
+                                    <span class="stat-value">{{ user_progress.completed_at|date("M d, Y") }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="login-prompt">
+                            <a href="{{ url('users:login') }}">Login</a> to track your progress
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="help-section card">
+                    <h3>
+                        <span class="material-icons">help</span>
+                        Need Help?
+                    </h3>
+                    <div class="help-links">
+                        <a href="{{ url('core:home') }}" class="help-link">
+                            <span class="material-icons">code</span>
+                            Practice in SQL Editor
+                        </a>
+                        <a href="{{ url('tutorials:tutorials_list') }}" class="help-link">
+                            <span class="material-icons">school</span>
+                            Learn with Tutorials
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.challenge-header {
+    margin-bottom: 3rem;
+}
+
+.breadcrumb {
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.challenge-title-section {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.challenge-icon {
+    background: linear-gradient(135deg, #ffd700, #ffb300);
+    color: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.challenge-icon .material-icons {
+    font-size: 2.5rem;
+}
+
+.challenge-title-info h1 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.challenge-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.difficulty {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.difficulty-easy {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.difficulty-medium {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.difficulty-hard {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-badge.completed {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.attempted {
+    background: rgba(245, 124, 0, 0.1);
+    color: #f57c00;
+}
+
+.challenge-content-section {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 3rem;
+}
+
+.challenge-main-content {
+    min-width: 0;
+}
+
+.problem-section,
+.editor-section,
+.results-section {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.problem-section h2,
+.editor-section h2,
+.results-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1.5rem 0;
+    color: var(--text-primary);
+}
+
+.problem-description {
+    line-height: 1.7;
+    margin-bottom: 2rem;
+}
+
+.problem-question {
+    background: var(--background-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.problem-question h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.problem-question p {
+    margin: 0;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.editor-container {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#challenge-editor {
+    height: 300px;
+    width: 100%;
+}
+
+.editor-actions {
+    background: var(--background-secondary);
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.challenge-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.hint-section,
+.progress-section,
+.help-section {
+    padding: 1.5rem;
+}
+
+.hint-section h3,
+.progress-section h3,
+.help-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+.hint-section {
+    background: rgba(255, 193, 7, 0.1);
+    border-left: 4px solid #ffc107;
+}
+
+.hint-section p {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.progress-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.stat-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.stat-value.success {
+    color: var(--success-color);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.login-prompt {
+    text-align: center;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.login-prompt a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.help-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.help-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: background-color 0.2s ease;
+}
+
+.help-link:hover {
+    background: var(--border-color);
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.results-table th,
+.results-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.results-table th {
+    background: var(--background-secondary);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.results-table td {
+    color: var(--text-secondary);
+}
+
+.result-status {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+}
+
+.result-status.success {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.result-status.error {
+    background: rgba(198, 40, 40, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(198, 40, 40, 0.2);
+}
+
+.result-status.incorrect {
+    background: rgba(245, 124, 0, 0.1);
+    color: #f57c00;
+    border: 1px solid rgba(245, 124, 0, 0.2);
+}
+
+@media (max-width: 1024px) {
+    .challenge-content-section {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .challenge-sidebar {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .challenge-title-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .challenge-meta {
+        justify-content: center;
+    }
+
+    .editor-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<!-- Monaco Editor -->
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs/loader.js"></script>
+
+<script>
+let editor;
+let currentQuery = '';
+
+// Initialize Monaco Editor
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs' } });
+require(['vs/editor/editor.main'], function () {
+    editor = monaco.editor.create(document.getElementById('challenge-editor'), {
+        value: '-- Write your SQL query here\n',
+        language: 'sql',
+        theme: document.body.classList.contains('dark-theme') ? 'vs-dark' : 'vs',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        fontSize: 14,
+        lineNumbers: 'on',
+        roundedSelection: false,
+        scrollbar: {
+            vertical: 'auto',
+            horizontal: 'auto'
+        }
+    });
+
+    // Add keyboard shortcut for running query
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function () {
+        runQuery();
+    });
+});
+
+// Run Query Function
+function runQuery() {
+    currentQuery = editor.getValue().trim();
+
+    if (!currentQuery) {
+        showMessage('Please enter a SQL query', 'error');
+        return;
+    }
+
+    const runBtn = document.getElementById('run-query-btn');
+    const submitBtn = document.getElementById('submit-solution-btn');
+    const originalText = runBtn.innerHTML;
+
+    runBtn.disabled = true;
+    runBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Running...';
+
+    fetch('{{ url("editor:execute_query") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'query=' + encodeURIComponent(currentQuery)
+    })
+    .then(response => response.json())
+    .then(data => {
+        runBtn.disabled = false;
+        runBtn.innerHTML = originalText;
+
+        displayResults(data);
+
+        if (data.success) {
+            submitBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        runBtn.disabled = false;
+        runBtn.innerHTML = originalText;
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+// Submit Solution Function
+function submitSolution() {
+    if (!currentQuery) {
+        showMessage('Please run your query first', 'error');
+        return;
+    }
+
+    const submitBtn = document.getElementById('submit-solution-btn');
+    const originalText = submitBtn.innerHTML;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Submitting...';
+
+    fetch('{{ url("challenges:submit_challenge", challenge.id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'query=' + encodeURIComponent(currentQuery)
+    })
+    .then(response => response.json())
+    .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+
+        if (data.success) {
+            displaySubmissionResult(data);
+        } else {
+            showMessage(data.error || 'Submission failed', 'error');
+        }
+    })
+    .catch(error => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        showMessage('Network error occurred', 'error');
+    });
+}
+
+// Display Query Results
+function displayResults(data) {
+    const resultsSection = document.getElementById('results-section');
+    const resultsContent = document.getElementById('results-content');
+
+    resultsSection.style.display = 'block';
+
+    if (data.success) {
+        let html = `
+            <div class="result-status success">
+                <span class="material-icons">check_circle</span>
+                Query executed successfully in ${data.execution_time_ms}ms
+            </div>
+        `;
+
+        if (data.data && data.data.length > 0) {
+            html += '<div class="table-container"><table class="results-table">';
+
+            // Headers
+            const headers = Object.keys(data.data[0]);
+            html += '<thead><tr>';
+            headers.forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead>';
+
+            // Rows
+            html += '<tbody>';
+            data.data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${row[header] || ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+        } else {
+            html += '<p>Query executed successfully but returned no results.</p>';
+        }
+
+        resultsContent.innerHTML = html;
+    } else {
+        resultsContent.innerHTML = `
+            <div class="result-status error">
+                <span class="material-icons">error</span>
+                ${data.error}
+            </div>
+        `;
+    }
+}
+
+// Display Submission Result
+function displaySubmissionResult(data) {
+    const resultsContent = document.getElementById('results-content');
+
+    if (data.correct) {
+        let html = `
+            <div class="result-status success">
+                <span class="material-icons">emoji_events</span>
+                ${data.message}
+            </div>
+        `;
+
+        showMessage('Congratulations! Challenge completed!', 'success');
+
+        // Reload page after a delay to update progress
+        setTimeout(() => {
+            location.reload();
+        }, 2000);
+    } else {
+        let html = `
+            <div class="result-status incorrect">
+                <span class="material-icons">info</span>
+                ${data.message}
+            </div>
+        `;
+
+        if (data.hint) {
+            html += `
+                <div class="hint-section" style="margin-top: 1rem;">
+                    <h4><span class="material-icons">lightbulb</span> Hint</h4>
+                    <p>${data.hint}</p>
+                </div>
+            `;
+        }
+
+        resultsContent.innerHTML = html;
+    }
+}
+
+// Show Message Function
+function showMessage(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: ${type === 'success' ? 'var(--success-color)' : 'var(--error-color)'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+    `;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Event Listeners
+document.getElementById('run-query-btn').addEventListener('click', runQuery);
+document.getElementById('submit-solution-btn').addEventListener('click', submitSolution);
+
+// Add CSS for toast animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

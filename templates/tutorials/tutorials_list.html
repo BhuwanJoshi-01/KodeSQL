@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <div class="page-header" style="text-align: center; margin-bottom: 3rem;">
+            <h1>
+                <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">school</span>
+                SQL Tutorials
+            </h1>
+            <p style="color: var(--text-secondary);">Learn SQL from basics to advanced concepts with interactive lessons</p>
+        </div>
+
+        {% if tutorials %}
+            <div class="tutorials-grid">
+                {% for tutorial in tutorials %}
+                    <div class="tutorial-card card">
+                        <div class="tutorial-header">
+                            <div class="tutorial-icon">
+                                <span class="material-icons">{{ tutorial.icon }}</span>
+                            </div>
+                            <div class="tutorial-info">
+                                <h3>{{ tutorial.title }}</h3>
+                                <div class="tutorial-meta">
+                                    <span class="difficulty difficulty-{{ tutorial.difficulty }}">
+                                        {{ tutorial.get_difficulty_display() }}
+                                    </span>
+                                    <span class="lesson-count">
+                                        {{ tutorial.total_lessons }} lesson{{ tutorial.total_lessons|pluralize }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tutorial-description">
+                            <p>{{ tutorial.description }}</p>
+                        </div>
+
+                        {% if user.is_authenticated and tutorial.id in user_progress %}
+                            <div class="progress-section">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ user_progress[tutorial.id].progress_percentage }}%"></div>
+                                </div>
+                                <div class="progress-text">
+                                    {{ user_progress[tutorial.id].progress_percentage }}% Complete
+                                    {% if user_progress[tutorial.id].is_completed %}
+                                        <span class="material-icons completed">check_circle</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="tutorial-actions">
+                            <a href="{{ url('tutorials:tutorial_detail', tutorial.id) }}" class="btn btn-primary">
+                                {% if user.is_authenticated and tutorial.id in user_progress %}
+                                    {% if user_progress[tutorial.id].is_completed %}
+                                        <span class="material-icons">replay</span>
+                                        Review
+                                    {% else %}
+                                        <span class="material-icons">play_arrow</span>
+                                        Continue
+                                    {% endif %}
+                                {% else %}
+                                    <span class="material-icons">play_arrow</span>
+                                    Start Tutorial
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state card" style="max-width: 600px; margin: 0 auto;">
+                <div style="padding: 3rem 2rem; text-align: center;">
+                    <span class="material-icons" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">school</span>
+                    <h3>No Tutorials Available</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                        Tutorials are being created. Check back soon!
+                    </p>
+                    <a href="{{ url('core:home') }}" class="btn btn-primary">
+                        <span class="material-icons">code</span>
+                        Practice in SQL Editor
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.tutorials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.tutorial-card {
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tutorial-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.tutorial-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.tutorial-icon {
+    background: var(--primary-color);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tutorial-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.tutorial-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.difficulty {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.difficulty-beginner {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.difficulty-intermediate {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.difficulty-advanced {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.lesson-count {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.tutorial-description {
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-description p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.progress-section {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    background: var(--border-color);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    background: var(--primary-color);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.progress-text .completed {
+    color: var(--success-color);
+    font-size: 1rem;
+}
+
+.tutorial-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .tutorials-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .tutorial-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .tutorial-meta {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

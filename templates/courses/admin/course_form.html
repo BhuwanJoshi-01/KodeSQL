@@ -1,0 +1,293 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}{% if course %}Edit Course{% else %}Create Course{% endif %} - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>{% if course %}Edit Course{% else %}Create Course{% endif %}</h1>
+            <div class="admin-actions">
+                <a href="{% url 'courses:admin_courses_list' %}" class="btn-secondary">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Courses
+                </a>
+                {% if course %}
+                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-secondary" target="_blank">
+                    <span class="material-icons">open_in_new</span>
+                    Preview
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-content">
+    <div class="tile-wrap">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-error">
+                <h4>Please correct the following errors:</h4>
+                {{ form.errors }}
+            </div>
+            {% endif %}
+            
+            <div class="form-sections">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>Basic Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.help_text %}
+                            <small class="help-text">{{ form.title.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.slug.id_for_label }}">{{ form.slug.label }}</label>
+                            {{ form.slug }}
+                            {% if form.slug.help_text %}
+                            <small class="help-text">{{ form.slug.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="{{ form.short_description.id_for_label }}">{{ form.short_description.label }}</label>
+                            {{ form.short_description }}
+                            {% if form.short_description.help_text %}
+                            <small class="help-text">{{ form.short_description.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                            <small class="help-text">{{ form.description.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Course Settings -->
+                <div class="form-section">
+                    <h3>Course Settings</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
+                            {{ form.difficulty }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.course_type.id_for_label }}">{{ form.course_type.label }}</label>
+                            {{ form.course_type }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                            {{ form.status }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                            {{ form.category }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>
+                            {{ form.language }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.duration_hours.id_for_label }}">{{ form.duration_hours.label }}</label>
+                            {{ form.duration_hours }}
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}</label>
+                            {{ form.tags }}
+                            {% if form.tags.help_text %}
+                            <small class="help-text">{{ form.tags.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pricing -->
+                <div class="form-section">
+                    <h3>Pricing</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ form.price.id_for_label }}">{{ form.price.label }}</label>
+                            {{ form.price }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.discount_price.id_for_label }}">{{ form.discount_price.label }}</label>
+                            {{ form.discount_price }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Media -->
+                <div class="form-section">
+                    <h3>Media</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ form.thumbnail.id_for_label }}">{{ form.thumbnail.label }}</label>
+                            {{ form.thumbnail }}
+                            {% if course.thumbnail %}
+                            <div class="current-image">
+                                <img src="{{ course.thumbnail.url }}" alt="Current thumbnail" style="max-width: 200px; margin-top: 10px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.preview_video.id_for_label }}">{{ form.preview_video.label }}</label>
+                            {{ form.preview_video }}
+                            {% if form.preview_video.help_text %}
+                            <small class="help-text">{{ form.preview_video.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Course Content -->
+                <div class="form-section">
+                    <h3>Course Content</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ form.skill_level.id_for_label }}">{{ form.skill_level.label }}</label>
+                            {{ form.skill_level }}
+                            {% if form.skill_level.help_text %}
+                            <small class="help-text">{{ form.skill_level.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="{{ form.prerequisites.id_for_label }}">{{ form.prerequisites.label }}</label>
+                            {{ form.prerequisites }}
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="{{ form.learning_outcomes.id_for_label }}">{{ form.learning_outcomes.label }}</label>
+                            {{ form.learning_outcomes }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings -->
+                <div class="form-section">
+                    <h3>Settings</h3>
+                    <div class="form-grid">
+                        <div class="form-group checkbox-group">
+                            {{ form.is_featured }}
+                            <label for="{{ form.is_featured.id_for_label }}">{{ form.is_featured.label }}</label>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            {{ form.allow_preview }}
+                            <label for="{{ form.allow_preview.id_for_label }}">{{ form.allow_preview.label }}</label>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            {{ form.certificate_enabled }}
+                            <label for="{{ form.certificate_enabled.id_for_label }}">{{ form.certificate_enabled.label }}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <span class="material-icons">save</span>
+                    {% if course %}Update Course{% else %}Create Course{% endif %}
+                </button>
+                <a href="{% url 'courses:admin_courses_list' %}" class="btn-secondary">Cancel</a>
+                {% if course %}
+                <button type="button" class="btn-danger" onclick="confirmDelete()">
+                    <span class="material-icons">delete</span>
+                    Delete Course
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if course %}
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this course? This action cannot be undone.</p>
+        <div class="modal-actions">
+            <form method="post" action="{% url 'courses:admin_course_delete' course.slug %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger">Delete</button>
+            </form>
+            <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate slug from title
+    const titleField = document.getElementById('{{ form.title.id_for_label }}');
+    const slugField = document.getElementById('{{ form.slug.id_for_label }}');
+    
+    if (titleField && slugField && !slugField.value) {
+        titleField.addEventListener('input', function() {
+            const slug = this.value.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim('-');
+            slugField.value = slug;
+        });
+    }
+    
+    // Course type change handler
+    const courseTypeField = document.getElementById('{{ form.course_type.id_for_label }}');
+    const priceFields = document.querySelectorAll('#{{ form.price.id_for_label }}, #{{ form.discount_price.id_for_label }}');
+    
+    if (courseTypeField) {
+        courseTypeField.addEventListener('change', function() {
+            const isFree = this.value === 'free';
+            priceFields.forEach(field => {
+                field.disabled = isFree;
+                if (isFree) field.value = '0.00';
+            });
+        });
+        
+        // Trigger on page load
+        courseTypeField.dispatchEvent(new Event('change'));
+    }
+});
+
+{% if course %}
+function confirmDelete() {
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+{% endif %}
+</script>
+{% endblock %}

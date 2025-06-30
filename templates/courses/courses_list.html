@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Courses - SQL Playground{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="tile-wrap">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>SQL Courses</h1>
+            <p>Master SQL and data analytics with our comprehensive course collection</p>
+        </div>
+
+        <!-- Course Results -->
+        <div class="course-results">
+            <div class="results-header">
+                <h3>{{ total_courses }} Course{{ 's' if total_courses != 1 else '' }} Found</h3>
+            </div>
+
+            {% if courses %}
+            <div class="courses-grid">
+                {% for course in courses %}
+                <div class="course-card-grid">
+                    <div class="course-image">
+                        {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="{{ course.title }}">
+                        {% endif %}
+                        
+                        {% if course.is_featured %}
+                        <div class="featured-badge">
+                            <i class="fas fa-star"></i> Featured
+                        </div>
+                        {% endif %}
+                        
+                        <div class="course-type-badge {{ 'free' if course.is_free else 'paid' }}">
+                            {% if course.is_free %}
+                                Free
+                            {% else %}
+                                ${{ course.effective_price }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="course-content">
+                        <div class="course-header">
+                            <h3 class="course-title">
+                                <a href="{{ url('courses:course_detail', slug=course.slug) }}">{{ course.title }}</a>
+                            </h3>
+                            <div class="course-rating">
+                                {% if course.avg_rating %}
+                                    <div class="stars">
+                                        {% for i in range(1, 6) %}
+                                            {% if i <= course.avg_rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <span class="rating-text">({{ course.avg_rating }})</span>
+                                {% else %}
+                                    <span class="no-rating">No ratings yet</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <p class="course-description">{{ course.short_description }}</p>
+                        
+                        <div class="course-meta">
+                            <span class="difficulty {{ course.difficulty }}">
+                                <i class="fas fa-signal"></i> {{ course.get_difficulty_display() }}
+                            </span>
+                            <span class="duration">
+                                <i class="fas fa-clock"></i> {{ course.duration_hours }}h
+                            </span>
+                            <span class="modules">
+                                <i class="fas fa-layer-group"></i> {{ course.module_count }} modules
+                            </span>
+                            <span class="students">
+                                <i class="fas fa-users"></i> {{ course.enrollment_count }} student{{ 's' if course.enrollment_count != 1 else '' }}
+                            </span>
+                        </div>
+                        
+                        <div class="course-instructor">
+                            <i class="fas fa-user-tie"></i>
+                            <span>{{ course.instructor.first_name }} {{ course.instructor.last_name or course.instructor.email }}</span>
+                        </div>
+                        
+                        <div class="course-actions">
+                            <a href="{{ url('courses:course_detail', slug=course.slug) }}" class="btn-primary">
+                                {% if course.is_free %}
+                                    Start Learning
+                                {% else %}
+                                    View Course
+                                {% endif %}
+                            </a>
+                            {% if course.allow_preview %}
+                            <a href="{{ url('courses:course_detail', slug=course.slug) }}#preview" class="btn-secondary">
+                                <i class="fas fa-play"></i> Preview
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="no-courses">
+                <i class="fas fa-search"></i>
+                <h3>No courses found</h3>
+                <p>Try adjusting your search criteria or browse all courses.</p>
+                <a href="{{ url('courses:courses_list') }}" class="btn-primary">View All Courses</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

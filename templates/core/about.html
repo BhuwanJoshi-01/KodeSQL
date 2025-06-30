@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <div style="padding: 3rem 2rem; text-align: center;">
+                <span class="material-icons" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">info</span>
+                <h1>About SQL Playground</h1>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
+                    An interactive platform for learning and practicing SQL
+                </p>
+                
+                <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                    <h3 style="margin-bottom: 1rem;">Features</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span class="material-icons" style="color: var(--success-color); margin-right: 0.5rem;">check_circle</span>
+                            Interactive SQL Editor with Monaco Editor
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span class="material-icons" style="color: var(--success-color); margin-right: 0.5rem;">check_circle</span>
+                            Per-user SQLite databases
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span class="material-icons" style="color: var(--success-color); margin-right: 0.5rem;">check_circle</span>
+                            Query history and saved queries
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span class="material-icons" style="color: var(--success-color); margin-right: 0.5rem;">check_circle</span>
+                            Dark/Light theme support
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <span class="material-icons" style="color: var(--success-color); margin-right: 0.5rem;">check_circle</span>
+                            Responsive design
+                        </li>
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <a href="{{ url('core:home') }}" class="btn btn-primary">
+                        <span class="material-icons">play_arrow</span>
+                        Try SQL Playground
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

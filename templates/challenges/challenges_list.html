@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <div class="page-header" style="text-align: center; margin-bottom: 3rem;">
+            <h1>
+                <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">emoji_events</span>
+                SQL Challenges
+            </h1>
+            <p style="color: var(--text-secondary);">Test your SQL skills with interactive challenges</p>
+        </div>
+
+        {% if challenges %}
+            <!-- Difficulty Filter -->
+            <div class="filter-section">
+                <div class="difficulty-filters">
+                    <button class="filter-btn active" data-difficulty="all">All Challenges</button>
+                    <button class="filter-btn" data-difficulty="easy">Easy</button>
+                    <button class="filter-btn" data-difficulty="medium">Medium</button>
+                    <button class="filter-btn" data-difficulty="hard">Hard</button>
+                </div>
+            </div>
+
+            <div class="challenges-grid">
+                {% for challenge in challenges %}
+                    <div class="challenge-card card" data-difficulty="{{ challenge.difficulty }}">
+                        <div class="challenge-header">
+                            <div class="challenge-info">
+                                <h3>{{ challenge.title }}</h3>
+                                <div class="challenge-meta">
+                                    <span class="difficulty difficulty-{{ challenge.difficulty }}">
+                                        {{ challenge.get_difficulty_display() }}
+                                    </span>
+                                    {% if user.is_authenticated and challenge.id in user_progress %}
+                                        {% if user_progress[challenge.id].is_completed %}
+                                            <span class="status-badge completed">
+                                                <span class="material-icons">check_circle</span>
+                                                Completed
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge attempted">
+                                                {{ user_progress[challenge.id].attempts }} attempt{{ user_progress[challenge.id].attempts|pluralize }}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if user.is_authenticated and challenge.id in user_progress and user_progress[challenge.id].is_completed %}
+                                <div class="completion-icon">
+                                    <span class="material-icons">emoji_events</span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="challenge-description">
+                            <p>{{ challenge.description }}</p>
+                        </div>
+
+                        <div class="challenge-actions">
+                            <a href="{{ url('challenges:challenge_detail', challenge.id) }}" class="btn btn-primary">
+                                {% if user.is_authenticated and challenge.id in user_progress %}
+                                    {% if user_progress[challenge.id].is_completed %}
+                                        <span class="material-icons">replay</span>
+                                        Solve Again
+                                    {% else %}
+                                        <span class="material-icons">play_arrow</span>
+                                        Continue
+                                    {% endif %}
+                                {% else %}
+                                    <span class="material-icons">play_arrow</span>
+                                    Start Challenge
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state card" style="max-width: 600px; margin: 0 auto;">
+                <div style="padding: 3rem 2rem; text-align: center;">
+                    <span class="material-icons" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">emoji_events</span>
+                    <h3>No Challenges Available</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                        Challenges are being created. Check back soon!
+                    </p>
+                    <a href="{{ url('core:home') }}" class="btn btn-primary">
+                        <span class="material-icons">code</span>
+                        Practice in SQL Editor
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.filter-section {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.difficulty-filters {
+    display: inline-flex;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.filter-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+.filter-btn:last-child {
+    border-right: none;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.challenges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.challenge-card {
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.challenge-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-card.hidden {
+    display: none;
+}
+
+.challenge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.challenge-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.challenge-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.difficulty {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.difficulty-easy {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.difficulty-medium {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.difficulty-hard {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-badge.completed {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.attempted {
+    background: rgba(245, 124, 0, 0.1);
+    color: #f57c00;
+}
+
+.completion-icon {
+    color: #ffd700;
+    font-size: 2rem;
+}
+
+.challenge-description {
+    margin-bottom: 1.5rem;
+}
+
+.challenge-description p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.challenge-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .challenges-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .difficulty-filters {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .filter-btn {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .filter-btn:last-child {
+        border-bottom: none;
+    }
+
+    .challenge-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .challenge-meta {
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const challengeCards = document.querySelectorAll('.challenge-card');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active filter
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const difficulty = this.dataset.difficulty;
+
+            // Filter challenges
+            challengeCards.forEach(card => {
+                if (difficulty === 'all' || card.dataset.difficulty === difficulty) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

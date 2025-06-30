@@ -1,0 +1,213 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1 class="admin-title">
+        <span class="material-icons">quiz</span>
+        {{ challenge.title }}
+    </h1>
+    <div class="admin-actions">
+        <a href="{{ url('challenges:admin_challenge_edit', challenge_id=challenge.id) }}" class="admin-btn">
+            <span class="material-icons">edit</span>
+            Edit Challenge
+        </a>
+        <a href="{{ url('challenges:admin_challenges_list') }}" class="admin-btn secondary">
+            <span class="material-icons">arrow_back</span>
+            Back to List
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-item">
+        <h3>{{ stats.total_attempts }}</h3>
+        <p>Total Attempts</p>
+    </div>
+    <div class="stat-item">
+        <h3>{{ stats.completed_attempts }}</h3>
+        <p>Completed</p>
+    </div>
+    <div class="stat-item">
+        <h3>{{ stats.completion_rate }}%</h3>
+        <p>Success Rate</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h3>Challenge Information</h3>
+    
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+        <div>
+            <div style="margin-bottom: 1.5rem;">
+                <strong>Description:</strong>
+                <div style="margin-top: 0.5rem; padding: 1rem; background: var(--input-bg); border-radius: 8px;">
+                    {{ challenge.description|safe }}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <strong>Question:</strong>
+                <div style="margin-top: 0.5rem; padding: 1rem; background: var(--input-bg); border-radius: 8px;">
+                    {{ challenge.question|safe }}
+                </div>
+            </div>
+            
+            {% if challenge.hint %}
+                <div style="margin-bottom: 1.5rem;">
+                    <strong>Hint:</strong>
+                    <div style="margin-top: 0.5rem; padding: 1rem; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        {{ challenge.hint|safe }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div>
+            <div style="display: grid; gap: 1rem;">
+                <div>
+                    <strong>Difficulty:</strong>
+                    <span class="status-badge difficulty-{{ challenge.difficulty }}">
+                        {{ challenge.get_difficulty_display }}
+                    </span>
+                </div>
+                <div>
+                    <strong>Status:</strong>
+                    <span class="status-badge {% if challenge.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if challenge.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                <div>
+                    <strong>Order:</strong> {{ challenge.order }}
+                </div>
+                {% if challenge.sample_data %}
+                    <div>
+                        <strong>Sample Data:</strong>
+                        <div style="margin-top: 0.5rem;">
+                            <a href="{{ challenge.sample_data.url }}" class="admin-btn info" style="padding: 0.5rem; font-size: 0.8rem;" download>
+                                <span class="material-icons" style="font-size: 16px;">download</span>
+                                {{ challenge.sample_data.name }}
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h3>Solution Details</h3>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <strong>Expected SQL Query:</strong>
+        <div style="margin-top: 0.5rem; background: #f8f9fa; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace; border-left: 4px solid var(--primary-color);">
+            {{ challenge.expected_query }}
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+        <strong>Expected Result:</strong>
+        <div style="margin-top: 0.5rem; background: #f8f9fa; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace; max-height: 300px; overflow-y: auto; border-left: 4px solid #28a745;">
+            {% if challenge.expected_result %}
+                {{ challenge.expected_result|pprint if challenge.expected_result else "No expected result defined" }}
+            {% else %}
+                No expected result defined
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if stats.total_attempts > 0 %}
+    <div class="admin-card">
+        <h3>Performance Analytics</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <h4>Attempt Statistics</h4>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Total Attempts:</span>
+                        <strong>{{ stats.total_attempts }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Successful:</span>
+                        <strong style="color: #28a745;">{{ stats.completed_attempts }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Failed:</span>
+                        <strong style="color: #dc3545;">{{ stats.total_attempts|add:"-"|add:stats.completed_attempts }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #dee2e6; padding-top: 0.5rem; margin-top: 0.5rem;">
+                        <span>Success Rate:</span>
+                        <strong style="color: {% if stats.completion_rate >= 70 %}#28a745{% elif stats.completion_rate >= 40 %}#ffc107{% else %}#dc3545{% endif %};">
+                            {{ stats.completion_rate }}%
+                        </strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h4>Difficulty Assessment</h4>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                    {% if stats.completion_rate >= 80 %}
+                        <div style="color: #28a745;">
+                            <span class="material-icons">sentiment_very_satisfied</span>
+                            <strong>Too Easy</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Consider increasing difficulty or adding complexity.</p>
+                        </div>
+                    {% elif stats.completion_rate >= 60 %}
+                        <div style="color: #28a745;">
+                            <span class="material-icons">sentiment_satisfied</span>
+                            <strong>Well Balanced</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Good difficulty level for learning.</p>
+                        </div>
+                    {% elif stats.completion_rate >= 30 %}
+                        <div style="color: #ffc107;">
+                            <span class="material-icons">sentiment_neutral</span>
+                            <strong>Challenging</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Consider adding more hints or examples.</p>
+                        </div>
+                    {% else %}
+                        <div style="color: #dc3545;">
+                            <span class="material-icons">sentiment_very_dissatisfied</span>
+                            <strong>Too Difficult</strong>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Consider simplifying or providing better guidance.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<div class="admin-card">
+    <h3>Challenge Metadata</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div>
+            <p><strong>Created:</strong> {{ challenge.created_at.strftime('%B %d, %Y \a\t %I:%M %p') }}</p>
+            <p><strong>Last Updated:</strong> {{ challenge.updated_at.strftime('%B %d, %Y \a\t %I:%M %p') }}</p>
+        </div>
+        <div>
+            <p><strong>Challenge ID:</strong> {{ challenge.id }}</p>
+            <p><strong>Order Position:</strong> {{ challenge.order }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="admin-actions" style="margin-top: 2rem;">
+    <a href="{{ url('challenges:admin_challenge_edit', challenge_id=challenge.id) }}" class="admin-btn">
+        <span class="material-icons">edit</span>
+        Edit Challenge
+    </a>
+    <a href="{{ url('challenges:challenge_detail', challenge_id=challenge.id) }}" class="admin-btn info" target="_blank">
+        <span class="material-icons">launch</span>
+        View Public Page
+    </a>
+    <a href="{{ url('challenges:admin_challenge_delete', challenge_id=challenge.id) }}" class="admin-btn danger">
+        <span class="material-icons">delete</span>
+        Delete Challenge
+    </a>
+</div>
+{% endblock %}

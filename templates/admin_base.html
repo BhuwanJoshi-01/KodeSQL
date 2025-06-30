@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+/* Admin-specific styles */
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+}
+
+.admin-title {
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.admin-title .material-icons {
+    font-size: 2.5rem;
+    opacity: 0.9;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.admin-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.admin-btn:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    color: white !important;
+}
+
+.admin-btn:hover::before {
+    opacity: 1;
+}
+
+.admin-btn.secondary {
+    background: rgba(108, 117, 125, 0.8) !important;
+    border-color: rgba(108, 117, 125, 0.5);
+}
+
+.admin-btn.success {
+    background: rgba(40, 167, 69, 0.8) !important;
+    border-color: rgba(40, 167, 69, 0.5);
+}
+
+.admin-btn.warning {
+    background: rgba(255, 193, 7, 0.8) !important;
+    border-color: rgba(255, 193, 7, 0.5);
+    color: #212529 !important;
+}
+
+.admin-btn.danger {
+    background: rgba(220, 53, 69, 0.8) !important;
+    border-color: rgba(220, 53, 69, 0.5);
+}
+
+.admin-btn.info {
+    background: rgba(23, 162, 184, 0.8) !important;
+    border-color: rgba(23, 162, 184, 0.5);
+}
+
+.admin-btn:active {
+    transform: translateY(0);
+}
+
+/* Admin buttons outside header */
+.admin-actions:not(.admin-header .admin-actions) .admin-btn,
+.admin-card .admin-btn,
+.admin-form .admin-btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%) !important;
+    border: none !important;
+    box-shadow: var(--shadow-md);
+}
+
+.admin-actions:not(.admin-header .admin-actions) .admin-btn.secondary,
+.admin-card .admin-btn.secondary,
+.admin-form .admin-btn.secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+}
+
+.admin-actions:not(.admin-header .admin-actions) .admin-btn.danger,
+.admin-card .admin-btn.danger,
+.admin-form .admin-btn.danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.admin-actions:not(.admin-header .admin-actions) .admin-btn.info,
+.admin-card .admin-btn.info,
+.admin-form .admin-btn.info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+}
+
+.admin-actions:not(.admin-header .admin-actions) .admin-btn.success,
+.admin-card .admin-btn.success,
+.admin-form .admin-btn.success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.admin-actions:not(.admin-header .admin-actions) .admin-btn.warning,
+.admin-card .admin-btn.warning,
+.admin-form .admin-btn.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+    color: #212529 !important;
+}
+
+.admin-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, #1d4ed8 100%);
+}
+
+.admin-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-color);
+}
+
+.admin-form {
+    max-width: 800px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--input-bg);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    transform: translateY(-1px);
+}
+
+.form-control:hover {
+    border-color: var(--primary-light);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-check-input {
+    width: auto;
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table th {
+    background: var(--card-bg);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.admin-table tr:hover {
+    background: var(--hover-bg);
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.difficulty-easy {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.difficulty-medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.difficulty-hard {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.pagination a,
+.pagination span {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+.pagination .current {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.filter-form {
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.5rem 0;
+}
+
+/* Enhanced Components */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.stat-item h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-item p {
+    margin: 0;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.alert {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.error-text {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+}
+
+.empty-state .material-icons {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-container {
+        padding: 1rem;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .admin-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-table {
+        font-size: 0.875rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    {% block admin_content %}
+    {% endblock %}
+</div>
+{% endblock %}

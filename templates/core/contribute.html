@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <div style="padding: 3rem 2rem; text-align: center;">
+                <span class="material-icons" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">volunteer_activism</span>
+                <h1>Contribute to SQL Playground</h1>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 1.1rem;">
+                    Help us make SQL learning better for everyone
+                </p>
+                
+                <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                    <h3 style="margin-bottom: 1rem;">Ways to Contribute</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                            <h4 style="margin-bottom: 0.5rem;">🐛 Report Bugs</h4>
+                            <p style="color: var(--text-secondary); margin: 0;">Found an issue? Let us know so we can fix it.</p>
+                        </div>
+                        <div style="padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                            <h4 style="margin-bottom: 0.5rem;">💡 Suggest Features</h4>
+                            <p style="color: var(--text-secondary); margin: 0;">Have ideas for new features? We'd love to hear them.</p>
+                        </div>
+                        <div style="padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                            <h4 style="margin-bottom: 0.5rem;">📚 Create Content</h4>
+                            <p style="color: var(--text-secondary); margin: 0;">Help create tutorials and challenges for learners.</p>
+                        </div>
+                        <div style="padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                            <h4 style="margin-bottom: 0.5rem;">💻 Code Contributions</h4>
+                            <p style="color: var(--text-secondary); margin: 0;">Contribute to the codebase and help improve the platform.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem;">
+                    <a href="{{ url('core:home') }}" class="btn btn-primary">
+                        <span class="material-icons">code</span>
+                        Start Using SQL Playground
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

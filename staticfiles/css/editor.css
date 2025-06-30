@@ -1,0 +1,452 @@
+/* SQL Editor Styles */
+
+.editor-container {
+    height: calc(100vh - 140px);
+    padding: 2rem 0;
+}
+
+.editor-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 400px 300px 250px;
+    gap: 1rem;
+    height: 100%;
+}
+
+/* Responsive Layout */
+@media (min-width: 768px) {
+    .editor-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 350px 300px;
+    }
+
+    .editor-panel {
+        grid-column: 1 / 3;
+        grid-row: 1 / 2;
+    }
+
+    .results-panel {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+    }
+
+    .schema-panel {
+        grid-column: 2 / 3;
+        grid-row: 2 / 3;
+    }
+}
+
+@media (min-width: 1024px) {
+    .editor-layout {
+        grid-template-columns: 1fr 1fr 300px;
+        grid-template-rows: 1fr 1fr;
+    }
+
+    .editor-panel {
+        grid-column: 1 / 2;
+        grid-row: 1 / 3;
+    }
+
+    .results-panel {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+    }
+
+    .schema-panel {
+        grid-column: 2 / 4;
+        grid-row: 2 / 3;
+    }
+}
+
+.editor-panel,
+.results-panel,
+.schema-panel {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Panel Headers */
+.editor-header,
+.results-header,
+.schema-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.editor-header h2,
+.results-header h3,
+.schema-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.editor-actions,
+.results-actions,
+.schema-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Panel Content */
+.editor-content,
+.results-content,
+.schema-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Monaco Editor */
+.monaco-editor-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* Results Display */
+.results-empty,
+.schema-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+}
+
+.empty-state .material-icons {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Results Table */
+.results-table {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+.results-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.results-table th,
+.results-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.results-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.results-table tr:hover {
+    background-color: var(--bg-hover);
+}
+
+/* Schema Tree */
+.schema-tree {
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.schema-table {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.schema-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-tertiary);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.schema-table-header:hover {
+    background-color: var(--bg-hover);
+}
+
+.schema-table-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.schema-table-toggle {
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+.schema-table.expanded .schema-table-toggle {
+    transform: rotate(180deg);
+}
+
+.schema-columns {
+    display: none;
+    padding: 0;
+}
+
+.schema-table.expanded .schema-columns {
+    display: block;
+}
+
+.schema-column {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+.schema-column-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.schema-column-type {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+/* Modals */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-xl);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal.open .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+/* History and Saved Queries Lists */
+.history-list,
+.saved-queries-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item,
+.saved-query-item {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover,
+.saved-query-item:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-hover);
+}
+
+.history-item-query,
+.saved-query-item-query {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.history-item-meta,
+.saved-query-item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.saved-query-item-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+/* Checkbox Styles */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin: 0;
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .editor-container {
+        padding: 1rem 0;
+    }
+
+    .editor-actions,
+    .results-actions,
+    .schema-actions {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+}
+
+/* Export Modal Styles */
+.export-options {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.export-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+}
+
+.export-option .material-icons {
+    font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+    .export-options {
+        flex-direction: column;
+    }
+}

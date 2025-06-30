@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enroll in {{ course.title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="tile-wrap">
+        <div class="enrollment-page">
+            <div class="enrollment-header">
+                <div class="breadcrumb">
+                    <a href="{% url 'courses:courses_list' %}">Courses</a>
+                    <span>/</span>
+                    <a href="{% url 'courses:course_detail' course.slug %}">{{ course.title }}</a>
+                    <span>/</span>
+                    <span>Enroll</span>
+                </div>
+                
+                <h1>Enroll in {{ course.title }}</h1>
+            </div>
+            
+            <div class="enrollment-content">
+                <div class="course-summary">
+                    <div class="course-image">
+                        {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="{{ course.title }}">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="course-info">
+                        <h2>{{ course.title }}</h2>
+                        <p>{{ course.short_description }}</p>
+                        
+                        <div class="course-details">
+                            <div class="detail-item">
+                                <i class="fas fa-signal"></i>
+                                <span>{{ course.get_difficulty_display }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ course.duration_hours }} hours</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-layer-group"></i>
+                                <span>{{ course.module_count }} modules</span>
+                            </div>
+                            {% if course.certificate_enabled %}
+                            <div class="detail-item">
+                                <i class="fas fa-certificate"></i>
+                                <span>Certificate included</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="enrollment-form-section">
+                    <div class="pricing-info">
+                        {% if course.is_free %}
+                            <div class="price free">
+                                <span class="price-label">Course Price</span>
+                                <span class="price-value">Free</span>
+                            </div>
+                        {% else %}
+                            <div class="price paid">
+                                <span class="price-label">Course Price</span>
+                                {% if course.discount_price %}
+                                    <div class="price-value">
+                                        <span class="original-price">${{ course.price }}</span>
+                                        <span class="discount-price">${{ course.discount_price }}</span>
+                                    </div>
+                                    <span class="savings">Save ${{ course.price|floatformat:2|add:"-"|add:course.discount_price|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="price-value">${{ course.price }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if existing_enrollment %}
+                        <div class="enrollment-status">
+                            <div class="status-message">
+                                <i class="fas fa-info-circle"></i>
+                                <p>You are already enrolled in this course with status: <strong>{{ existing_enrollment.get_status_display }}</strong></p>
+                            </div>
+                            
+                            {% if existing_enrollment.status == 'pending' %}
+                                <p>Please complete your payment to access the course content.</p>
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-primary">Complete Payment</a>
+                            {% elif existing_enrollment.status in 'active,completed' %}
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-primary">Continue Learning</a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="enrollment-form">
+                            <h3>Ready to start learning?</h3>
+                            
+                            {% if course.is_free %}
+                                <p>This course is completely free. Click below to start learning immediately!</p>
+                                
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-primary btn-large">
+                                        <i class="fas fa-play"></i>
+                                        Start Learning Now
+                                    </button>
+                                </form>
+                            {% else %}
+                                <p>This is a paid course. After enrollment, you'll have lifetime access to all course materials.</p>
+                                
+                                <div class="payment-features">
+                                    <div class="feature">
+                                        <i class="fas fa-infinity"></i>
+                                        <span>Lifetime Access</span>
+                                    </div>
+                                    <div class="feature">
+                                        <i class="fas fa-mobile-alt"></i>
+                                        <span>Mobile Friendly</span>
+                                    </div>
+                                    <div class="feature">
+                                        <i class="fas fa-headset"></i>
+                                        <span>Support Included</span>
+                                    </div>
+                                    {% if course.certificate_enabled %}
+                                    <div class="feature">
+                                        <i class="fas fa-certificate"></i>
+                                        <span>Certificate of Completion</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-primary btn-large">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        Enroll Now - ${{ course.effective_price }}
+                                    </button>
+                                </form>
+                                
+                                <div class="payment-security">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Secure payment processing</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="enrollment-guarantee">
+                                <h4>30-Day Money-Back Guarantee</h4>
+                                <p>If you're not satisfied with the course, we'll refund your money within 30 days of purchase.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="course-preview">
+                <h3>What You'll Learn</h3>
+                {% if course.learning_outcomes %}
+                    {{ course.learning_outcomes|safe }}
+                {% else %}
+                    <p>Master SQL fundamentals and advanced techniques through hands-on practice and real-world examples.</p>
+                {% endif %}
+                
+                {% if course.prerequisites %}
+                <div class="prerequisites">
+                    <h4>Prerequisites</h4>
+                    {{ course.prerequisites|safe }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add enrollment form validation if needed
+    const enrollmentForm = document.querySelector('.enrollment-form form');
+    
+    if (enrollmentForm) {
+        enrollmentForm.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            // Prevent double submission
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            // Re-enable after 5 seconds as fallback
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = submitBtn.dataset.originalText || 'Enroll Now';
+            }, 5000);
+        });
+    }
+});
+</script>
+{% endblock %}

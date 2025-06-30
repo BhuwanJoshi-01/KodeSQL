@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <h1>SQL Tutorials</h1>
+        
+        {% if tutorials %}
+            <div class="tutorials-grid">
+                {% for tutorial in tutorials %}
+                    <div class="tutorial-card card">
+                        <h3>{{ tutorial.title }}</h3>
+                        <p>{{ tutorial.description }}</p>
+                        <p>Difficulty: {{ tutorial.difficulty }}</p>
+                        <p>Lessons: {{ tutorial.total_lessons }}</p>
+                        <a href="/tutorials/{{ tutorial.id }}/" class="btn btn-primary">
+                            Start Tutorial
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No tutorials available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

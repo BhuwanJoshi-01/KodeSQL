@@ -1,0 +1,209 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1 class="admin-title">
+        <span class="material-icons">school</span>
+        {{ tutorial.title }}
+    </h1>
+    <div class="admin-actions">
+        <a href="{{ url('tutorials:admin_tutorial_edit', tutorial_id=tutorial.id) }}" class="admin-btn">
+            <span class="material-icons">edit</span>
+            Edit Tutorial
+        </a>
+        <a href="{{ url('tutorials:admin_lesson_create', tutorial_id=tutorial.id) }}" class="admin-btn success">
+            <span class="material-icons">add</span>
+            Add Lesson
+        </a>
+        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+            <span class="material-icons">arrow_back</span>
+            Back to List
+        </a>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+        <div>
+            <h3>Tutorial Information</h3>
+            <div style="margin-bottom: 1rem;">
+                <strong>Description:</strong>
+                <div style="margin-top: 0.5rem; padding: 1rem; background: var(--input-bg); border-radius: 8px;">
+                    {{ tutorial.description|safe }}
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <strong>Difficulty:</strong>
+                    <span class="status-badge difficulty-{{ tutorial.difficulty }}">
+                        {{ tutorial.get_difficulty_display }}
+                    </span>
+                </div>
+                <div>
+                    <strong>Status:</strong>
+                    <span class="status-badge {% if tutorial.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if tutorial.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <strong>Icon:</strong> 
+                    <span class="material-icons" style="vertical-align: middle;">{{ tutorial.icon }}</span>
+                    {{ tutorial.icon }}
+                </div>
+                <div>
+                    <strong>Order:</strong> {{ tutorial.order }}
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            {% if tutorial.thumbnail %}
+                <div style="text-align: center;">
+                    <strong>Thumbnail:</strong>
+                    <div style="margin-top: 0.5rem;">
+                        <img src="{{ tutorial.thumbnail.url }}" alt="{{ tutorial.title }}" 
+                             style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div style="margin-top: 1.5rem;">
+                <div class="stats-grid" style="grid-template-columns: 1fr;">
+                    <div class="stat-item">
+                        <h3>{{ lessons|length }}</h3>
+                        <p>Total Lessons</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>Lessons</h3>
+        <a href="{{ url('tutorials:admin_lesson_create', tutorial_id=tutorial.id) }}" class="admin-btn success">
+            <span class="material-icons">add</span>
+            Add Lesson
+        </a>
+    </div>
+    
+    {% if lessons %}
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Title</th>
+                        <th>Content Preview</th>
+                        <th>Media</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lesson in lessons %}
+                        <tr>
+                            <td>
+                                <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 500;">
+                                    {{ lesson.order }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ lesson.title }}</strong>
+                            </td>
+                            <td>
+                                <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ lesson.content|striptags|truncate(15, True, "") }}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    {% if lesson.video_url %}
+                                        <span class="material-icons" style="color: #dc3545;" title="Has Video">play_circle</span>
+                                    {% endif %}
+                                    {% if lesson.attachments %}
+                                        <span class="material-icons" style="color: #28a745;" title="Has Attachments">attach_file</span>
+                                    {% endif %}
+                                    {% if lesson.example_query %}
+                                        <span class="material-icons" style="color: #17a2b8;" title="Has SQL Example">code</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge {% if lesson.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if lesson.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="{{ url('tutorials:lesson_detail', tutorial_id=tutorial.id, lesson_id=lesson.id) }}" 
+                                       class="admin-btn info" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" target="_blank">
+                                        <span class="material-icons" style="font-size: 16px;">visibility</span>
+                                        View
+                                    </a>
+                                    <a href="{{ url('tutorials:admin_lesson_edit', lesson_id=lesson.id) }}" 
+                                       class="admin-btn secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        <span class="material-icons" style="font-size: 16px;">edit</span>
+                                        Edit
+                                    </a>
+                                    <a href="{{ url('tutorials:admin_lesson_delete', lesson_id=lesson.id) }}" 
+                                       class="admin-btn danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        <span class="material-icons" style="font-size: 16px;">delete</span>
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <span class="material-icons">menu_book</span>
+            <h3>No lessons yet</h3>
+            <p>Add your first lesson to get started with this tutorial.</p>
+            <a href="{{ url('tutorials:admin_lesson_create', tutorial_id=tutorial.id) }}" class="admin-btn success">
+                <span class="material-icons">add</span>
+                Add First Lesson
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="admin-card">
+    <h3>Tutorial Metadata</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div>
+            <p><strong>Created:</strong> {{ tutorial.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            <p><strong>Last Updated:</strong> {{ tutorial.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        </div>
+        <div>
+            <p><strong>Total Lessons:</strong> {{ lessons|length }}</p>
+            <p><strong>Active Lessons:</strong> {{ lessons|length }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="admin-actions" style="margin-top: 2rem;">
+    <a href="{{ url('tutorials:admin_tutorial_edit', tutorial_id=tutorial.id) }}" class="admin-btn">
+        <span class="material-icons">edit</span>
+        Edit Tutorial
+    </a>
+    <a href="{{ url('tutorials:tutorial_detail', tutorial_id=tutorial.id) }}" class="admin-btn info" target="_blank">
+        <span class="material-icons">launch</span>
+        View Public Page
+    </a>
+    <a href="{{ url('tutorials:admin_tutorial_delete', tutorial_id=tutorial.id) }}" class="admin-btn danger">
+        <span class="material-icons">delete</span>
+        Delete Tutorial
+    </a>
+</div>
+{% endblock %}

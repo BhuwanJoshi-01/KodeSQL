@@ -1,0 +1,275 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+{{ form.media.css }}
+<style>
+.code-preview {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.media-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.media-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate lesson order
+    const orderField = document.getElementById('id_order');
+    if (orderField && !orderField.value) {
+        // Set default order based on existing lessons
+        orderField.value = {{ (lessons|length if lessons else 0) + 1 }};
+    }
+    
+    // Preview SQL query
+    const queryField = document.getElementById('id_example_query');
+    if (queryField) {
+        queryField.addEventListener('input', function() {
+            const preview = document.getElementById('query-preview');
+            if (preview) {
+                preview.textContent = this.value || 'No query entered yet...';
+            }
+        });
+    }
+    
+    // File upload preview
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            const preview = this.parentNode.querySelector('.file-preview');
+            
+            if (file && preview) {
+                preview.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                preview.style.color = 'var(--success-color)';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1 class="admin-title">
+        <span class="material-icons">menu_book</span>
+        {% if is_edit %}Edit Lesson{% else %}Create Lesson{% endif %}
+    </h1>
+    <div class="admin-actions">
+        {% if is_edit %}
+            <a href="{{ url('tutorials:admin_tutorial_detail', tutorial_id=lesson.tutorial.id) }}" class="admin-btn secondary">
+                <span class="material-icons">arrow_back</span>
+                Back to Tutorial
+            </a>
+        {% else %}
+            <a href="{{ url('tutorials:admin_tutorial_detail', tutorial_id=tutorial.id) }}" class="admin-btn secondary">
+                <span class="material-icons">arrow_back</span>
+                Back to Tutorial
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    
+    <div class="admin-card">
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">info</span>
+                Basic Information
+            </h4>
+            
+            {% if not is_edit %}
+                {{ form.tutorial }}
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.help_text %}
+                        <div class="help-text">{{ form.title.help_text }}</div>
+                    {% endif %}
+                    {% if form.title.errors %}
+                        <div class="error-text">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                    {{ form.order }}
+                    {% if form.order.help_text %}
+                        <div class="help-text">{{ form.order.help_text }}</div>
+                    {% endif %}
+                    {% if form.order.errors %}
+                        <div class="error-text">{{ form.order.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check" style="margin-top: 2rem;">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                    </div>
+                    {% if form.is_active.errors %}
+                        <div class="error-text">{{ form.is_active.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">article</span>
+                Lesson Content
+            </h4>
+            
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>
+                {{ form.content }}
+                {% if form.content.help_text %}
+                    <div class="help-text">{{ form.content.help_text }}</div>
+                {% endif %}
+                {% if form.content.errors %}
+                    <div class="error-text">{{ form.content.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">code</span>
+                SQL Examples
+            </h4>
+            
+            <div class="form-group">
+                <label for="{{ form.example_query.id_for_label }}">{{ form.example_query.label }}</label>
+                {{ form.example_query }}
+                {% if form.example_query.help_text %}
+                    <div class="help-text">{{ form.example_query.help_text }}</div>
+                {% endif %}
+                {% if form.example_query.errors %}
+                    <div class="error-text">{{ form.example_query.errors.0 }}</div>
+                {% endif %}
+                
+                <div style="margin-top: 1rem;">
+                    <strong>Query Preview:</strong>
+                    <div id="query-preview" class="code-preview">
+                        {{ form.example_query.value|default("No query entered yet...") }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.expected_output.id_for_label }}">{{ form.expected_output.label }}</label>
+                {{ form.expected_output }}
+                {% if form.expected_output.help_text %}
+                    <div class="help-text">{{ form.expected_output.help_text }}</div>
+                {% endif %}
+                {% if form.expected_output.errors %}
+                    <div class="error-text">{{ form.expected_output.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">perm_media</span>
+                Media & Resources
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="form-group">
+                    <label for="{{ form.video_url.id_for_label }}">{{ form.video_url.label }}</label>
+                    {{ form.video_url }}
+                    {% if form.video_url.help_text %}
+                        <div class="help-text">{{ form.video_url.help_text }}</div>
+                    {% endif %}
+                    {% if form.video_url.errors %}
+                        <div class="error-text">{{ form.video_url.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.attachments.id_for_label }}">{{ form.attachments.label }}</label>
+                    <div class="media-upload-area">
+                        {{ form.attachments }}
+                        <div class="file-preview" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-muted);">
+                            {% if form.attachments.value %}
+                                Current: {{ form.attachments.value }}
+                            {% else %}
+                                No file selected
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if form.attachments.help_text %}
+                        <div class="help-text">{{ form.attachments.help_text }}</div>
+                    {% endif %}
+                    {% if form.attachments.errors %}
+                        <div class="error-text">{{ form.attachments.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-actions" style="margin-top: 2rem;">
+        <button type="submit" class="admin-btn">
+            <span class="material-icons">save</span>
+            {% if is_edit %}Update Lesson{% else %}Create Lesson{% endif %}
+        </button>
+        {% if is_edit %}
+            <a href="{{ url('tutorials:admin_tutorial_detail', tutorial_id=lesson.tutorial.id) }}" class="admin-btn secondary">
+                <span class="material-icons">cancel</span>
+                Cancel
+            </a>
+        {% else %}
+            <a href="{{ url('tutorials:admin_tutorial_detail', tutorial_id=tutorial.id) }}" class="admin-btn secondary">
+                <span class="material-icons">cancel</span>
+                Cancel
+            </a>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}

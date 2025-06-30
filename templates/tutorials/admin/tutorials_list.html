@@ -1,0 +1,119 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1 class="admin-title">
+        <span class="material-icons">school</span>
+        Manage Tutorials
+    </h1>
+    <div class="admin-actions">
+        <a href="{{ url('tutorials:admin_tutorial_create') }}" class="admin-btn">
+            <span class="material-icons">add</span>
+            Create Tutorial
+        </a>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="stat-item">
+            <h3>{{ total_tutorials }}</h3>
+            <p>Total Tutorials</p>
+        </div>
+        <div class="stat-item">
+            <h3>{{ tutorials.paginator.count }}</h3>
+            <p>Active Tutorials</p>
+        </div>
+    </div>
+    
+    {% if tutorials %}
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Difficulty</th>
+                        <th>Lessons</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tutorial in tutorials %}
+                        <tr>
+                            <td>
+                                <strong>{{ tutorial.title }}</strong>
+                                {% if tutorial.thumbnail %}
+                                    <span class="material-icons" style="font-size: 16px; color: var(--primary-color);">image</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge difficulty-{{ tutorial.difficulty }}">
+                                    {{ tutorial.get_difficulty_display }}
+                                </span>
+                            </td>
+                            <td>{{ tutorial.total_lessons }}</td>
+                            <td>
+                                <span class="status-badge {% if tutorial.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if tutorial.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ tutorial.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="{{ url('tutorials:admin_tutorial_detail', tutorial_id=tutorial.id) }}"
+                                       class="admin-btn secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        <span class="material-icons" style="font-size: 16px;">visibility</span>
+                                        View
+                                    </a>
+                                    <a href="{{ url('tutorials:admin_tutorial_edit', tutorial_id=tutorial.id) }}"
+                                       class="admin-btn secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        <span class="material-icons" style="font-size: 16px;">edit</span>
+                                        Edit
+                                    </a>
+                                    <a href="{{ url('tutorials:admin_tutorial_delete', tutorial_id=tutorial.id) }}"
+                                       class="admin-btn danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                        <span class="material-icons" style="font-size: 16px;">delete</span>
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if tutorials.has_other_pages %}
+            <div class="pagination">
+                {% if tutorials.has_previous %}
+                    <a href="?page=1">&laquo; First</a>
+                    <a href="?page={{ tutorials.previous_page_number }}">Previous</a>
+                {% endif %}
+                
+                <span class="current">
+                    Page {{ tutorials.number }} of {{ tutorials.paginator.num_pages }}
+                </span>
+                
+                {% if tutorials.has_next %}
+                    <a href="?page={{ tutorials.next_page_number }}">Next</a>
+                    <a href="?page={{ tutorials.paginator.num_pages }}">Last &raquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 2rem;">
+            <span class="material-icons" style="font-size: 48px; color: var(--text-muted);">school</span>
+            <h3>No tutorials found</h3>
+            <p>Create your first tutorial to get started.</p>
+            <a href="{{ url('tutorials:admin_tutorial_create') }}" class="admin-btn">
+                <span class="material-icons">add</span>
+                Create Tutorial
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

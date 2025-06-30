@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/editor.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div class="editor-container">
+        <div class="editor-layout">
+        <!-- SQL Editor Panel -->
+        <div class="editor-panel">
+            <div class="editor-header">
+                <h2>SQL Editor</h2>
+                <div class="editor-actions">
+                    {% if request.user.is_authenticated %}
+                        <button class="btn btn-secondary btn-sm" onclick="openHistoryModal()">
+                            <span class="material-icons">history</span>
+                            History
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="openSavedQueriesModal()">
+                            <span class="material-icons">bookmark</span>
+                            Saved
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="saveCurrentQuery()">
+                            <span class="material-icons">save</span>
+                            Save
+                        </button>
+                    {% endif %}
+                    <button class="btn btn-primary execute-query-btn" onclick="executeQuery()">
+                        <span class="material-icons">play_arrow</span>
+                        Run Query
+                    </button>
+                </div>
+            </div>
+            
+            <div class="editor-content">
+                <div id="sql-editor" class="monaco-editor-container"></div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+            <div class="results-header">
+                <h3>Results</h3>
+                <div class="results-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="exportResults()" disabled>
+                        <span class="material-icons">download</span>
+                        Export
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearResults()">
+                        <span class="material-icons">clear</span>
+                        Clear
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-content">
+                <div id="results-container" class="results-empty">
+                    <div class="empty-state">
+                        <span class="material-icons">play_circle_outline</span>
+                        <p>Run a SQL query to see results here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+            <div class="results-header">
+                <h3>Query Results</h3>
+                <div class="results-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="clearResults()">
+                        <span class="material-icons">clear</span>
+                        Clear
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportResults()">
+                        <span class="material-icons">download</span>
+                        Export
+                    </button>
+                </div>
+            </div>
+
+            <div class="results-content">
+                <div id="results-container" class="results-empty">
+                    <div class="empty-state">
+                        <span class="material-icons">play_arrow</span>
+                        <p>Run a query to see results here!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% if request.user.is_authenticated %}
+<!-- Query History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Query History</h3>
+            <button class="modal-close" onclick="closeModal('historyModal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="history-list" class="history-list">
+                <!-- History items will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Saved Queries Modal -->
+<div id="savedQueriesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Saved Queries</h3>
+            <button class="modal-close" onclick="closeModal('savedQueriesModal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="saved-queries-list" class="saved-queries-list">
+                <!-- Saved queries will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Query Modal -->
+<div id="saveQueryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Save Query</h3>
+            <button class="modal-close" onclick="closeModal('saveQueryModal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="save-query-form" onsubmit="handleSaveQuery(event)">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">>
+                <div class="form-group">
+                    <label class="form-label" for="query-title">Query Title</label>
+                    <input type="text" id="query-title" name="title" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="query-description">Description (optional)</label>
+                    <textarea id="query-description" name="description" class="form-input form-textarea" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="query-favorite" name="is_favorite">
+                        <span class="checkmark"></span>
+                        Mark as favorite
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('saveQueryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Query</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Export Results Modal -->
+<div id="exportModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Export Results</h3>
+            <button class="modal-close" onclick="closeModal('exportModal')">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="export-options">
+                <button class="btn btn-primary" onclick="exportAsCSV()">
+                    <span class="material-icons">table_chart</span>
+                    Export as CSV
+                </button>
+                <button class="btn btn-secondary" onclick="exportAsJSON()">
+                    <span class="material-icons">code</span>
+                    Export as JSON
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ static('js/editor.js') }}"></script>
+<script>
+    // Initialize editor when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initSQLEditor();
+
+        {% if request.user.is_authenticated %}
+            // Set user context for authenticated features
+            window.user = {
+                is_authenticated: true,
+                id: {{ request.user.id }},
+                email: "{{ request.user.email }}"
+            };
+        {% else %}
+            window.user = { is_authenticated: false };
+        {% endif %}
+    });
+</script>
+{% endblock %}

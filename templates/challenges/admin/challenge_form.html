@@ -1,0 +1,331 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+{{ form.media.css }}
+<style>
+.json-editor {
+    font-family: 'Courier New', monospace;
+    background: #f8f9fa;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 200px;
+    transition: all 0.3s ease;
+}
+
+.json-editor:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.json-preview {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+}
+
+.difficulty-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.sample-data-info {
+    background: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // JSON validation and preview
+    const jsonField = document.getElementById('id_expected_result_text');
+    const jsonPreview = document.getElementById('json-preview');
+    
+    if (jsonField && jsonPreview) {
+        function updateJsonPreview() {
+            const value = jsonField.value.trim();
+            if (!value) {
+                jsonPreview.textContent = 'No expected result entered...';
+                jsonPreview.style.color = '#6c757d';
+                return;
+            }
+            
+            try {
+                const parsed = JSON.parse(value);
+                jsonPreview.textContent = JSON.stringify(parsed, null, 2);
+                jsonPreview.style.color = '#28a745';
+                jsonField.style.borderColor = '#28a745';
+            } catch (e) {
+                jsonPreview.textContent = `Invalid JSON: ${e.message}`;
+                jsonPreview.style.color = '#dc3545';
+                jsonField.style.borderColor = '#dc3545';
+            }
+        }
+        
+        jsonField.addEventListener('input', updateJsonPreview);
+        updateJsonPreview(); // Initial preview
+    }
+    
+    // Difficulty preview
+    const difficultyField = document.getElementById('id_difficulty');
+    const difficultyPreview = document.getElementById('difficulty-preview');
+    
+    if (difficultyField && difficultyPreview) {
+        function updateDifficultyPreview() {
+            const value = difficultyField.value;
+            const badges = {
+                'easy': '<span class="status-badge difficulty-easy">Easy</span>',
+                'medium': '<span class="status-badge difficulty-medium">Medium</span>',
+                'hard': '<span class="status-badge difficulty-hard">Hard</span>'
+            };
+            difficultyPreview.innerHTML = badges[value] || '';
+        }
+        
+        difficultyField.addEventListener('change', updateDifficultyPreview);
+        updateDifficultyPreview(); // Initial preview
+    }
+    
+    // Auto-generate order
+    const orderField = document.getElementById('id_order');
+    if (orderField && !orderField.value) {
+        // Set a default order value
+        orderField.value = Math.floor(Date.now() / 1000); // Unix timestamp as default
+    }
+    
+    // File upload preview
+    const fileInput = document.getElementById('id_sample_data');
+    const filePreview = document.getElementById('file-preview');
+    
+    if (fileInput && filePreview) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024).toFixed(1);
+                const fileType = file.name.split('.').pop().toLowerCase();
+                
+                filePreview.innerHTML = `
+                    <strong>Selected:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${fileSize} KB<br>
+                    <strong>Type:</strong> ${fileType.toUpperCase()}
+                `;
+                filePreview.style.color = '#28a745';
+            } else {
+                filePreview.innerHTML = 'No file selected';
+                filePreview.style.color = '#6c757d';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1 class="admin-title">
+        <span class="material-icons">quiz</span>
+        {% if is_edit %}Edit Challenge{% else %}Create Challenge{% endif %}
+    </h1>
+    <div class="admin-actions">
+        <a href="{{ url('challenges:admin_challenges_list') }}" class="admin-btn secondary">
+            <span class="material-icons">arrow_back</span>
+            Back to List
+        </a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    
+    <div class="admin-card">
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">info</span>
+                Basic Information
+            </h4>
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.help_text %}
+                    <div class="help-text">{{ form.title.help_text }}</div>
+                {% endif %}
+                {% if form.title.errors %}
+                    <div class="error-text">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.help_text %}
+                    <div class="help-text">{{ form.description.help_text }}</div>
+                {% endif %}
+                {% if form.description.errors %}
+                    <div class="error-text">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
+                    {{ form.difficulty }}
+                    <div id="difficulty-preview" class="difficulty-preview"></div>
+                    {% if form.difficulty.errors %}
+                        <div class="error-text">{{ form.difficulty.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                    {{ form.order }}
+                    {% if form.order.help_text %}
+                        <div class="help-text">{{ form.order.help_text }}</div>
+                    {% endif %}
+                    {% if form.order.errors %}
+                        <div class="error-text">{{ form.order.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check" style="margin-top: 2rem;">
+                        {{ form.is_active }}
+                        <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                    </div>
+                    {% if form.is_active.errors %}
+                        <div class="error-text">{{ form.is_active.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">help</span>
+                Challenge Content
+            </h4>
+            
+            <div class="form-group">
+                <label for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
+                {{ form.question }}
+                {% if form.question.help_text %}
+                    <div class="help-text">{{ form.question.help_text }}</div>
+                {% endif %}
+                {% if form.question.errors %}
+                    <div class="error-text">{{ form.question.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.hint.id_for_label }}">{{ form.hint.label }}</label>
+                {{ form.hint }}
+                {% if form.hint.help_text %}
+                    <div class="help-text">{{ form.hint.help_text }}</div>
+                {% endif %}
+                {% if form.hint.errors %}
+                    <div class="error-text">{{ form.hint.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">code</span>
+                Solution & Expected Results
+            </h4>
+            
+            <div class="form-group">
+                <label for="{{ form.expected_query.id_for_label }}">{{ form.expected_query.label }}</label>
+                {{ form.expected_query }}
+                {% if form.expected_query.help_text %}
+                    <div class="help-text">{{ form.expected_query.help_text }}</div>
+                {% endif %}
+                {% if form.expected_query.errors %}
+                    <div class="error-text">{{ form.expected_query.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.expected_result_text.id_for_label }}">{{ form.expected_result_text.label }}</label>
+                {{ form.expected_result_text }}
+                {% if form.expected_result_text.help_text %}
+                    <div class="help-text">{{ form.expected_result_text.help_text }}</div>
+                {% endif %}
+                {% if form.expected_result_text.errors %}
+                    <div class="error-text">{{ form.expected_result_text.errors.0 }}</div>
+                {% endif %}
+                
+                <div style="margin-top: 1rem;">
+                    <strong>JSON Preview:</strong>
+                    <div id="json-preview" class="json-preview">
+                        No expected result entered...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">storage</span>
+                Sample Data
+            </h4>
+            
+            <div class="form-group">
+                <label for="{{ form.sample_data.id_for_label }}">{{ form.sample_data.label }}</label>
+                <div class="media-upload-area">
+                    {{ form.sample_data }}
+                    <div id="file-preview" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-muted);">
+                        {% if form.sample_data.value %}
+                            <strong>Current:</strong> {{ form.sample_data.value }}
+                        {% else %}
+                            No file selected
+                        {% endif %}
+                    </div>
+                </div>
+                {% if form.sample_data.help_text %}
+                    <div class="help-text">{{ form.sample_data.help_text }}</div>
+                {% endif %}
+                {% if form.sample_data.errors %}
+                    <div class="error-text">{{ form.sample_data.errors.0 }}</div>
+                {% endif %}
+                
+                <div class="sample-data-info">
+                    <h5 style="margin: 0 0 0.5rem 0;">Sample Data Guidelines:</h5>
+                    <ul style="margin: 0; padding-left: 1.5rem;">
+                        <li><strong>CSV files:</strong> First row should contain column headers</li>
+                        <li><strong>SQL files:</strong> Should contain INSERT statements with sample data</li>
+                        <li><strong>File size:</strong> Keep under 1MB for optimal performance</li>
+                        <li><strong>Data quality:</strong> Ensure data is relevant to the challenge</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-actions" style="margin-top: 2rem;">
+        <button type="submit" class="admin-btn">
+            <span class="material-icons">save</span>
+            {% if is_edit %}Update Challenge{% else %}Create Challenge{% endif %}
+        </button>
+        <a href="{{ url('challenges:admin_challenges_list') }}" class="admin-btn secondary">
+            <span class="material-icons">cancel</span>
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

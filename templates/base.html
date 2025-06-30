@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SQL Playground{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ static('css/base.css') }}">
+    <link rel="stylesheet" href="{{ static('css/theme.css') }}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Monaco Editor -->
+    <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="tile-wrap">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <a href="{{ url('core:home') }}" class="brand-link">
+                        <span class="material-icons">storage</span>
+                        <span class="brand-text">SQL Playground</span>
+                    </a>
+                </div>
+            
+            <div class="nav-menu">
+                <a href="{{ url('core:home') }}" class="nav-link">Editor</a>
+                <a href="{{ url('tutorials:tutorials_list') }}" class="nav-link">Tutorials</a>
+                <a href="{{ url('challenges:challenges_list') }}" class="nav-link">Challenges</a>
+                <a href="{{ url('courses:courses_list') }}" class="nav-link">Courses</a>
+
+                {% if request.user.is_authenticated %}
+                    {% if request.user.is_staff %}
+                        <div class="nav-dropdown">
+                            <button class="nav-dropdown-btn admin-btn">
+                                <span class="material-icons">admin_panel_settings</span>
+                                Admin
+                            </button>
+                            <div class="nav-dropdown-content">
+                                <a href="{{ url('tutorials:admin_tutorials_list') }}">
+                                    <span class="material-icons">school</span>
+                                    Manage Tutorials
+                                </a>
+                                <a href="{{ url('challenges:admin_challenges_list') }}">
+                                    <span class="material-icons">quiz</span>
+                                    Manage Challenges
+                                </a>
+                                <a href="{{ url('courses:admin_courses_list') }}">
+                                    <span class="material-icons">video_library</span>
+                                    Manage Courses
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a href="{{ url('tutorials:admin_tutorial_create') }}">
+                                    <span class="material-icons">add</span>
+                                    Create Tutorial
+                                </a>
+                                <a href="{{ url('challenges:admin_challenge_create') }}">
+                                    <span class="material-icons">add</span>
+                                    Create Challenge
+                                </a>
+                                <a href="{{ url('courses:admin_course_create') }}">
+                                    <span class="material-icons">add</span>
+                                    Create Course
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="nav-dropdown">
+                        <button class="nav-dropdown-btn">
+                            <span class="material-icons">account_circle</span>
+                            {{ request.user.email }}
+                        </button>
+                        <div class="nav-dropdown-content">
+                            <a href="{{ url('core:dashboard') }}">Dashboard</a>
+                            <a href="{{ url('courses:my_courses') }}">My Courses</a>
+                            <a href="{{ url('users:profile') }}">Profile</a>
+                            {% if request.user.is_staff %}
+                                <div class="dropdown-divider"></div>
+                                <a href="/admin/">Django Admin</a>
+                            {% endif %}
+                            <a href="{{ url('users:logout') }}">Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url('users:login') }}" class="nav-link">Login</a>
+                    <a href="{{ url('users:register') }}" class="nav-link btn-primary">Sign Up</a>
+                {% endif %}
+                
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span class="material-icons">dark_mode</span>
+                </button>
+            </div>
+            
+                <!-- Mobile menu button -->
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <span class="material-icons">menu</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% set messages = get_messages(request) %}
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message message-{{ message.tags }}">
+                        <span class="material-icons">
+                            {% if message.tags == 'error' %}error
+                            {% elif message.tags == 'warning' %}warning
+                            {% elif message.tags == 'success' %}check_circle
+                            {% else %}info
+                            {% endif %}
+                        </span>
+                        {{ message }}
+                        <button class="message-close" onclick="this.parentElement.remove()">
+                            <span class="material-icons">close</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="tile-wrap">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SQL Playground</h3>
+                    <p>Interactive SQL learning platform</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Learn</h4>
+                    <a href="{{ url('tutorials:tutorials_list') }}">Tutorials</a>
+                    <a href="{{ url('challenges:challenges_list') }}">Challenges</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Tools</h4>
+                    <a href="{{ url('core:home') }}">SQL Editor</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <a href="{{ url('core:contribute') }}">Contribute</a>
+                    <a href="{{ url('core:about') }}">About</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 SQL Playground. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ static('js/base.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

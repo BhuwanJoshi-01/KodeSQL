@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="tile-wrap">
+    <div style="padding: 2rem 0;">
+        <!-- Tutorial Header -->
+        <div class="tutorial-header-section">
+            <div class="breadcrumb">
+                <a href="{{ url('tutorials:tutorials_list') }}">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Tutorials
+                </a>
+            </div>
+
+            <div class="tutorial-title-section">
+                <div class="tutorial-icon-large">
+                    <span class="material-icons">{{ tutorial.icon }}</span>
+                </div>
+                <div class="tutorial-title-info">
+                    <h1>{{ tutorial.title }}</h1>
+                    <div class="tutorial-meta">
+                        <span class="difficulty difficulty-{{ tutorial.difficulty }}">
+                            {{ tutorial.get_difficulty_display() }}
+                        </span>
+                        <span class="lesson-count">
+                            {{ lessons|length }} lesson{{ lessons|length|pluralize }}
+                        </span>
+                    </div>
+                    <p class="tutorial-description">{{ tutorial.description }}</p>
+                </div>
+            </div>
+
+            {% if user.is_authenticated and user_progress %}
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span>Your Progress</span>
+                        <span class="progress-percentage">{{ user_progress.progress_percentage }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ user_progress.progress_percentage }}%"></div>
+                    </div>
+                    {% if user_progress.is_completed %}
+                        <div class="completion-badge">
+                            <span class="material-icons">check_circle</span>
+                            Tutorial Completed!
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Lessons List -->
+        <div class="lessons-section">
+            <h2>Lessons</h2>
+            {% if lessons %}
+                <div class="lessons-list">
+                    {% for lesson in lessons %}
+                        <div class="lesson-item {% if lesson.id in completed_lessons %}completed{% endif %}">
+                            <div class="lesson-status">
+                                {% if lesson.id in completed_lessons %}
+                                    <span class="material-icons completed">check_circle</span>
+                                {% else %}
+                                    <span class="material-icons">play_circle_outline</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="lesson-content">
+                                <h3>{{ loop.index }}. {{ lesson.title }}</h3>
+                                {% if lesson.content %}
+                                    <p class="lesson-preview">{{ lesson.content|truncatewords(20) }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="lesson-actions">
+                                <a href="{{ url('tutorials:lesson_detail', tutorial.id, lesson.id) }}" class="btn btn-primary">
+                                    {% if lesson.id in completed_lessons %}
+                                        <span class="material-icons">replay</span>
+                                        Review
+                                    {% else %}
+                                        <span class="material-icons">play_arrow</span>
+                                        Start
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <span class="material-icons">school</span>
+                    <h3>No Lessons Available</h3>
+                    <p>This tutorial doesn't have any lessons yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.tutorial-header-section {
+    margin-bottom: 3rem;
+}
+
+.breadcrumb {
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.tutorial-title-section {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+}
+
+.tutorial-icon-large {
+    background: var(--primary-color);
+    color: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tutorial-icon-large .material-icons {
+    font-size: 2.5rem;
+}
+
+.tutorial-title-info h1 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.tutorial-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.difficulty {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.difficulty-beginner {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.difficulty-intermediate {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.difficulty-advanced {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.lesson-count {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.tutorial-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.progress-section {
+    background: var(--card-background);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.progress-percentage {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.progress-bar {
+    background: var(--border-color);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    background: var(--primary-color);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.completion-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.lessons-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.lessons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.lesson-item {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.lesson-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.lesson-item.completed {
+    background: rgba(46, 125, 50, 0.05);
+    border-color: rgba(46, 125, 50, 0.2);
+}
+
+.lesson-status .material-icons {
+    font-size: 2rem;
+}
+
+.lesson-status .material-icons.completed {
+    color: var(--success-color);
+}
+
+.lesson-status .material-icons:not(.completed) {
+    color: var(--text-secondary);
+}
+
+.lesson-content {
+    flex: 1;
+}
+
+.lesson-content h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.lesson-preview {
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.lesson-actions {
+    flex-shrink: 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state .material-icons {
+    font-size: 4rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .tutorial-title-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .lesson-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .lesson-content {
+        order: 1;
+    }
+
+    .lesson-status {
+        order: 2;
+    }
+
+    .lesson-actions {
+        order: 3;
+    }
+}
+</style>
+{% endblock %}

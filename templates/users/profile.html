@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tile-wrap tile-wrap-md">
+    <div class="profile-container" style="padding: 2rem 0;">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">User Profile</h2>
+                <p class="card-subtitle">Manage your account settings</p>
+            </div>
+            
+            <div style="padding: 1.5rem;">
+                <div class="profile-info">
+                    <div class="profile-avatar">
+                        <div style="width: 80px; height: 80px; background-color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                            {{ request.user.email[0]|upper }}
+                        </div>
+                    </div>
+                    
+                    <div class="profile-details">
+                        <h3>{{ request.user.first_name or request.user.username }} {{ request.user.last_name or '' }}</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ request.user.email }}</p>
+                        
+                        <div class="profile-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                            <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">{{ request.user.query_history.count() }}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Queries Executed</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">{{ request.user.saved_queries.count() }}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Saved Queries</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color);">{{ request.user.date_joined.strftime('%b %Y') }}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Member Since</div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-actions" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="{{ url('users:change_password') }}" class="btn btn-primary">
+                                <span class="material-icons">lock</span>
+                                Change Password
+                            </a>
+                            <button class="btn btn-secondary" onclick="toggleTheme()">
+                                <span class="material-icons">palette</span>
+                                Toggle Theme
+                            </button>
+                            <a href="{{ url('core:dashboard') }}" class="btn btn-secondary">
+                                <span class="material-icons">dashboard</span>
+                                Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom: 1rem;">Account Information</h4>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
+                            <span style="font-weight: 500;">Username:</span>
+                            <span>{{ request.user.username }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
+                            <span style="font-weight: 500;">Email:</span>
+                            <span>{{ request.user.email }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
+                            <span style="font-weight: 500;">Email Verified:</span>
+                            <span style="color: {{ 'var(--success-color)' if request.user.is_email_verified else 'var(--error-color)' }};">
+                                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">
+                                    {{ 'check_circle' if request.user.is_email_verified else 'cancel' }}
+                                </span>
+                                {{ 'Yes' if request.user.is_email_verified else 'No' }}
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
+                            <span style="font-weight: 500;">Theme Preference:</span>
+                            <span style="text-transform: capitalize;">{{ profile.theme_preference }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
+                            <span style="font-weight: 500;">Last Login:</span>
+                            <span>{{ request.user.last_login.strftime('%b %d, %Y %H:%M') if request.user.last_login else 'Never' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set user theme preference
+    {% if profile.theme_preference %}
+        setTheme('{{ profile.theme_preference }}');
+    {% endif %}
+});
+</script>
+{% endblock %}

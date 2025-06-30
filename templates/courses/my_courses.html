@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}My Courses - SQL Playground{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="tile-wrap">
+        <!-- Courses Header -->
+        <div class="courses-header">
+            <h2>My Courses</h2>
+            <div class="courses-actions">
+                <div class="search-bar">
+                    <input type="text" id="courseSearch" placeholder="Search my courses..." value="{{ search_query }}">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="filter-dropdown">
+                    <button class="filter-btn">Filter <i class="fas fa-chevron-down"></i></button>
+                    <div class="filter-menu">
+                        <label><input type="checkbox" value="in-progress" {{ 'checked' if 'in-progress' in status_filter or not status_filter else '' }}> In Progress</label>
+                        <label><input type="checkbox" value="completed" {{ 'checked' if 'completed' in status_filter or not status_filter else '' }}> Completed</label>
+                        <label><input type="checkbox" value="not-started" {{ 'checked' if 'not-started' in status_filter or not status_filter else '' }}> Not Started</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Course Statistics -->
+        <div class="courses-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalCourses">{{ total_courses }}</h3>
+                    <p>Total Courses</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="inProgressCourses">{{ in_progress_courses }}</h3>
+                    <p>In Progress</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="completedCourses">{{ completed_courses }}</h3>
+                    <p>Completed</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="certificatesEarned">{{ certificates_earned }}</h3>
+                    <p>Certificates</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Courses Container -->
+        <div class="courses-container" id="coursesContainer">
+            {% if enrollments %}
+                {% for enrollment in enrollments %}
+                <div class="course-card {% if enrollment.is_completed %}completed{% elif enrollment.progress_percentage > 0 %}in-progress{% else %}not-started{% endif %}" 
+                     data-course-title="{{ enrollment.course.title|lower }}" 
+                     data-course-description="{{ enrollment.course.short_description|lower }}"
+                     data-status="{% if enrollment.is_completed %}completed{% elif enrollment.progress_percentage > 0 %}in-progress{% else %}not-started{% endif %}">
+                    <div class="course-image">
+                        {% if enrollment.course.thumbnail %}
+                            <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="{{ enrollment.course.title }}">
+                        {% endif %}
+                        <div class="course-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ enrollment.progress_percentage }}%"></div>
+                            </div>
+                            <span class="progress-text">{{ enrollment.progress_percentage }}% Complete</span>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <h3 class="course-title">{{ enrollment.course.title }}</h3>
+                        <p class="course-description">{{ enrollment.course.short_description }}</p>
+                        <div class="course-meta">
+                            <span><i class="fas fa-clock"></i> <span class="course-duration">{{ enrollment.course.duration_hours }}h</span></span>
+                            <span><i class="fas fa-layer-group"></i> <span class="course-modules">{{ enrollment.course.module_count }}</span> modules</span>
+                            <span><i class="fas fa-graduation-cap"></i> <span class="course-level">{{ enrollment.course.get_difficulty_display }}</span></span>
+                        </div>
+                        <div class="course-actions">
+                            {% if enrollment.is_completed %}
+                                {% if enrollment.certificate_issued %}
+                                    <a href="{{ url('courses:certificate_view', certificate_id=enrollment.certificate.certificate_id) }}" class="btn-primary continue-btn">View Certificate</a>
+                                {% else %}
+                                    <a href="{{ url('courses:course_detail', slug=enrollment.course.slug) }}" class="btn-primary continue-btn">Review Course</a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{{ url('courses:course_detail', slug=enrollment.course.slug) }}" class="btn-primary continue-btn">Continue Learning</a>
+                            {% endif %}
+                            <a href="{{ url('courses:course_detail', slug=enrollment.course.slug) }}" class="btn-secondary details-btn">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-courses" id="noCoursesMessage">
+                    <i class="fas fa-book"></i>
+                    <h3>No courses found</h3>
+                    <p>You haven't enrolled in any courses yet.</p>
+                    <a href="{{ url('courses:courses_list') }}" class="btn-primary">Browse Courses</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Explore More Courses Section -->
+<section class="explore-courses">
+    <div class="tile-wrap">
+        <h2>Explore More Courses</h2>
+        <p>Discover new courses to enhance your skills and knowledge</p>
+        <div class="recommended-courses" id="recommendedCourses">
+            <!-- Recommended courses will be loaded here dynamically -->
+        </div>
+        <div class="explore-action">
+            <a href="{{ url('courses:courses_list') }}" class="btn-primary">Browse All Courses</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize course filtering and search
+    initializeCourseFiltering();
+    
+    // Load recommended courses
+    loadRecommendedCourses();
+    
+    // Initialize filter dropdown
+    initializeFilterDropdown();
+});
+
+function initializeCourseFiltering() {
+    const searchInput = document.getElementById('courseSearch');
+    const filterCheckboxes = document.querySelectorAll('.filter-menu input[type="checkbox"]');
+    const courseCards = document.querySelectorAll('.course-card');
+    
+    // Search functionality
+    searchInput.addEventListener('input', filterCourses);
+    
+    // Filter functionality
+    filterCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', filterCourses);
+    });
+    
+    function filterCourses() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedFilters = Array.from(filterCheckboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+        
+        courseCards.forEach(card => {
+            const title = card.dataset.courseTitle || '';
+            const description = card.dataset.courseDescription || '';
+            const status = card.dataset.status || '';
+            
+            // Check search match
+            const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+            
+            // Check filter match
+            const matchesFilter = selectedFilters.length === 0 || selectedFilters.includes(status);
+            
+            // Show/hide card
+            if (matchesSearch && matchesFilter) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Check if no courses are visible
+        const visibleCourses = Array.from(courseCards).filter(card => card.style.display !== 'none');
+        const noCoursesMessage = document.getElementById('noCoursesMessage');
+        
+        if (visibleCourses.length === 0 && courseCards.length > 0) {
+            if (!noCoursesMessage) {
+                const message = document.createElement('div');
+                message.id = 'noCoursesMessage';
+                message.className = 'no-courses';
+                message.innerHTML = `
+                    <i class="fas fa-search"></i>
+                    <h3>No courses found</h3>
+                    <p>Try adjusting your search or filter criteria.</p>
+                `;
+                document.getElementById('coursesContainer').appendChild(message);
+            }
+        } else if (noCoursesMessage && visibleCourses.length > 0) {
+            noCoursesMessage.remove();
+        }
+    }
+}
+
+function initializeFilterDropdown() {
+    const filterBtn = document.querySelector('.filter-btn');
+    const filterMenu = document.querySelector('.filter-menu');
+    
+    filterBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        filterMenu.classList.toggle('active');
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.filter-dropdown') && filterMenu.classList.contains('active')) {
+            filterMenu.classList.remove('active');
+        }
+    });
+}
+
+async function loadRecommendedCourses() {
+    try {
+        const response = await fetch('{{ url("courses:api_courses_list") }}');
+        const data = await response.json();
+        
+        const container = document.getElementById('recommendedCourses');
+        container.innerHTML = '';
+        
+        if (data.courses && data.courses.length > 0) {
+            data.courses.slice(0, 3).forEach(course => {
+                const courseCard = createRecommendedCourseCard(course);
+                container.appendChild(courseCard);
+            });
+        } else {
+            container.innerHTML = '<p>No recommended courses available at the moment.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading recommended courses:', error);
+        document.querySelector('.explore-courses').style.display = 'none';
+    }
+}
+
+function createRecommendedCourseCard(course) {
+    const card = document.createElement('div');
+    card.className = 'course-card recommended';
+    card.innerHTML = `
+        <div class="course-image">
+            <img src="${course.imageUrl || 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'}" alt="${course.title}">
+        </div>
+        <div class="course-content">
+            <h3 class="course-title">${course.title}</h3>
+            <p class="course-description">${course.description}</p>
+            <div class="course-meta">
+                <span><i class="fas fa-clock"></i> ${course.duration}</span>
+                <span><i class="fas fa-layer-group"></i> ${course.moduleCount} modules</span>
+                ${course.isFree ? '<span class="free-badge">Free</span>' : `<span class="price">$${course.price}</span>`}
+            </div>
+            <a href="/courses/${course.id}/" class="btn-secondary">View Course</a>
+        </div>
+    `;
+    return card;
+}
+</script>
+{% endblock %}

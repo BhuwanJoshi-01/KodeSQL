@@ -1,0 +1,351 @@
+/* Dashboard Styles */
+
+.dashboard-container {
+    padding: 2rem 0;
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-title h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.stat-icon.success {
+    background-color: var(--success-bg);
+    color: var(--success-color);
+}
+
+.stat-icon.warning {
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
+}
+
+.stat-icon.info {
+    background-color: var(--info-bg);
+    color: var(--info-color);
+}
+
+.stat-icon .material-icons {
+    font-size: 24px;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+    gap: 2rem;
+}
+
+.dashboard-section {
+    min-height: 400px;
+}
+
+.dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Recent Queries */
+.recent-queries {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.query-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.query-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.query-item:last-child {
+    border-bottom: none;
+}
+
+.query-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.query-text {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    background-color: var(--code-bg);
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--code-border);
+}
+
+.query-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+}
+
+.query-time {
+    color: var(--text-secondary);
+}
+
+.query-status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+}
+
+.query-status.success {
+    color: var(--success-color);
+}
+
+.query-status.error {
+    color: var(--error-color);
+}
+
+.query-status .material-icons {
+    font-size: 16px;
+}
+
+/* Progress */
+.progress-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+}
+
+.progress-fill.success {
+    background-color: var(--success-color);
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.action-item:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-hover);
+    transform: translateX(4px);
+}
+
+.action-item .material-icons {
+    color: var(--primary-color);
+    font-size: 24px;
+}
+
+.action-content {
+    flex: 1;
+}
+
+.action-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.action-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state .material-icons {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem 0;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    
+    .dashboard-title h1 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-content {
+        gap: 1.5rem;
+    }
+    
+    .dashboard-sidebar {
+        gap: 1rem;
+    }
+    
+    .query-text {
+        font-size: 0.75rem;
+        word-break: break-all;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .action-item {
+        padding: 0.75rem;
+    }
+    
+    .action-item .material-icons {
+        font-size: 20px;
+    }
+    
+    .progress-label {
+        font-size: 0.75rem;
+    }
+}

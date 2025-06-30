@@ -1,0 +1,244 @@
+{% extends "admin_base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+{{ form.media.css }}
+<style>
+.formset-form {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--card-bg);
+}
+
+.formset-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.delete-checkbox {
+    color: #dc3545;
+}
+
+.add-form-btn {
+    margin-top: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dynamic formset
+    const addButton = document.getElementById('add-lesson-form');
+    const formsetContainer = document.getElementById('lesson-formset');
+    let formCount = parseInt(document.getElementById('id_lessons-TOTAL_FORMS').value);
+    
+    if (addButton) {
+        addButton.addEventListener('click', function() {
+            const emptyForm = document.getElementById('empty-lesson-form').innerHTML;
+            const newForm = emptyForm.replace(/__prefix__/g, formCount);
+            
+            const div = document.createElement('div');
+            div.innerHTML = newForm;
+            formsetContainer.appendChild(div.firstElementChild);
+            
+            formCount++;
+            document.getElementById('id_lessons-TOTAL_FORMS').value = formCount;
+        });
+    }
+    
+    // Handle delete buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-form-btn')) {
+            e.preventDefault();
+            const form = e.target.closest('.formset-form');
+            const deleteCheckbox = form.querySelector('input[name$="-DELETE"]');
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = true;
+                form.style.opacity = '0.5';
+                form.style.textDecoration = 'line-through';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h1 class="admin-title">
+        <span class="material-icons">school</span>
+        {% if is_edit %}Edit Tutorial{% else %}Create Tutorial{% endif %}
+    </h1>
+    <div class="admin-actions">
+        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+            <span class="material-icons">arrow_back</span>
+            Back to List
+        </a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    
+    <div class="admin-card">
+        <h3>Tutorial Information</h3>
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.help_text %}
+                <div class="help-text">{{ form.title.help_text }}</div>
+            {% endif %}
+            {% if form.title.errors %}
+                <div class="error-text">{{ form.title.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.help_text %}
+                <div class="help-text">{{ form.description.help_text }}</div>
+            {% endif %}
+            {% if form.description.errors %}
+                <div class="error-text">{{ form.description.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
+                {{ form.difficulty }}
+                {% if form.difficulty.errors %}
+                    <div class="error-text">{{ form.difficulty.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.icon.id_for_label }}">{{ form.icon.label }}</label>
+                {{ form.icon }}
+                {% if form.icon.help_text %}
+                    <div class="help-text">{{ form.icon.help_text }}</div>
+                {% endif %}
+                {% if form.icon.errors %}
+                    <div class="error-text">{{ form.icon.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.thumbnail.id_for_label }}">{{ form.thumbnail.label }}</label>
+                {{ form.thumbnail }}
+                {% if form.thumbnail.help_text %}
+                    <div class="help-text">{{ form.thumbnail.help_text }}</div>
+                {% endif %}
+                {% if form.thumbnail.errors %}
+                    <div class="error-text">{{ form.thumbnail.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                {{ form.order }}
+                {% if form.order.help_text %}
+                    <div class="help-text">{{ form.order.help_text }}</div>
+                {% endif %}
+                {% if form.order.errors %}
+                    <div class="error-text">{{ form.order.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="form-check">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+            </div>
+            {% if form.is_active.errors %}
+                <div class="error-text">{{ form.is_active.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if not is_edit %}
+        <div class="admin-card">
+            <h3>Lessons</h3>
+            <p class="help-text">Add lessons to your tutorial. You can also add lessons later.</p>
+            
+            <div id="lesson-formset">
+                {{ formset.management_form }}
+                {% for lesson_form in formset %}
+                    <div class="formset-form">
+                        <div class="formset-header">
+                            <h4>Lesson {{ forloop.counter }}</h4>
+                            {% if lesson_form.instance.pk %}
+                                <button type="button" class="admin-btn danger delete-form-btn">
+                                    <span class="material-icons">delete</span>
+                                    Delete
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        {% for field in lesson_form.visible_fields %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="help-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="error-text">{{ field.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        {% for field in lesson_form.hidden_fields %}
+                            {{ field }}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <button type="button" id="add-lesson-form" class="admin-btn secondary add-form-btn">
+                <span class="material-icons">add</span>
+                Add Another Lesson
+            </button>
+        </div>
+        
+        <div id="empty-lesson-form" style="display: none;">
+            <div class="formset-form">
+                <div class="formset-header">
+                    <h4>New Lesson</h4>
+                    <button type="button" class="admin-btn danger delete-form-btn">
+                        <span class="material-icons">delete</span>
+                        Delete
+                    </button>
+                </div>
+                {{ formset.empty_form }}
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="admin-actions" style="margin-top: 2rem;">
+        <button type="submit" class="admin-btn">
+            <span class="material-icons">save</span>
+            {% if is_edit %}Update Tutorial{% else %}Create Tutorial{% endif %}
+        </button>
+        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+            <span class="material-icons">cancel</span>
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

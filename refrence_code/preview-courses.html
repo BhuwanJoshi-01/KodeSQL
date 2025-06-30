@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses - Learning Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="courses-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Mock data styles for preview only */
+        .auth-mock {
+            display: none;
+        }
+        .preview-notice {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        body {
+            padding-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-notice">
+        Preview Mode - This is a static preview with mock data
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Learning Platform</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#" class="active">Courses</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="user-profile" data-auth-state="authenticated">
+                <div class="profile-icon" id="profileIcon">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Profile" id="profileImage" data-user-profile="picture">
+                </div>
+                <div class="dropdown-menu" id="profileDropdown">
+                    <ul>
+                        <li><a href="#">My Profile</a></li>
+                        <li><a href="#" class="active">My Courses</a></li>
+                        <li><a href="#">Settings</a></li>
+                        <li><a href="#" id="logoutBtn">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="auth-buttons auth-mock" data-auth-state="unauthenticated" id="authButtons">
+                <button id="loginBtn" onclick="window.location.href='login.html'">Login</button>
+                <button id="registerBtn" class="btn-primary" onclick="window.location.href='register.html'">Register</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="courses-section">
+            <div class="container">
+                <div class="courses-header">
+                    <h2>My Courses</h2>
+                    <div class="courses-actions">
+                        <div class="search-bar">
+                            <input type="text" id="courseSearch" placeholder="Search my courses...">
+                            <button><i class="fas fa-search"></i></button>
+                        </div>
+                        <div class="filter-dropdown">
+                            <button class="filter-btn">Filter <i class="fas fa-chevron-down"></i></button>
+                            <div class="filter-menu">
+                                <label><input type="checkbox" value="in-progress" checked> In Progress</label>
+                                <label><input type="checkbox" value="completed" checked> Completed</label>
+                                <label><input type="checkbox" value="not-started" checked> Not Started</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="courses-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalCourses">5</h3>
+                            <p>Total Courses</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="inProgressCourses">2</h3>
+                            <p>In Progress</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="completedCourses">2</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-certificate"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="certificatesEarned">1</h3>
+                            <p>Certificates</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="courses-container" id="coursesContainer">
+                    <!-- Mock Course Cards for Preview -->
+                    <div class="course-card completed">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="SQL Fundamentals">
+                            <div class="course-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%"></div>
+                                </div>
+                                <span class="progress-text">100% Complete</span>
+                            </div>
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">SQL Fundamentals</h3>
+                            <p class="course-description">Learn the basics of SQL including queries, joins, and database management. This course covers everything you need to know to get started with SQL.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> <span class="course-duration">10h</span></span>
+                                <span><i class="fas fa-layer-group"></i> <span class="course-modules">8</span> modules</span>
+                                <span><i class="fas fa-graduation-cap"></i> <span class="course-level">Beginner</span></span>
+                            </div>
+                            <div class="course-actions">
+                                <a href="#" class="btn-primary continue-btn">View Certificate</a>
+                                <a href="#" class="btn-secondary details-btn">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-card in-progress">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Advanced SQL">
+                            <div class="course-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 65%"></div>
+                                </div>
+                                <span class="progress-text">65% Complete</span>
+                            </div>
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">Advanced SQL Techniques</h3>
+                            <p class="course-description">Take your SQL skills to the next level with advanced techniques including window functions, CTEs, and performance optimization strategies.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> <span class="course-duration">15h</span></span>
+                                <span><i class="fas fa-layer-group"></i> <span class="course-modules">12</span> modules</span>
+                                <span><i class="fas fa-graduation-cap"></i> <span class="course-level">Intermediate</span></span>
+                            </div>
+                            <div class="course-actions">
+                                <a href="#" class="btn-primary continue-btn">Continue Learning</a>
+                                <a href="#" class="btn-secondary details-btn">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-card in-progress">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Database Design">
+                            <div class="course-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 30%"></div>
+                                </div>
+                                <span class="progress-text">30% Complete</span>
+                            </div>
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">Database Design Principles</h3>
+                            <p class="course-description">Learn how to design efficient, scalable, and maintainable database schemas. This course covers normalization, indexing, and best practices.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> <span class="course-duration">12h</span></span>
+                                <span><i class="fas fa-layer-group"></i> <span class="course-modules">10</span> modules</span>
+                                <span><i class="fas fa-graduation-cap"></i> <span class="course-level">Intermediate</span></span>
+                            </div>
+                            <div class="course-actions">
+                                <a href="#" class="btn-primary continue-btn">Continue Learning</a>
+                                <a href="#" class="btn-secondary details-btn">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-card completed">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1599658880436-c61792e70672?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="SQL for Data Science">
+                            <div class="course-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%"></div>
+                                </div>
+                                <span class="progress-text">100% Complete</span>
+                            </div>
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">SQL for Data Science</h3>
+                            <p class="course-description">Learn how to use SQL for data analysis, data cleaning, and data visualization. This course is perfect for aspiring data scientists.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> <span class="course-duration">18h</span></span>
+                                <span><i class="fas fa-layer-group"></i> <span class="course-modules">15</span> modules</span>
+                                <span><i class="fas fa-graduation-cap"></i> <span class="course-level">Advanced</span></span>
+                            </div>
+                            <div class="course-actions">
+                                <a href="#" class="btn-primary continue-btn">View Certificate</a>
+                                <a href="#" class="btn-secondary details-btn">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="course-card not-started">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2015&q=80" alt="Performance Tuning">
+                            <div class="course-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                                <span class="progress-text">0% Complete</span>
+                            </div>
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">SQL Performance Tuning</h3>
+                            <p class="course-description">Master the art of optimizing SQL queries for maximum performance. Learn about execution plans, indexing strategies, and query optimization.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> <span class="course-duration">14h</span></span>
+                                <span><i class="fas fa-layer-group"></i> <span class="course-modules">12</span> modules</span>
+                                <span><i class="fas fa-graduation-cap"></i> <span class="course-level">Advanced</span></span>
+                            </div>
+                            <div class="course-actions">
+                                <a href="#" class="btn-primary continue-btn">Start Learning</a>
+                                <a href="#" class="btn-secondary details-btn">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="explore-courses">
+            <div class="container">
+                <h2>Explore More Courses</h2>
+                <p>Discover new courses to enhance your skills and knowledge</p>
+                <div class="recommended-courses" id="recommendedCourses">
+                    <!-- Mock Recommended Courses -->
+                    <div class="course-card">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80" alt="NoSQL Databases">
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">NoSQL Databases</h3>
+                            <p class="course-description">Explore non-relational databases including MongoDB, Cassandra, and Redis. Learn when and how to use NoSQL solutions.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> 16h</span>
+                                <span><i class="fas fa-layer-group"></i> 14 modules</span>
+                            </div>
+                            <a href="#" class="btn-secondary">View Course</a>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Data Warehousing">
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">Data Warehousing Fundamentals</h3>
+                            <p class="course-description">Learn how to design and implement data warehouses for business intelligence and analytics applications.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> 20h</span>
+                                <span><i class="fas fa-layer-group"></i> 16 modules</span>
+                            </div>
+                            <a href="#" class="btn-secondary">View Course</a>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card">
+                        <div class="course-image">
+                            <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2034&q=80" alt="Database Security">
+                        </div>
+                        <div class="course-content">
+                            <h3 class="course-title">Database Security</h3>
+                            <p class="course-description">Master the essential security practices for protecting your databases from threats and vulnerabilities.</p>
+                            <div class="course-meta">
+                                <span><i class="fas fa-clock"></i> 12h</span>
+                                <span><i class="fas fa-layer-group"></i> 10 modules</span>
+                            </div>
+                            <a href="#" class="btn-secondary">View Course</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="explore-action">
+                    <a href="#" class="btn-primary">Browse All Courses</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Learning Platform</h2>
+                    <p>Expand your knowledge with our courses</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Courses</a></li>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-envelope"></i> info@learningplatform.com</p>
+                    <p><i class="fas fa-phone"></i> +1 (123) 456-7890</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Learning Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script>
+        // Simple preview script for dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AUTH UI if available
+            if (window.AUTH) {
+                window.AUTH.updateUI();
+            }
+            
+            // Profile dropdown
+            const profileIcon = document.getElementById('profileIcon');
+            const profileDropdown = document.getElementById('profileDropdown');
+            
+            if (profileIcon && profileDropdown) {
+                profileIcon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('active');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!profileDropdown.contains(e.target) && !profileIcon.contains(e.target)) {
+                        profileDropdown.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Logout functionality
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn && window.AUTH) {
+                logoutBtn.addEventListener('click', function() {
+                    window.AUTH.logout();
+                });
+            }
+            
+            // Filter dropdown
+            const filterBtn = document.querySelector('.filter-btn');
+            const filterMenu = document.querySelector('.filter-menu');
+            
+            if (filterBtn && filterMenu) {
+                filterBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    filterMenu.classList.toggle('active');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.filter-dropdown') && filterMenu.classList.contains('active')) {
+                        filterMenu.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
