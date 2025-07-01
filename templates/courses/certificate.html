@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}Certificate - {{ certificate.course_title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
 <style>
 .certificate-container {
     max-width: 800px;
@@ -228,7 +227,7 @@
         <div class="certificate-footer">
             <div class="certificate-date">
                 <strong>Date of Completion</strong>
-                <span>{{ certificate.completion_date|date:"F d, Y" }}</span>
+                <span>{{ certificate.completion_date.strftime('%B %d, %Y') }}</span>
             </div>
             
             <div class="certificate-signature">
@@ -249,7 +248,7 @@
         <button onclick="downloadCertificate()" class="print-btn">
             <i class="fas fa-download"></i> Download PDF
         </button>
-        <a href="{% url 'courses:my_courses' %}" class="print-btn" style="text-decoration: none; display: inline-block;">
+        <a href="{{ url('courses:my_courses') }}" class="print-btn" style="text-decoration: none; display: inline-block;">
             <i class="fas fa-arrow-left"></i> Back to My Courses
         </a>
     </div>

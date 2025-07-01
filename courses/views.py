@@ -3,6 +3,7 @@ from django.http import JsonResponse, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.db import models
 from django.db.models import Count, Q, Avg, Prefetch, Sum
@@ -10,14 +11,18 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils.text import slugify
+from django.conf import settings
+from django.middleware.csrf import get_token
 from decimal import Decimal
 import json
+import stripe
+import uuid
 
 from .models import (
     Course, CourseModule, CourseLesson, UserCourseEnrollment,
-    CourseReview, CourseCertificate, CoursePayment
+    CourseReview, CourseCertificate, CoursePayment, SubscriptionPlan, UserSubscription
 )
-from .forms import CourseForm, CourseModuleForm, CourseLessonForm, CourseFilterForm
+from .forms import CourseForm, CourseModuleForm, CourseLessonForm, CourseFilterForm, SubscriptionPlanForm
 
 
 def courses_list(request):
@@ -369,7 +374,7 @@ def api_lesson_complete(request, lesson_id):
 @login_required
 def course_enroll(request, slug):
     """
-    Course enrollment page.
+    Course enrollment page with Razorpay integration.
     """
     course = get_object_or_404(Course, slug=slug, status='published')
 
@@ -402,18 +407,8 @@ def course_enroll(request, slug):
             messages.success(request, f'Successfully enrolled in {course.title}!')
             return redirect('courses:course_detail', slug=course.slug)
         else:
-            # For paid courses, redirect to payment
-            enrollment, created = UserCourseEnrollment.objects.get_or_create(
-                user=request.user,
-                course=course,
-                defaults={
-                    'status': 'pending',
-                    'amount_paid': 0.00,
-                }
-            )
-
-            messages.info(request, 'Please complete payment to access the course.')
-            return redirect('courses:course_detail', slug=course.slug)
+            # For paid courses, redirect to subscription plans
+            return redirect('courses:subscription_plans', slug=course.slug)
 
     context = {
         'page_title': f'Enroll in {course.title}',
@@ -565,3 +560,538 @@ def admin_course_delete(request, slug):
     course.delete()
     messages.success(request, f'Course "{course_title}" deleted successfully!')
     return redirect('courses:admin_courses_list')
+
+
+# Payment Views
+@login_required
+def payment_page(request, payment_id):
+    """
+    Stripe payment page.
+    """
+    payment = get_object_or_404(CoursePayment, id=payment_id, enrollment__user=request.user)
+
+    if payment.status != 'pending':
+        messages.info(request, 'This payment has already been processed.')
+        return redirect('courses:course_detail', slug=payment.enrollment.course.slug)
+
+    # Get the client secret from the payment intent
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    intent = stripe.PaymentIntent.retrieve(payment.transaction_id)
+
+    context = {
+        'page_title': f'Payment - {payment.enrollment.course.title}',
+        'payment': payment,
+        'course': payment.enrollment.course,
+        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
+        'client_secret': intent.client_secret,
+        'amount_in_cents': int(float(payment.amount) * 100),
+    }
+    return render(request, 'courses/payment.html', context)
+
+
+@login_required
+def payment_success(request):
+    """
+    Handle successful Stripe payment (both GET and POST).
+    """
+    try:
+        # Get payment intent ID from request (GET or POST)
+        payment_intent_id = request.GET.get('payment_intent') or request.POST.get('payment_intent_id')
+
+        if not payment_intent_id:
+            messages.error(request, 'Invalid payment data received.')
+            return redirect('courses:courses_list')
+
+        # Find the payment record
+        payment = get_object_or_404(
+            CoursePayment,
+            transaction_id=payment_intent_id,
+            enrollment__user=request.user
+        )
+
+        # Check if payment is already processed
+        if payment.status == 'completed':
+            messages.info(request, f'You are already enrolled in {payment.enrollment.course.title}.')
+            return redirect('courses:course_detail', slug=payment.enrollment.course.slug)
+
+        # Verify payment with Stripe
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+        if intent.status == 'succeeded':
+            # Payment is valid, update records
+            payment.status = 'completed'
+            payment.completed_at = timezone.now()
+            payment.gateway_response = intent
+            payment.save()
+
+            # Update enrollment
+            enrollment = payment.enrollment
+            enrollment.status = 'active'
+            enrollment.amount_paid = payment.amount
+            enrollment.payment_method = 'stripe'
+            enrollment.payment_reference = payment_intent_id
+            enrollment.save()
+
+            # Check if this is a subscription payment
+            subscription_id = intent.metadata.get('subscription_id')
+            if subscription_id:
+                try:
+                    subscription = UserSubscription.objects.get(id=subscription_id)
+                    subscription.activate()
+                    subscription.payment_reference = payment_intent_id
+                    subscription.save()
+
+                    messages.success(request, f'Subscription activated! You now have {subscription.plan.name} access to {enrollment.course.title}.')
+                except UserSubscription.DoesNotExist:
+                    messages.success(request, f'Payment successful! You are now enrolled in {enrollment.course.title}.')
+            else:
+                messages.success(request, f'Payment successful! You are now enrolled in {enrollment.course.title}.')
+
+            return redirect('courses:course_detail', slug=enrollment.course.slug)
+        else:
+            messages.error(request, 'Payment was not successful. Please try again.')
+            return redirect('courses:courses_list')
+
+    except Exception as e:
+        messages.error(request, f'Payment processing failed: {str(e)}')
+        return redirect('courses:courses_list')
+
+
+@login_required
+def payment_failed(request):
+    """
+    Handle failed Stripe payment.
+    """
+    payment_intent_id = request.GET.get('payment_intent_id')
+
+    if payment_intent_id:
+        try:
+            payment = CoursePayment.objects.get(
+                transaction_id=payment_intent_id,
+                enrollment__user=request.user
+            )
+            payment.status = 'failed'
+            payment.save()
+
+            course_title = payment.enrollment.course.title
+            messages.error(request, f'Payment failed for {course_title}. Please try again.')
+            return redirect('courses:course_detail', slug=payment.enrollment.course.slug)
+
+        except CoursePayment.DoesNotExist:
+            pass
+
+    messages.error(request, 'Payment failed. Please try again.')
+    return redirect('courses:courses_list')
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook(request):
+    """
+    Handle Stripe webhooks for payment status updates.
+    """
+    try:
+        payload = request.body
+        sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+
+        # Verify webhook signature if secret is configured
+        if settings.STRIPE_WEBHOOK_SECRET:
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+            )
+        else:
+            # For development without webhook secret
+            event = json.loads(payload)
+
+        # Handle the event
+        if event['type'] == 'payment_intent.succeeded':
+            # Handle successful payment
+            payment_intent = event['data']['object']
+            payment_intent_id = payment_intent['id']
+
+            try:
+                payment = CoursePayment.objects.get(transaction_id=payment_intent_id)
+                if payment.status == 'pending':
+                    payment.status = 'completed'
+                    payment.completed_at = timezone.now()
+                    payment.gateway_response = payment_intent
+                    payment.save()
+
+                    # Update enrollment
+                    enrollment = payment.enrollment
+                    enrollment.status = 'active'
+                    enrollment.amount_paid = payment.amount
+                    enrollment.save()
+
+            except CoursePayment.DoesNotExist:
+                pass
+
+        elif event['type'] == 'payment_intent.payment_failed':
+            # Handle failed payment
+            payment_intent = event['data']['object']
+            payment_intent_id = payment_intent['id']
+
+            try:
+                payment = CoursePayment.objects.get(transaction_id=payment_intent_id)
+                payment.status = 'failed'
+                payment.gateway_response = payment_intent
+                payment.save()
+
+            except CoursePayment.DoesNotExist:
+                pass
+
+        return JsonResponse({'status': 'success'})
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+# Subscription Views
+@login_required
+def subscription_plans(request, slug):
+    """
+    Display subscription plans for a course.
+    """
+    course = get_object_or_404(Course, slug=slug, status='published')
+
+    # Check if user is already enrolled
+    existing_enrollment = UserCourseEnrollment.objects.filter(
+        user=request.user,
+        course=course,
+        status__in=['active', 'completed']
+    ).first()
+
+    if existing_enrollment:
+        messages.info(request, 'You are already enrolled in this course.')
+        return redirect('courses:course_detail', slug=course.slug)
+
+    # Get subscription plans for this course
+    subscription_plans = SubscriptionPlan.objects.filter(
+        course=course,
+        is_active=True
+    ).order_by('sort_order', 'price')
+
+    if not subscription_plans.exists():
+        messages.error(request, 'No subscription plans available for this course.')
+        return redirect('courses:course_detail', slug=course.slug)
+
+    context = {
+        'page_title': f'Choose Your Plan - {course.title}',
+        'course': course,
+        'subscription_plans': subscription_plans,
+    }
+    return render(request, 'courses/subscription_plans.html', context)
+
+
+@login_required
+def subscription_checkout(request, course_slug, plan_id):
+    """
+    Handle subscription checkout with selected plan.
+    """
+    course = get_object_or_404(Course, slug=course_slug, status='published')
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id, course=course, is_active=True)
+
+    # Check if user is already enrolled with active status
+    existing_enrollment = UserCourseEnrollment.objects.filter(
+        user=request.user,
+        course=course,
+        status__in=['active', 'completed']
+    ).first()
+
+    if existing_enrollment:
+        messages.info(request, 'You are already enrolled in this course.')
+        return redirect('courses:course_detail', slug=course.slug)
+
+    # Check if user already has a subscription for this course (any plan)
+    existing_subscription = UserSubscription.objects.filter(
+        user=request.user,
+        course=course,
+        status__in=['active', 'pending']
+    ).first()
+
+    if existing_subscription:
+        if existing_subscription.status == 'pending':
+            messages.info(request, 'You have a pending payment for this course. Please complete the payment.')
+            # Find the payment record and redirect to payment page
+            payment = CoursePayment.objects.filter(
+                enrollment__user=request.user,
+                enrollment__course=course,
+                status='pending'
+            ).first()
+            if payment:
+                return redirect('courses:payment_page', payment_id=payment.id)
+        else:
+            messages.info(request, 'You already have an active subscription for this course.')
+            return redirect('courses:course_detail', slug=course.slug)
+
+    # Create or get enrollment (update existing pending ones)
+    enrollment, created = UserCourseEnrollment.objects.get_or_create(
+        user=request.user,
+        course=course,
+        defaults={
+            'status': 'pending',
+            'amount_paid': 0.00,
+        }
+    )
+
+    # If enrollment exists but is not pending, update it
+    if not created and enrollment.status not in ['pending']:
+        enrollment.status = 'pending'
+        enrollment.amount_paid = 0.00
+        enrollment.save()
+
+    # Check if enrollment already has an active subscription for this plan
+    existing_enrollment_subscription = UserSubscription.objects.filter(
+        enrollment=enrollment,
+        plan=plan,
+        status__in=['active', 'pending']
+    ).first()
+
+    if existing_enrollment_subscription:
+        # Update existing subscription instead of creating new one
+        existing_enrollment_subscription.status = 'pending'
+        existing_enrollment_subscription.amount_paid = plan.effective_price
+        existing_enrollment_subscription.start_date = timezone.now()
+        existing_enrollment_subscription.save()
+        subscription = existing_enrollment_subscription
+    else:
+        # Create new subscription
+        subscription = UserSubscription.objects.create(
+            user=request.user,
+            course=course,
+            plan=plan,
+            enrollment=enrollment,
+            start_date=timezone.now(),
+            status='pending',
+            amount_paid=plan.effective_price,
+        )
+
+    # Create Stripe payment intent
+    try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+
+        # Convert price to cents (Stripe uses smallest currency unit)
+        amount_in_cents = int(float(plan.effective_price) * 100)
+
+        # Create payment intent
+        intent = stripe.PaymentIntent.create(
+            amount=amount_in_cents,
+            currency=settings.STRIPE_CURRENCY,
+            metadata={
+                'course_id': course.id,
+                'user_id': request.user.id,
+                'enrollment_id': enrollment.id,
+                'subscription_id': subscription.id,
+                'plan_id': plan.id,
+            },
+            description=f'Subscription: {plan.name} - {course.title}',
+        )
+
+        # Create payment record
+        payment = CoursePayment.objects.create(
+            enrollment=enrollment,
+            amount=plan.effective_price,
+            currency=settings.STRIPE_CURRENCY.upper(),
+            payment_method='stripe',
+            status='pending',
+            transaction_id=intent.id,
+            gateway_response=intent
+        )
+
+        # Redirect to payment page
+        return redirect('courses:payment_page', payment_id=payment.id)
+
+    except Exception as e:
+        # Clean up created records on error (only if they were newly created)
+        try:
+            if 'subscription' in locals() and subscription and subscription.status == 'pending':
+                subscription.delete()
+            if created and enrollment and enrollment.status == 'pending':
+                enrollment.delete()
+        except:
+            pass  # Ignore cleanup errors
+        messages.error(request, f'Payment initialization failed: {str(e)}')
+        return redirect('courses:subscription_plans', slug=course.slug)
+
+
+# Subscription Plan Admin Views (Staff Only)
+@staff_member_required
+def admin_subscription_plans_list(request):
+    """
+    Admin subscription plan management list.
+    """
+    plans = SubscriptionPlan.objects.select_related('course').annotate(
+        subscription_count=Count('subscriptions', filter=Q(subscriptions__status='active'))
+    ).order_by('-created_at')
+
+    # Apply filters
+    search = request.GET.get('search')
+    if search:
+        plans = plans.filter(
+            Q(name__icontains=search) |
+            Q(course__title__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    plan_type_filter = request.GET.get('plan_type')
+    if plan_type_filter:
+        plans = plans.filter(plan_type=plan_type_filter)
+
+    duration_filter = request.GET.get('duration')
+    if duration_filter:
+        plans = plans.filter(duration=duration_filter)
+
+    is_active_filter = request.GET.get('is_active')
+    if is_active_filter:
+        plans = plans.filter(is_active=is_active_filter == 'true')
+
+    # Pagination
+    paginator = Paginator(plans, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get statistics
+    total_plans = SubscriptionPlan.objects.count()
+    active_plans = SubscriptionPlan.objects.filter(is_active=True).count()
+    global_plans = SubscriptionPlan.objects.filter(plan_type='global').count()
+    course_specific_plans = SubscriptionPlan.objects.filter(plan_type='course_specific').count()
+
+    context = {
+        'page_title': 'Manage Subscription Plans',
+        'plans': page_obj,
+        'search': search,
+        'plan_type_filter': plan_type_filter,
+        'duration_filter': duration_filter,
+        'is_active_filter': is_active_filter,
+        'total_plans': total_plans,
+        'active_plans': active_plans,
+        'global_plans': global_plans,
+        'course_specific_plans': course_specific_plans,
+    }
+    return render(request, 'courses/admin/subscription_plans_list.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_create(request):
+    """
+    Create new subscription plan (admin).
+    """
+    if request.method == 'POST':
+        form = SubscriptionPlanForm(request.POST)
+        if form.is_valid():
+            plan = form.save()
+            messages.success(request, f'Subscription plan "{plan.name}" created successfully!')
+            return redirect('courses:admin_subscription_plan_detail', plan_id=plan.id)
+    else:
+        form = SubscriptionPlanForm()
+
+    context = {
+        'page_title': 'Create Subscription Plan',
+        'form': form,
+        'csrf_token': get_token(request),
+    }
+    return render(request, 'courses/admin/subscription_plan_form.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_detail(request, plan_id):
+    """
+    Admin subscription plan detail view.
+    """
+    plan = get_object_or_404(
+        SubscriptionPlan.objects.select_related('course').prefetch_related(
+            'subscriptions__user',
+            'subscriptions__enrollment'
+        ),
+        id=plan_id
+    )
+
+    # Get plan statistics
+    total_subscriptions = plan.subscriptions.count()
+    active_subscriptions = plan.subscriptions.filter(status='active').count()
+    expired_subscriptions = plan.subscriptions.filter(status='expired').count()
+    total_revenue = plan.subscriptions.filter(status='active').aggregate(
+        total=models.Sum('amount_paid')
+    )['total'] or 0
+
+    # Get recent subscriptions
+    recent_subscriptions = plan.subscriptions.select_related('user', 'course').order_by('-created_at')[:10]
+
+    context = {
+        'page_title': f'Manage Plan: {plan.name}',
+        'plan': plan,
+        'total_subscriptions': total_subscriptions,
+        'active_subscriptions': active_subscriptions,
+        'expired_subscriptions': expired_subscriptions,
+        'total_revenue': total_revenue,
+        'recent_subscriptions': recent_subscriptions,
+    }
+    return render(request, 'courses/admin/subscription_plan_detail.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_edit(request, plan_id):
+    """
+    Edit subscription plan (admin).
+    """
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+
+    if request.method == 'POST':
+        form = SubscriptionPlanForm(request.POST, instance=plan)
+        if form.is_valid():
+            plan = form.save()
+            messages.success(request, f'Subscription plan "{plan.name}" updated successfully!')
+            return redirect('courses:admin_subscription_plan_detail', plan_id=plan.id)
+    else:
+        form = SubscriptionPlanForm(instance=plan)
+
+    context = {
+        'page_title': f'Edit Plan: {plan.name}',
+        'form': form,
+        'plan': plan,
+        'csrf_token': get_token(request),
+    }
+    return render(request, 'courses/admin/subscription_plan_form.html', context)
+
+
+@staff_member_required
+@require_POST
+def admin_subscription_plan_delete(request, plan_id):
+    """
+    Delete subscription plan (admin).
+    """
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+
+    # Check if plan has active subscriptions
+    active_subscriptions = plan.subscriptions.filter(status='active').count()
+    if active_subscriptions > 0:
+        messages.error(request, f'Cannot delete plan "{plan.name}" because it has {active_subscriptions} active subscriptions.')
+        return redirect('courses:admin_subscription_plan_detail', plan_id=plan.id)
+
+    plan_name = plan.name
+    plan.delete()
+    messages.success(request, f'Subscription plan "{plan_name}" deleted successfully!')
+    return redirect('courses:admin_subscription_plans_list')
+
+
+@staff_member_required
+def admin_subscription_plan_confirm_delete(request, plan_id):
+    """
+    Confirm subscription plan deletion (admin).
+    """
+    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+
+    # Check if plan has active subscriptions
+    active_subscriptions = plan.subscriptions.filter(status='active').count()
+    total_subscriptions = plan.subscriptions.count()
+
+    context = {
+        'page_title': f'Delete Plan: {plan.name}',
+        'plan': plan,
+        'active_subscriptions': active_subscriptions,
+        'total_subscriptions': total_subscriptions,
+        'can_delete': active_subscriptions == 0,
+    }
+    return render(request, 'courses/admin/subscription_plan_confirm_delete.html', context)

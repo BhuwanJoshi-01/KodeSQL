@@ -1,0 +1,244 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Manage Subscription Plans - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">card_membership</span>
+                Manage Subscription Plans
+            </h1>
+            <div class="admin-actions">
+                <a href="{{ url('courses:admin_subscription_plan_create') }}" class="btn-primary">
+                    <span class="material-icons">add</span>
+                    Create Subscription Plan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <!-- Statistics Cards -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">card_membership</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_plans }}</h3>
+                <p>Total Plans</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">check_circle</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ active_plans }}</h3>
+                <p>Active Plans</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">public</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ global_plans }}</h3>
+                <p>Global Plans</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">school</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ course_specific_plans }}</h3>
+                <p>Course-Specific Plans</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-filters">
+        <form method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search">Search:</label>
+                    <input type="text" id="search" name="search" value="{{ search }}" 
+                           placeholder="Search plans, courses, descriptions..." class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="plan_type">Plan Type:</label>
+                    <select id="plan_type" name="plan_type" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="global" {% if plan_type_filter == 'global' %}selected{% endif %}>Global</option>
+                        <option value="course_specific" {% if plan_type_filter == 'course_specific' %}selected{% endif %}>Course Specific</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="duration">Duration:</label>
+                    <select id="duration" name="duration" class="form-control">
+                        <option value="">All Durations</option>
+                        <option value="1_month" {% if duration_filter == '1_month' %}selected{% endif %}>1 Month</option>
+                        <option value="3_months" {% if duration_filter == '3_months' %}selected{% endif %}>3 Months</option>
+                        <option value="unlimited" {% if duration_filter == 'unlimited' %}selected{% endif %}>Unlimited</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="is_active">Status:</label>
+                    <select id="is_active" name="is_active" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="true" {% if is_active_filter == 'true' %}selected{% endif %}>Active</option>
+                        <option value="false" {% if is_active_filter == 'false' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-secondary">
+                        <span class="material-icons">search</span>
+                        Filter
+                    </button>
+                    <a href="{{ url('courses:admin_subscription_plans_list') }}" class="btn-outline">
+                        <span class="material-icons">clear</span>
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Plans List -->
+    <div class="admin-content-section">
+        {% if plans %}
+            <div class="plans-grid">
+                {% for plan in plans %}
+                    <div class="plan-card {% if not plan.is_active %}inactive{% endif %}">
+                        <div class="plan-header">
+                            <div class="plan-title">
+                                <h3>
+                                    <a href="{{ url('courses:admin_subscription_plan_detail', plan.id) }}">
+                                        {{ plan.name }}
+                                    </a>
+                                    {% if plan.is_recommended %}
+                                        <span class="badge badge-recommended">Recommended</span>
+                                    {% endif %}
+                                </h3>
+                                <div class="plan-meta">
+                                    <span class="plan-type">{{ plan.get_plan_type_display }}</span>
+                                    <span class="plan-duration">{{ plan.get_duration_display }}</span>
+                                </div>
+                            </div>
+                            <div class="plan-status">
+                                {% if plan.is_active %}
+                                    <span class="status-badge active">Active</span>
+                                {% else %}
+                                    <span class="status-badge inactive">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="plan-content">
+                            <div class="plan-course">
+                                {% if plan.course %}
+                                    <span class="material-icons">school</span>
+                                    {{ plan.course.title }}
+                                {% else %}
+                                    <span class="material-icons">public</span>
+                                    All Courses
+                                {% endif %}
+                            </div>
+
+                            <div class="plan-pricing">
+                                <div class="price">
+                                    {% if plan.has_discount %}
+                                        <span class="original-price">${{ plan.original_price }}</span>
+                                        <span class="current-price">${{ plan.price }}</span>
+                                    {% else %}
+                                        <span class="current-price">${{ plan.price }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="plan-description">
+                                {{ plan.description|truncatewords(20) }}
+                            </div>
+
+                            <div class="plan-stats">
+                                <div class="stat">
+                                    <span class="material-icons">people</span>
+                                    {{ plan.subscription_count }} subscribers
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="plan-actions">
+                            <a href="{{ url('courses:admin_subscription_plan_detail', plan.id) }}"
+                               class="btn-secondary btn-sm">
+                                <span class="material-icons">visibility</span>
+                                View
+                            </a>
+                            <a href="{{ url('courses:admin_subscription_plan_edit', plan.id) }}"
+                               class="btn-outline btn-sm">
+                                <span class="material-icons">edit</span>
+                                Edit
+                            </a>
+                            <a href="{{ url('courses:admin_subscription_plan_confirm_delete', plan.id) }}"
+                               class="btn-danger btn-sm">
+                                <span class="material-icons">delete</span>
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if plans.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <nav class="pagination">
+                        {% if plans.has_previous %}
+                            <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if plan_type_filter %}&plan_type={{ plan_type_filter }}{% endif %}{% if duration_filter %}&duration={{ duration_filter }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}"
+                               class="page-link">First</a>
+                            <a href="?page={{ plans.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if plan_type_filter %}&plan_type={{ plan_type_filter }}{% endif %}{% if duration_filter %}&duration={{ duration_filter }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}"
+                               class="page-link">Previous</a>
+                        {% endif %}
+
+                        <span class="page-info">
+                            Page {{ plans.number }} of {{ plans.paginator.num_pages }}
+                        </span>
+
+                        {% if plans.has_next %}
+                            <a href="?page={{ plans.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if plan_type_filter %}&plan_type={{ plan_type_filter }}{% endif %}{% if duration_filter %}&duration={{ duration_filter }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}" 
+                               class="page-link">Next</a>
+                            <a href="?page={{ plans.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if plan_type_filter %}&plan_type={{ plan_type_filter }}{% endif %}{% if duration_filter %}&duration={{ duration_filter }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}" 
+                               class="page-link">Last</a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <span class="material-icons">card_membership</span>
+                </div>
+                <h3>No subscription plans found</h3>
+                <p>{% if search or plan_type_filter or duration_filter or is_active_filter %}
+                    No plans match your current filters. Try adjusting your search criteria.
+                {% else %}
+                    Get started by creating your first subscription plan.
+                {% endif %}</p>
+                <a href="{{ url('courses:admin_subscription_plan_create') }}" class="btn-primary">
+                    <span class="material-icons">add</span>
+                    Create Subscription Plan
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

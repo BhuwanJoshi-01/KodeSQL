@@ -1,0 +1,264 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}{% if plan %}Edit Subscription Plan{% else %}Create Subscription Plan{% endif %} - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">card_membership</span>
+                {% if plan %}Edit Subscription Plan{% else %}Create Subscription Plan{% endif %}
+            </h1>
+            <div class="admin-actions">
+                <a href="{{ url('courses:admin_subscription_plans_list') }}" class="btn-secondary">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Plans
+                </a>
+                {% if plan %}
+                <a href="{{ url('courses:admin_subscription_plan_detail', plan.id) }}" class="btn-outline">
+                    <span class="material-icons">visibility</span>
+                    View Plan
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <div class="admin-form-container">
+        <form method="post" class="admin-form" id="subscription-plan-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-sections">
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">info</span>
+                        Basic Information
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}" class="form-label required">
+                                Plan Name
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="form-error">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">Give your plan a clear, descriptive name</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.description.id_for_label }}" class="form-label required">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="form-error">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">Describe what this plan includes and its benefits</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.features.id_for_label }}" class="form-label">
+                                Features
+                            </label>
+                            {{ form.features }}
+                            {% if form.features.errors %}
+                                <div class="form-error">{{ form.features.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">{{ form.features.help_text }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan Configuration Section -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">settings</span>
+                        Plan Configuration
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="{{ form.plan_type.id_for_label }}" class="form-label required">
+                                Plan Type
+                            </label>
+                            {{ form.plan_type }}
+                            {% if form.plan_type.errors %}
+                                <div class="form-error">{{ form.plan_type.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">{{ form.plan_type.help_text }}</small>
+                        </div>
+                        
+                        <div class="form-group col-md-6">
+                            <label for="{{ form.duration.id_for_label }}" class="form-label required">
+                                Duration
+                            </label>
+                            {{ form.duration }}
+                            {% if form.duration.errors %}
+                                <div class="form-error">{{ form.duration.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">How long the subscription lasts</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" id="course-field">
+                            <label for="{{ form.course.id_for_label }}" class="form-label">
+                                Course
+                            </label>
+                            {{ form.course }}
+                            {% if form.course.errors %}
+                                <div class="form-error">{{ form.course.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">Select a course for course-specific plans</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">attach_money</span>
+                        Pricing
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="{{ form.price.id_for_label }}" class="form-label required">
+                                Price ($)
+                            </label>
+                            {{ form.price }}
+                            {% if form.price.errors %}
+                                <div class="form-error">{{ form.price.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">Current selling price</small>
+                        </div>
+                        
+                        <div class="form-group col-md-6">
+                            <label for="{{ form.original_price.id_for_label }}" class="form-label">
+                                Original Price ($)
+                            </label>
+                            {{ form.original_price }}
+                            {% if form.original_price.errors %}
+                                <div class="form-error">{{ form.original_price.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">{{ form.original_price.help_text }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">tune</span>
+                        Settings
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="{{ form.sort_order.id_for_label }}" class="form-label">
+                                Sort Order
+                            </label>
+                            {{ form.sort_order }}
+                            {% if form.sort_order.errors %}
+                                <div class="form-error">{{ form.sort_order.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">{{ form.sort_order.help_text }}</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                                    Active Plan
+                                </label>
+                            </div>
+                            {% if form.is_active.errors %}
+                                <div class="form-error">{{ form.is_active.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">Only active plans are visible to users</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <div class="form-check">
+                                {{ form.is_recommended }}
+                                <label for="{{ form.is_recommended.id_for_label }}" class="form-check-label">
+                                    Recommended Plan
+                                </label>
+                            </div>
+                            {% if form.is_recommended.errors %}
+                                <div class="form-error">{{ form.is_recommended.errors.0 }}</div>
+                            {% endif %}
+                            <small class="form-help">Mark this plan as recommended to highlight it</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <span class="material-icons">save</span>
+                    {% if plan %}Update Plan{% else %}Create Plan{% endif %}
+                </button>
+                <a href="{{ url('courses:admin_subscription_plans_list') }}" class="btn-secondary">
+                    <span class="material-icons">cancel</span>
+                    Cancel
+                </a>
+                {% if plan %}
+                <a href="{{ url('courses:admin_subscription_plan_confirm_delete', plan.id) }}"
+                   class="btn-danger" onclick="return confirm('Are you sure you want to delete this plan?')">
+                    <span class="material-icons">delete</span>
+                    Delete Plan
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const planTypeField = document.getElementById('{{ form.plan_type.id_for_label }}');
+    const courseField = document.getElementById('course-field');
+    
+    function toggleCourseField() {
+        if (planTypeField.value === 'global') {
+            courseField.style.display = 'none';
+            document.getElementById('{{ form.course.id_for_label }}').value = '';
+        } else {
+            courseField.style.display = 'block';
+        }
+    }
+    
+    // Initial state
+    toggleCourseField();
+    
+    // Listen for changes
+    planTypeField.addEventListener('change', toggleCourseField);
+});
+</script>
+{% endblock %}

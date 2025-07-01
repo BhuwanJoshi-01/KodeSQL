@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}{{ course.title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
@@ -16,7 +15,7 @@
             <div class="course-hero">
                 <div class="course-hero-content">
                     <div class="course-breadcrumb">
-                        <a href="{% url 'courses:courses_list' %}">Courses</a>
+                        <a href="{{ url('courses:courses_list') }}">Courses</a>
                         <span>/</span>
                         <span>{{ course.title }}</span>
                     </div>
@@ -44,8 +43,8 @@
                         {% if avg_rating > 0 %}
                         <div class="meta-item">
                             <div class="rating">
-                                {% for i in "12345" %}
-                                    {% if forloop.counter <= avg_rating %}
+                                {% for i in range(1, 6) %}
+                                    {% if i <= avg_rating %}
                                         <i class="fas fa-star"></i>
                                     {% else %}
                                         <i class="far fa-star"></i>
@@ -59,7 +58,7 @@
                     
                     <div class="course-instructor">
                         <i class="fas fa-user-tie"></i>
-                        <span>Instructor: {{ course.instructor.first_name }} {{ course.instructor.last_name|default:course.instructor.email }}</span>
+                        <span>Instructor: {{ course.instructor.first_name }} {{ course.instructor.last_name or course.instructor.email }}</span>
                     </div>
                 </div>
                 
@@ -92,16 +91,16 @@
                 <div class="enrollment-actions">
                     {% if user_enrollment %}
                         {% if user_enrollment.is_completed %}
-                            <a href="{% url 'courses:my_courses' %}" class="btn-primary">
+                            <a href="{{ url('courses:my_courses') }}" class="btn-primary">
                                 <i class="fas fa-check-circle"></i> Completed
                             </a>
                             {% if user_enrollment.certificate_issued %}
-                                <a href="{% url 'courses:certificate_view' user_enrollment.certificate.certificate_id %}" class="btn-secondary">
+                                <a href="{{ url('courses:certificate_view', certificate_id=user_enrollment.certificate.certificate_id) }}" class="btn-secondary">
                                     <i class="fas fa-certificate"></i> View Certificate
                                 </a>
                             {% endif %}
                         {% else %}
-                            <a href="{% url 'courses:my_courses' %}" class="btn-primary">
+                            <a href="{{ url('courses:my_courses') }}" class="btn-primary">
                                 <i class="fas fa-play"></i> Continue Learning
                             </a>
                             <div class="progress-info">
@@ -113,8 +112,8 @@
                         {% endif %}
                     {% else %}
                         {% if user.is_authenticated %}
-                            <form method="post" action="{% url 'courses:course_enroll' course.slug %}">
-                                {% csrf_token %}
+                            <form method="post" action="{{ url('courses:course_enroll', slug=course.slug) }}">
+                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                                 <button type="submit" class="btn-primary">
                                     {% if course.is_free %}
                                         <i class="fas fa-play"></i> Start Learning
@@ -124,7 +123,7 @@
                                 </button>
                             </form>
                         {% else %}
-                            <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn-primary">
+                            <a href="{{ url('users:login') }}?next={{ request.path }}" class="btn-primary">
                                 <i class="fas fa-sign-in-alt"></i> Login to Enroll
                             </a>
                         {% endif %}
@@ -162,14 +161,14 @@
                 <div class="course-description">
                     {{ course.description|safe }}
                 </div>
-                
+
                 {% if course.learning_outcomes %}
                 <div class="learning-outcomes">
                     <h3>What You'll Learn</h3>
                     {{ course.learning_outcomes|safe }}
                 </div>
                 {% endif %}
-                
+
                 {% if course.prerequisites %}
                 <div class="prerequisites">
                     <h3>Prerequisites</h3>
@@ -180,18 +179,18 @@
             
             <div class="tab-content" id="curriculum">
                 <div class="course-modules">
-                    {% for module in course.modules.all %}
+                    {% for module in course.modules.all() %}
                     <div class="module-item">
                         <div class="module-header">
                             <h4>{{ module.title }}</h4>
-                            <span class="lesson-count">{{ module.lesson_count }} lesson{{ module.lesson_count|pluralize }}</span>
+                            <span class="lesson-count">{{ module.lesson_count }} lesson{{ 's' if module.lesson_count != 1 else '' }}</span>
                         </div>
                         {% if module.description %}
                         <p class="module-description">{{ module.description }}</p>
                         {% endif %}
                         
                         <div class="module-lessons">
-                            {% for lesson in module.lessons.all %}
+                            {% for lesson in module.lessons.all() %}
                             <div class="lesson-item">
                                 <div class="lesson-info">
                                     <i class="fas fa-play-circle"></i>
@@ -201,7 +200,7 @@
                                     {% if lesson.duration_minutes %}
                                         <span class="duration">{{ lesson.duration_minutes }} min</span>
                                     {% endif %}
-                                    <span class="lesson-type">{{ lesson.get_lesson_type_display }}</span>
+                                    <span class="lesson-type">{{ lesson.get_lesson_type_display() }}</span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -218,10 +217,10 @@
                     <div class="review-item">
                         <div class="review-header">
                             <div class="reviewer-info">
-                                <strong>{{ review.user.first_name|default:review.user.email }}</strong>
+                                <strong>{{ review.user.first_name or review.user.email }}</strong>
                                 <div class="review-rating">
-                                    {% for i in "12345" %}
-                                        {% if forloop.counter <= review.rating %}
+                                    {% for i in range(1, 6) %}
+                                        {% if i <= review.rating %}
                                             <i class="fas fa-star"></i>
                                         {% else %}
                                             <i class="far fa-star"></i>
@@ -229,7 +228,7 @@
                                     {% endfor %}
                                 </div>
                             </div>
-                            <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                            <span class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</span>
                         </div>
                         {% if review.review_text %}
                         <p class="review-text">{{ review.review_text }}</p>
