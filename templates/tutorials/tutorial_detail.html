@@ -28,7 +28,7 @@
                             {{ lessons|length }} lesson{{ lessons|length|pluralize }}
                         </span>
                     </div>
-                    <p class="tutorial-description">{{ tutorial.description }}</p>
+                    <div class="tutorial-description">{{ tutorial.description|safe }}</div>
                 </div>
             </div>
 
@@ -69,7 +69,7 @@
                             <div class="lesson-content">
                                 <h3>{{ loop.index }}. {{ lesson.title }}</h3>
                                 {% if lesson.content %}
-                                    <p class="lesson-preview">{{ lesson.content|truncatewords(20) }}</p>
+                                    <div class="lesson-preview">{{ lesson.content|truncate(200)|safe }}</div>
                                 {% endif %}
                             </div>
 

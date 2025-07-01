@@ -6,6 +6,7 @@
 {{ super() }}
 {{ form.media.css }}
 <style>
+/* Additional form-specific styles */
 .formset-form {
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -171,17 +172,20 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
     
-    {% if not is_edit %}
-        <div class="admin-card">
-            <h3>Lessons</h3>
+    <div class="admin-card">
+        <h3>Lessons</h3>
+        {% if is_edit %}
+            <p class="help-text">Edit existing lessons or add new ones to your tutorial.</p>
+        {% else %}
             <p class="help-text">Add lessons to your tutorial. You can also add lessons later.</p>
+        {% endif %}
             
             <div id="lesson-formset">
                 {{ formset.management_form }}
                 {% for lesson_form in formset %}
                     <div class="formset-form">
                         <div class="formset-header">
-                            <h4>Lesson {{ forloop.counter }}</h4>
+                            <h4>Lesson {{ loop.index }}</h4>
                             {% if lesson_form.instance.pk %}
                                 <button type="button" class="admin-btn danger delete-form-btn">
                                     <span class="material-icons">delete</span>
@@ -190,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             {% endif %}
                         </div>
                         
-                        {% for field in lesson_form.visible_fields %}
+                        {% for field in lesson_form.visible_fields() %}
                             <div class="form-group">
                                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                                 {{ field }}
@@ -203,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         {% endfor %}
                         
-                        {% for field in lesson_form.hidden_fields %}
+                        {% for field in lesson_form.hidden_fields() %}
                             {{ field }}
                         {% endfor %}
                     </div>
@@ -228,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {{ formset.empty_form }}
             </div>
         </div>
-    {% endif %}
+    </div>
     
     <div class="admin-actions" style="margin-top: 2rem;">
         <button type="submit" class="admin-btn">

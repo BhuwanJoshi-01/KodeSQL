@@ -6,34 +6,101 @@
 {{ super() }}
 {{ form.media.css }}
 <style>
+/* Fix CKEditor5 visibility issues */
+.ck.ck-editor {
+    background: var(--bg-primary, #ffffff) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 8px !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    min-height: 300px !important;
+    padding: 1rem !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable:focus {
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.ck.ck-toolbar {
+    background: var(--bg-secondary, #f8fafc) !important;
+    border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.ck.ck-toolbar .ck-button {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-toolbar .ck-button:hover {
+    background: var(--bg-hover, #e2e8f0) !important;
+}
+
+/* Fix textarea visibility */
+textarea.form-control {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 1rem !important;
+    resize: vertical !important;
+}
+
+textarea.form-control:focus {
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
+}
+
+/* Ensure all form inputs are visible */
+.form-control {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
 .code-preview {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
     border-radius: 8px;
     padding: 1rem;
     font-family: 'Courier New', monospace;
     white-space: pre-wrap;
     max-height: 200px;
     overflow-y: auto;
+    color: var(--text-primary, #1e293b);
 }
 
 .media-upload-area {
-    border: 2px dashed var(--border-color);
+    border: 2px dashed var(--border-color, #e2e8f0);
     border-radius: 8px;
     padding: 2rem;
     text-align: center;
     transition: all 0.3s ease;
+    background: var(--bg-primary, #ffffff);
 }
 
 .media-upload-area:hover {
-    border-color: var(--primary-color);
-    background: rgba(var(--primary-rgb), 0.05);
+    border-color: var(--primary-color, #2563eb);
+    background: var(--bg-hover, #e2e8f0);
 }
 
 .form-section {
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
 .form-section:last-child {
@@ -41,11 +108,39 @@
 }
 
 .form-section h4 {
-    color: var(--primary-color);
+    color: var(--primary-color, #2563eb);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck.ck-toolbar {
+    background: var(--bg-secondary, #1e293b) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .ck.ck-toolbar .ck-button {
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] textarea.form-control,
+[data-theme="dark"] .form-control {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .code-preview {
+    background: var(--bg-secondary, #1e293b);
+    color: var(--text-primary, #f8fafc);
+    border-color: var(--border-color, #334155);
 }
 </style>
 {% endblock %}

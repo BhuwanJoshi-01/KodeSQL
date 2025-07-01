@@ -108,8 +108,9 @@ class LessonForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Only show active tutorials
-        self.fields['tutorial'].queryset = Tutorial.objects.filter(is_active=True)
+        # Only show active tutorials if the tutorial field exists (not in inline formset)
+        if 'tutorial' in self.fields:
+            self.fields['tutorial'].queryset = Tutorial.objects.filter(is_active=True)
 
 
 class LessonInlineFormSet(forms.BaseInlineFormSet):
@@ -120,17 +121,17 @@ class LessonInlineFormSet(forms.BaseInlineFormSet):
         super().__init__(*args, **kwargs)
         # Set default values for new forms
         for form in self.forms:
-            if not form.instance.pk:
+            if not form.instance.pk and 'is_active' in form.fields:
                 form.fields['is_active'].initial = True
 
 
 # Create the inline formset
 LessonFormSet = forms.inlineformset_factory(
-    Tutorial, 
+    Tutorial,
     Lesson,
     form=LessonForm,
     formset=LessonInlineFormSet,
-    extra=1,
+    extra=0,
     can_delete=True,
     fields=['title', 'content', 'example_query', 'expected_output', 'video_url', 'order', 'is_active']
 )

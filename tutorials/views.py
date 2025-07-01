@@ -219,6 +219,7 @@ def admin_tutorial_edit(request, tutorial_id):
     """
     Admin view to edit an existing tutorial.
     """
+
     tutorial = get_object_or_404(Tutorial, id=tutorial_id)
 
     if request.method == 'POST':
@@ -231,6 +232,12 @@ def admin_tutorial_edit(request, tutorial_id):
 
             messages.success(request, f'Tutorial "{tutorial.title}" updated successfully!')
             return redirect('tutorials:admin_tutorial_detail', tutorial_id=tutorial.id)
+        else:
+            # Add error messages to help user understand what went wrong
+            if not form.is_valid():
+                messages.error(request, "There were errors in the tutorial form. Please check the fields below.")
+            if not formset.is_valid():
+                messages.error(request, "There were errors in the lessons. Please check the lesson forms below.")
     else:
         form = TutorialForm(instance=tutorial)
         formset = LessonFormSet(instance=tutorial)
@@ -266,6 +273,7 @@ def admin_tutorial_delete(request, tutorial_id):
     """
     Admin view to delete a tutorial.
     """
+
     tutorial = get_object_or_404(Tutorial, id=tutorial_id)
 
     if request.method == 'POST':

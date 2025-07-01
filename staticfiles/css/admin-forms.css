@@ -1,0 +1,341 @@
+/* Admin Forms CSS - Fixes for Editor Visibility */
+
+/* CKEditor5 Fixes */
+.ck.ck-editor {
+    background: var(--bg-primary, #ffffff) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 8px !important;
+    box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05)) !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    min-height: 300px !important;
+    padding: 1rem !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable:focus {
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable p {
+    color: var(--text-primary, #1e293b) !important;
+    margin: 0 0 1em 0 !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable h1,
+.ck.ck-editor__main > .ck-editor__editable h2,
+.ck.ck-editor__main > .ck-editor__editable h3,
+.ck.ck-editor__main > .ck-editor__editable h4,
+.ck.ck-editor__main > .ck-editor__editable h5,
+.ck.ck-editor__main > .ck-editor__editable h6 {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable ul,
+.ck.ck-editor__main > .ck-editor__editable ol {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable li {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable blockquote {
+    color: var(--text-secondary, #64748b) !important;
+    border-left: 4px solid var(--border-color, #e2e8f0) !important;
+    padding-left: 1rem !important;
+    margin: 1rem 0 !important;
+    font-style: italic !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable code {
+    background: var(--bg-secondary, #f8fafc) !important;
+    color: var(--text-primary, #1e293b) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 4px !important;
+    font-family: 'Courier New', monospace !important;
+}
+
+.ck.ck-editor__main > .ck-editor__editable pre {
+    background: var(--bg-secondary, #f8fafc) !important;
+    color: var(--text-primary, #1e293b) !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+    font-family: 'Courier New', monospace !important;
+    overflow-x: auto !important;
+}
+
+/* CKEditor5 Toolbar */
+.ck.ck-toolbar {
+    background: var(--bg-secondary, #f8fafc) !important;
+    border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 0.5rem !important;
+}
+
+.ck.ck-toolbar .ck-button {
+    color: var(--text-primary, #1e293b) !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 0.5rem !important;
+    margin: 0 0.25rem !important;
+}
+
+.ck.ck-toolbar .ck-button:hover {
+    background: var(--bg-hover, #e2e8f0) !important;
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-toolbar .ck-button.ck-on {
+    background: var(--primary-color, #2563eb) !important;
+    color: white !important;
+}
+
+.ck.ck-toolbar .ck-button .ck-button__label {
+    color: inherit !important;
+}
+
+.ck.ck-toolbar .ck-dropdown__button {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+/* Textarea Fixes */
+textarea.form-control {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 1rem !important;
+    resize: vertical !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+textarea.form-control:focus {
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
+}
+
+textarea.form-control::placeholder {
+    color: var(--text-tertiary, #94a3b8) !important;
+    opacity: 1 !important;
+}
+
+/* General Form Control Fixes */
+.form-control {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
+    border-radius: 8px !important;
+    padding: 0.875rem 1rem !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
+}
+
+.form-control::placeholder {
+    color: var(--text-tertiary, #94a3b8) !important;
+    opacity: 1 !important;
+}
+
+/* Select Elements */
+select.form-control {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-position: right 0.5rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.5em 1.5em !important;
+    padding-right: 2.5rem !important;
+}
+
+/* Form Labels */
+.form-group label {
+    color: var(--text-primary, #1e293b) !important;
+    font-weight: 500 !important;
+    margin-bottom: 0.5rem !important;
+    display: block !important;
+}
+
+/* Help Text */
+.help-text {
+    color: var(--text-secondary, #64748b) !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.25rem !important;
+}
+
+/* Error Text */
+.error-text {
+    color: var(--error-color, #ef4444) !important;
+    font-size: 0.875rem !important;
+    margin-top: 0.25rem !important;
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .ck.ck-editor {
+    background: var(--bg-primary, #0f172a) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable p,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable h1,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable h2,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable h3,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable h4,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable h5,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable h6,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable ul,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable ol,
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable li {
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable code {
+    background: var(--bg-secondary, #1e293b) !important;
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck.ck-editor__main > .ck-editor__editable pre {
+    background: var(--bg-secondary, #1e293b) !important;
+    color: var(--text-primary, #f8fafc) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .ck.ck-toolbar {
+    background: var(--bg-secondary, #1e293b) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .ck.ck-toolbar .ck-button {
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck.ck-toolbar .ck-button:hover {
+    background: var(--bg-hover, #475569) !important;
+}
+
+[data-theme="dark"] textarea.form-control,
+[data-theme="dark"] .form-control {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .form-group label {
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .help-text {
+    color: var(--text-secondary, #cbd5e1) !important;
+}
+
+/* Additional CKEditor5 Content Fixes */
+.ck.ck-content {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-content * {
+    color: inherit !important;
+}
+
+/* Force visibility for any hidden text */
+.ck-editor__editable_inline {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+}
+
+/* Ensure dropdown menus are visible */
+.ck.ck-dropdown__panel {
+    background: var(--bg-primary, #ffffff) !important;
+    border: 1px solid var(--border-color, #e2e8f0) !important;
+    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1)) !important;
+}
+
+.ck.ck-dropdown__panel .ck-list__item {
+    color: var(--text-primary, #1e293b) !important;
+}
+
+.ck.ck-dropdown__panel .ck-list__item:hover {
+    background: var(--bg-hover, #e2e8f0) !important;
+}
+
+/* Fix for any remaining invisible text issues */
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="password"] {
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+}
+
+/* Dark theme dropdown fixes */
+[data-theme="dark"] .ck.ck-dropdown__panel {
+    background: var(--bg-primary, #0f172a) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .ck.ck-dropdown__panel .ck-list__item {
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck.ck-dropdown__panel .ck-list__item:hover {
+    background: var(--bg-hover, #475569) !important;
+}
+
+[data-theme="dark"] .ck.ck-content {
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .ck-editor__editable_inline {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="email"],
+[data-theme="dark"] input[type="url"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="password"] {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .ck.ck-editor__main > .ck-editor__editable {
+        min-height: 200px !important;
+        padding: 0.75rem !important;
+        font-size: 13px !important;
+    }
+
+    textarea.form-control {
+        padding: 0.75rem !important;
+        font-size: 13px !important;
+    }
+
+    .form-control {
+        padding: 0.75rem !important;
+        font-size: 13px !important;
+    }
+}

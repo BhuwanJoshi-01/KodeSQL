@@ -17,10 +17,17 @@
             <div class="tutorials-grid">
                 {% for tutorial in tutorials %}
                     <div class="tutorial-card card">
-                        <div class="tutorial-header">
-                            <div class="tutorial-icon">
-                                <span class="material-icons">{{ tutorial.icon }}</span>
+                        {% if tutorial.thumbnail %}
+                            <div class="tutorial-thumbnail">
+                                <img src="{{ tutorial.thumbnail.url }}" alt="{{ tutorial.title }}" class="tutorial-thumbnail-img">
                             </div>
+                        {% endif %}
+                        <div class="tutorial-header{% if tutorial.thumbnail %} has-thumbnail{% endif %}">
+                            {% if not tutorial.thumbnail %}
+                                <div class="tutorial-icon">
+                                    <span class="material-icons">{{ tutorial.icon }}</span>
+                                </div>
+                            {% endif %}
                             <div class="tutorial-info">
                                 <h3>{{ tutorial.title }}</h3>
                                 <div class="tutorial-meta">
@@ -35,7 +42,7 @@
                         </div>
 
                         <div class="tutorial-description">
-                            <p>{{ tutorial.description }}</p>
+                            <div>{{ tutorial.description|truncate(150)|safe }}</div>
                         </div>
 
                         {% if user.is_authenticated and tutorial.id in user_progress %}
@@ -100,11 +107,29 @@
 .tutorial-card {
     padding: 1.5rem;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
 }
 
 .tutorial-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.tutorial-thumbnail {
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    height: 200px;
+    overflow: hidden;
+}
+
+.tutorial-thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.tutorial-card:hover .tutorial-thumbnail-img {
+    transform: scale(1.05);
 }
 
 .tutorial-header {
@@ -124,6 +149,11 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+}
+
+/* Adjust header when thumbnail is present */
+.tutorial-header.has-thumbnail {
+    gap: 0;
 }
 
 .tutorial-info h3 {

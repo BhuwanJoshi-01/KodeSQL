@@ -115,6 +115,20 @@ def date_filter(value, format_string="M d, Y"):
     return django_format(value, format_string)
 
 
+def widthratio(value, max_value, max_width):
+    """
+    Jinja2 widthratio filter similar to Django's widthratio.
+    """
+    if not max_value or max_value == 0:
+        return 0
+
+    try:
+        ratio = (float(value) / float(max_value)) * float(max_width)
+        return int(ratio)
+    except (ValueError, ZeroDivisionError):
+        return 0
+
+
 def environment(**options):
     """
     Create and configure Jinja2 environment.
@@ -134,4 +148,5 @@ def environment(**options):
     env.filters['escapejs'] = escapejs
     env.filters['urlencode'] = urlencode_filter
     env.filters['date'] = date_filter
+    env.filters['widthratio'] = widthratio
     return env

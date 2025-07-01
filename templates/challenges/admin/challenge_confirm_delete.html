@@ -32,9 +32,9 @@
                 <strong>Title:</strong> {{ challenge.title }}
             </div>
             <div>
-                <strong>Difficulty:</strong> 
+                <strong>Difficulty:</strong>
                 <span class="status-badge difficulty-{{ challenge.difficulty }}">
-                    {{ challenge.get_difficulty_display }}
+                    {{ challenge.get_difficulty_display() }}
                 </span>
             </div>
             <div>

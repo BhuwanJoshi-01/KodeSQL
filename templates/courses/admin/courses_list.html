@@ -1,19 +1,18 @@
 {% extends 'admin_base.html' %}
-{% load static %}
 
 {% block title %}Manage Courses - Admin{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
 {% endblock %}
 
-{% block content %}
+{% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
         <div class="admin-header-content">
             <h1>Manage Courses</h1>
             <div class="admin-actions">
-                <a href="{% url 'courses:admin_course_create' %}" class="btn-primary">
+                <a href="{{ url('courses:admin_course_create') }}" class="btn-primary">
                     <span class="material-icons">add</span>
                     Create Course
                 </a>
@@ -36,7 +35,7 @@
                         <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
                     </select>
                     <button type="submit" class="btn-secondary">Filter</button>
-                    <a href="{% url 'courses:admin_courses_list' %}" class="btn-secondary">Clear</a>
+                    <a href="{{ url('courses:admin_courses_list') }}" class="btn-secondary">Clear</a>
                 </div>
             </form>
         </div>
@@ -55,63 +54,65 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for course in courses %}
-                    <tr>
-                        <td>
-                            <div class="course-info">
-                                <strong>{{ course.title }}</strong>
-                                <div class="course-meta">
-                                    <span class="difficulty {{ course.difficulty }}">{{ course.get_difficulty_display }}</span>
-                                    <span>{{ course.duration_hours }}h</span>
-                                    <span>{{ course.module_count }} modules</span>
+                    {% if courses %}
+                        {% for course in courses %}
+                        <tr>
+                            <td>
+                                <div class="course-info">
+                                    <strong>{{ course.title }}</strong>
+                                    <div class="course-meta">
+                                        <span class="difficulty {{ course.difficulty }}">{{ course.get_difficulty_display() }}</span>
+                                        <span>{{ course.duration_hours }}h</span>
+                                        <span>{{ course.module_count }} modules</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="course-type {{ course.course_type }}">
-                                {{ course.get_course_type_display }}
-                                {% if not course.is_free %}
-                                    <small>${{ course.effective_price }}</small>
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="status-badge {{ course.status }}">
-                                {{ course.get_status_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="enrollment-count">{{ course.enrollment_count }}</span>
-                        </td>
-                        <td>
-                            <span class="date">{{ course.created_at|date:"M d, Y" }}</span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <a href="{% url 'courses:admin_course_detail' course.slug %}" class="btn-sm btn-primary" title="View Details">
-                                    <span class="material-icons">visibility</span>
-                                </a>
-                                <a href="{% url 'courses:admin_course_edit' course.slug %}" class="btn-sm btn-secondary" title="Edit">
-                                    <span class="material-icons">edit</span>
-                                </a>
-                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-sm btn-secondary" title="Preview" target="_blank">
-                                    <span class="material-icons">open_in_new</span>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
+                            </td>
+                            <td>
+                                <span class="course-type {{ course.course_type }}">
+                                    {{ course.get_course_type_display() }}
+                                    {% if not course.is_free %}
+                                        <small>${{ course.effective_price }}</small>
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge {{ course.status }}">
+                                    {{ course.get_status_display() }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="enrollment-count">{{ course.enrollment_count }}</span>
+                            </td>
+                            <td>
+                                <span class="date">{{ course.created_at|date("M d, Y") }}</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url('courses:admin_course_detail', course.slug) }}" class="btn-sm btn-primary" title="View Details">
+                                        <span class="material-icons">visibility</span>
+                                    </a>
+                                    <a href="{{ url('courses:admin_course_edit', course.slug) }}" class="btn-sm btn-secondary" title="Edit">
+                                        <span class="material-icons">edit</span>
+                                    </a>
+                                    <a href="{{ url('courses:course_detail', course.slug) }}" class="btn-sm btn-secondary" title="Preview" target="_blank">
+                                        <span class="material-icons">open_in_new</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
                     <tr>
                         <td colspan="6" class="no-data">
                             <div class="no-data-content">
                                 <span class="material-icons">school</span>
                                 <h3>No courses found</h3>
                                 <p>Create your first course to get started.</p>
-                                <a href="{% url 'courses:admin_course_create' %}" class="btn-primary">Create Course</a>
+                                <a href="{{ url('courses:admin_course_create') }}" class="btn-primary">Create Course</a>
                             </div>
                         </td>
                     </tr>
-                    {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         </div>

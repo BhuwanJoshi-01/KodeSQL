@@ -24,6 +24,23 @@
                         <span class="difficulty difficulty-{{ challenge.difficulty }}">
                             {{ challenge.get_difficulty_display() }}
                         </span>
+                        {% if challenge.is_premium %}
+                            <span class="subscription-badge premium">
+                                <span class="material-icons">workspace_premium</span>
+                                Premium
+                            </span>
+                        {% else %}
+                            <span class="subscription-badge free">
+                                <span class="material-icons">lock_open</span>
+                                Free
+                            </span>
+                        {% endif %}
+                        {% if challenge.company %}
+                            <span class="company-badge">
+                                <span class="material-icons">business</span>
+                                {{ challenge.company }}
+                            </span>
+                        {% endif %}
                         {% if user.is_authenticated and user_progress %}
                             {% if user_progress.is_completed %}
                                 <span class="status-badge completed">
@@ -51,12 +68,12 @@
                         Problem Description
                     </h2>
                     <div class="problem-description">
-                        {{ challenge.description|linebreaks }}
+                        {{ challenge.description|safe }}
                     </div>
 
                     <div class="problem-question">
                         <h3>Question:</h3>
-                        <p>{{ challenge.question }}</p>
+                        <div>{{ challenge.question|safe }}</div>
                     </div>
                 </div>
 
@@ -99,7 +116,7 @@
                             <span class="material-icons">lightbulb</span>
                             Hint
                         </h3>
-                        <p>{{ challenge.hint }}</p>
+                        <div>{{ challenge.hint|safe }}</div>
                     </div>
                 {% endif %}
 
@@ -253,6 +270,38 @@
 .status-badge.attempted {
     background: rgba(245, 124, 0, 0.1);
     color: #f57c00;
+}
+
+.subscription-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.subscription-badge.premium {
+    background: rgba(234, 88, 12, 0.1);
+    color: #ea580c;
+}
+
+.subscription-badge.free {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.company-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
 }
 
 .challenge-content-section {

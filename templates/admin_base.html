@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/admin-forms.css') }}">
 <style>
 /* Admin-specific styles */
 .admin-container {
@@ -77,6 +78,8 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    z-index: 1;
+    pointer-events: auto;
 }
 
 .admin-btn::before {
@@ -100,6 +103,22 @@
 
 .admin-btn:hover::before {
     opacity: 1;
+}
+
+.admin-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure buttons are clickable */
+.admin-actions {
+    position: relative;
+    z-index: 10;
+}
+
+.admin-actions .admin-btn {
+    position: relative;
+    z-index: 11;
 }
 
 .admin-btn.secondary {
@@ -494,9 +513,9 @@
 
 {% block content %}
 <div class="admin-container">
-    {% if messages %}
+    {% if get_messages(request) %}
         <div class="messages">
-            {% for message in messages %}
+            {% for message in get_messages(request) %}
                 <div class="alert alert-{{ message.tags }}">
                     {{ message }}
                 </div>
@@ -507,4 +526,46 @@
     {% block admin_content %}
     {% endblock %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script src="{{ static('js/admin-forms.js') }}"></script>
+<script>
+// Debug script for admin buttons
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin page loaded');
+
+    // Add click event listeners to all admin buttons for debugging
+    const adminButtons = document.querySelectorAll('.admin-btn');
+    console.log(`Found ${adminButtons.length} admin buttons`);
+
+    adminButtons.forEach((button, index) => {
+        const href = button.getAttribute('href');
+        const text = button.textContent.trim();
+        console.log(`Button ${index}: "${text}" -> "${href}"`);
+
+        // Add click handler for debugging
+        button.addEventListener('click', function(e) {
+            console.log(`Clicked button: "${text}" -> "${href}"`);
+
+            // Check if href is valid
+            if (!href || href === '#' || href === '') {
+                console.error(`Invalid href for button: "${text}"`);
+                e.preventDefault();
+                alert(`Error: Invalid link for "${text}". Please check the console for details.`);
+                return false;
+            }
+
+            // For delete buttons, add confirmation
+            if (text.toLowerCase().includes('delete')) {
+                if (!confirm(`Are you sure you want to ${text.toLowerCase()}?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

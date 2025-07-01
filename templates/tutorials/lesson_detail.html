@@ -36,7 +36,7 @@
         <div class="lesson-content-section">
             <div class="lesson-main-content">
                 <div class="lesson-content">
-                    {{ lesson.content|linebreaks }}
+                    {{ lesson.content|safe }}
                 </div>
 
                 {% if lesson.example_query %}

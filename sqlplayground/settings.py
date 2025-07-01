@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', "django-insecure-s2e78lrr*0ta0brx-j2wi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else ['localhost', '127.0.0.1', 'testserver']
 
 
 # Application definition
@@ -288,3 +288,16 @@ SILENCED_SYSTEM_CHECKS = ["security.W019"]
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@sqlplayground.com'
+
+# Stripe settings
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_51RfhCjRn9gJUDL8d3zAbYQmqBM4irMCtLdt9cTpAR7cBZCRIqG4TpItoGuoakHvT2Ao30blthxbwjJl2hNRje5T5002RfQDrZq')  # Replace with your test key
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51RfhCjRn9gJUDL8dtKvoe4UsNByCLne2YXHs5sBg2718erSVB3ErbjbHxrIwGOlUzNSZ2ZZFRvwL2RL31OO4DMsc00IGNEEQbO')  # Replace with your test key
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_1234567890abcdef')  # Replace with your webhook secret
+STRIPE_LIVE_MODE = os.environ.get('STRIPE_LIVE_MODE', 'False').lower() == 'true'
+
+# Site URL for Stripe redirects
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')

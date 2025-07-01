@@ -8,8 +8,9 @@
 <style>
 .json-editor {
     font-family: 'Courier New', monospace;
-    background: #f8f9fa;
-    border: 2px solid var(--border-color);
+    background: var(--bg-primary, #ffffff) !important;
+    color: var(--text-primary, #1e293b) !important;
+    border: 2px solid var(--border-color, #e2e8f0) !important;
     border-radius: 8px;
     padding: 1rem;
     min-height: 200px;
@@ -17,19 +18,34 @@
 }
 
 .json-editor:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    border-color: var(--primary-color, #2563eb) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    outline: none !important;
 }
 
 .json-preview {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+    background: var(--bg-secondary, #f8fafc);
+    color: var(--text-primary, #1e293b);
+    border: 1px solid var(--border-color, #e2e8f0);
     border-radius: 8px;
     padding: 1rem;
     max-height: 300px;
     overflow-y: auto;
     font-family: 'Courier New', monospace;
     white-space: pre-wrap;
+}
+
+/* Dark theme support for JSON editor */
+[data-theme="dark"] .json-editor {
+    background: var(--bg-primary, #0f172a) !important;
+    color: var(--text-primary, #f8fafc) !important;
+    border-color: var(--border-color, #334155) !important;
+}
+
+[data-theme="dark"] .json-preview {
+    background: var(--bg-secondary, #1e293b);
+    color: var(--text-primary, #f8fafc);
+    border-color: var(--border-color, #334155);
 }
 
 .difficulty-preview {
