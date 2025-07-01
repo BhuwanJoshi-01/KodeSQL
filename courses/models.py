@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django_ckeditor_5.fields import CKEditor5Field
 from decimal import Decimal
+from datetime import timedelta
+import uuid
 
 
 class Course(models.Model):
@@ -381,3 +383,176 @@ class CoursePayment(models.Model):
 
     def __str__(self):
         return f"Payment {self.id} - {self.enrollment.user.email} - {self.amount} {self.currency}"
+
+
+class SubscriptionPlan(models.Model):
+    """Subscription plans for courses"""
+    DURATION_CHOICES = [
+        ('1_month', '1 Month'),
+        ('3_months', '3 Months'),
+        ('unlimited', 'Unlimited'),
+    ]
+
+    PLAN_TYPE_CHOICES = [
+        ('global', 'Global (All Courses)'),
+        ('course_specific', 'Course Specific'),
+    ]
+
+    name = models.CharField(max_length=100)
+    duration = models.CharField(max_length=20, choices=DURATION_CHOICES)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    original_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    description = models.TextField()
+    features = models.JSONField(default=list, help_text="List of features for this plan")
+    plan_type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES, default='course_specific')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True,
+                              help_text="Leave blank for global plans")
+    is_active = models.BooleanField(default=True)
+    is_recommended = models.BooleanField(default=False)
+    sort_order = models.IntegerField(default=0, help_text="Lower numbers appear first")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['sort_order', 'price']
+        unique_together = ['course', 'duration', 'plan_type']
+
+    def __str__(self):
+        course_name = self.course.title if self.course else "All Courses"
+        return f"{self.name} - {course_name} ({self.get_duration_display()})"
+
+    @property
+    def effective_price(self):
+        """Return the effective price (discounted if available)"""
+        return self.price
+
+    @property
+    def has_discount(self):
+        """Check if plan has a discount"""
+        return self.original_price and self.original_price > self.price
+
+    @property
+    def discount_percentage(self):
+        """Calculate discount percentage"""
+        if self.has_discount:
+            return int(((self.original_price - self.price) / self.original_price) * 100)
+        return 0
+
+    def get_duration_days(self):
+        """Get duration in days"""
+        duration_map = {
+            '1_month': 30,
+            '3_months': 90,
+            'unlimited': None,
+        }
+        return duration_map.get(self.duration)
+
+
+class UserSubscription(models.Model):
+    """User subscriptions to courses"""
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+        ('pending', 'Pending Payment'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscriptions')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE, related_name='subscriptions')
+    enrollment = models.ForeignKey(UserCourseEnrollment, on_delete=models.CASCADE,
+                                 related_name='subscriptions', null=True, blank=True)
+
+    # Subscription details
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField(null=True, blank=True)  # Null for unlimited plans
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Payment tracking
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_reference = models.CharField(max_length=255, null=True, blank=True)
+
+    # Notifications
+    expiry_notification_sent = models.BooleanField(default=False)
+    final_notification_sent = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['user', 'course', 'plan']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.course.title} ({self.plan.name})"
+
+    @property
+    def is_active(self):
+        """Check if subscription is currently active"""
+        if self.status != 'active':
+            return False
+
+        if self.end_date is None:  # Unlimited plan
+            return True
+
+        return timezone.now() <= self.end_date
+
+    @property
+    def is_expiring_soon(self):
+        """Check if subscription expires within 7 days"""
+        if self.end_date is None:
+            return False
+
+        days_until_expiry = (self.end_date - timezone.now()).days
+        return 0 <= days_until_expiry <= 7
+
+    @property
+    def days_remaining(self):
+        """Get days remaining in subscription"""
+        if self.end_date is None:
+            return None
+
+        days = (self.end_date - timezone.now()).days
+        return max(0, days)
+
+    @property
+    def time_remaining(self):
+        """Get human-readable time remaining"""
+        if self.end_date is None:
+            return "Unlimited"
+
+        remaining = self.end_date - timezone.now()
+        if remaining.days > 0:
+            return f"{remaining.days} days"
+        elif remaining.seconds > 3600:
+            hours = remaining.seconds // 3600
+            return f"{hours} hours"
+        else:
+            return "Expires soon"
+
+    def activate(self):
+        """Activate the subscription"""
+        self.status = 'active'
+        self.start_date = timezone.now()
+
+        # Set end date based on plan duration
+        if self.plan.duration != 'unlimited':
+            duration_days = self.plan.get_duration_days()
+            self.end_date = self.start_date + timedelta(days=duration_days)
+
+        self.save()
+
+        # Activate enrollment if exists
+        if self.enrollment:
+            self.enrollment.status = 'active'
+            self.enrollment.save()
+
+    def expire(self):
+        """Expire the subscription"""
+        self.status = 'expired'
+        self.save()
+
+        # Deactivate enrollment if exists
+        if self.enrollment:
+            self.enrollment.status = 'expired'
+            self.enrollment.save()

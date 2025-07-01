@@ -4,14 +4,31 @@ from . import views
 app_name = 'courses'
 
 urlpatterns = [
-    # Public course views
-    path('', views.courses_list, name='courses_list'),
-    path('<slug:slug>/', views.course_detail, name='course_detail'),
-    path('<slug:slug>/enroll/', views.course_enroll, name='course_enroll'),
+    # Admin views (staff only) - Must come before slug patterns
+    path('admin/', views.admin_courses_list, name='admin_courses_list'),
+    path('admin/create/', views.admin_course_create, name='admin_course_create'),
+
+    # Subscription Plan Admin views (staff only)
+    path('admin/subscription-plans/', views.admin_subscription_plans_list, name='admin_subscription_plans_list'),
+    path('admin/subscription-plans/create/', views.admin_subscription_plan_create, name='admin_subscription_plan_create'),
+    path('admin/subscription-plans/<int:plan_id>/', views.admin_subscription_plan_detail, name='admin_subscription_plan_detail'),
+    path('admin/subscription-plans/<int:plan_id>/edit/', views.admin_subscription_plan_edit, name='admin_subscription_plan_edit'),
+    path('admin/subscription-plans/<int:plan_id>/delete/', views.admin_subscription_plan_confirm_delete, name='admin_subscription_plan_confirm_delete'),
+    path('admin/subscription-plans/<int:plan_id>/delete/confirm/', views.admin_subscription_plan_delete, name='admin_subscription_plan_delete'),
+
+    path('admin/<slug:slug>/', views.admin_course_detail, name='admin_course_detail'),
+    path('admin/<slug:slug>/edit/', views.admin_course_edit, name='admin_course_edit'),
+    path('admin/<slug:slug>/delete/', views.admin_course_delete, name='admin_course_delete'),
 
     # User course management
     path('my-courses/', views.my_courses, name='my_courses'),
     path('certificates/<str:certificate_id>/', views.certificate_view, name='certificate_view'),
+
+    # Payment views
+    path('payment/<int:payment_id>/', views.payment_page, name='payment_page'),
+    path('payment/success/', views.payment_success, name='payment_success'),
+    path('payment/failed/', views.payment_failed, name='payment_failed'),
+    path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
 
     # API endpoints
     path('api/my-courses/', views.api_my_courses, name='api_my_courses'),
@@ -19,10 +36,12 @@ urlpatterns = [
     path('api/enroll/<slug:slug>/', views.api_course_enroll, name='api_course_enroll'),
     path('api/lesson-complete/<int:lesson_id>/', views.api_lesson_complete, name='api_lesson_complete'),
 
-    # Admin views (staff only)
-    path('admin/', views.admin_courses_list, name='admin_courses_list'),
-    path('admin/create/', views.admin_course_create, name='admin_course_create'),
-    path('admin/<slug:slug>/', views.admin_course_detail, name='admin_course_detail'),
-    path('admin/<slug:slug>/edit/', views.admin_course_edit, name='admin_course_edit'),
-    path('admin/<slug:slug>/delete/', views.admin_course_delete, name='admin_course_delete'),
+    # Public course views - Must come after specific patterns
+    path('', views.courses_list, name='courses_list'),
+    path('<slug:slug>/', views.course_detail, name='course_detail'),
+    path('<slug:slug>/enroll/', views.course_enroll, name='course_enroll'),
+
+    # Subscription plans
+    path('<slug:slug>/plans/', views.subscription_plans, name='subscription_plans'),
+    path('<slug:course_slug>/checkout/<int:plan_id>/', views.subscription_checkout, name='subscription_checkout'),
 ]

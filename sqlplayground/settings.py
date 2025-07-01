@@ -192,6 +192,12 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SQL Playground <norep
 # For development, you can also use console backend to see emails in terminal
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# Stripe Payment Gateway Settings
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "pk_test_51RfhCjRn9gJUDL8d3zAbYQmqBM4irMCtLdt9cTpAR7cBZCRIqG4TpItoGuoakHvT2Ao30blthxbwjJl2hNRje5T5002RfQDrZq")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "sk_test_51RfhCjRn9gJUDL8dtKvoe4UsNByCLne2YXHs5sBg2718erSVB3ErbjbHxrIwGOlUzNSZ2ZZFRvwL2RL31OO4DMsc00IGNEEQbO")
+STRIPE_CURRENCY = "usd"  # USD for Stripe
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
 # Messages Framework
 MESSAGE_TAGS = {
     messages.DEBUG: 'debug',

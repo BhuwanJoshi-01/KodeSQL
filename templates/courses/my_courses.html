@@ -96,8 +96,31 @@
                         <div class="course-meta">
                             <span><i class="fas fa-clock"></i> <span class="course-duration">{{ enrollment.course.duration_hours }}h</span></span>
                             <span><i class="fas fa-layer-group"></i> <span class="course-modules">{{ enrollment.course.module_count }}</span> modules</span>
-                            <span><i class="fas fa-graduation-cap"></i> <span class="course-level">{{ enrollment.course.get_difficulty_display }}</span></span>
+                            <span><i class="fas fa-graduation-cap"></i> <span class="course-level">{{ enrollment.course.get_difficulty_display() }}</span></span>
                         </div>
+
+                        {% set active_subscription = enrollment.subscriptions.filter(status='active').first() %}
+                        {% if active_subscription %}
+                        <div class="subscription-info">
+                            <div class="subscription-plan">
+                                <i class="fas fa-crown"></i>
+                                <span>{{ active_subscription.plan.name }}</span>
+                                {% if active_subscription.is_expiring_soon %}
+                                    <span class="expiring-badge">Expiring Soon</span>
+                                {% endif %}
+                            </div>
+                            <div class="subscription-time">
+                                {% if active_subscription.end_date %}
+                                    <i class="fas fa-clock"></i>
+                                    <span>{{ active_subscription.time_remaining }} remaining</span>
+                                {% else %}
+                                    <i class="fas fa-infinity"></i>
+                                    <span>Unlimited Access</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div class="course-actions">
                             {% if enrollment.is_completed %}
                                 {% if enrollment.certificate_issued %}

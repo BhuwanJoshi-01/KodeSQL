@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Choose Your Plan - {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<style>
+.subscription-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.subscription-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.subscription-header h1 {
+    color: var(--text-primary);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.subscription-header p {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.course-info {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.course-info h2 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.course-info p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.course-meta {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.meta-item i {
+    color: var(--primary-color);
+}
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.plan-card {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.plan-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.plan-card.recommended {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--bg-secondary), rgba(99, 91, 255, 0.05));
+}
+
+.plan-card.recommended::before {
+    content: "RECOMMENDED";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.plan-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.plan-name {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.plan-duration {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.plan-pricing {
+    margin-bottom: 1.5rem;
+}
+
+.plan-price {
+    color: var(--text-primary);
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.plan-original-price {
+    color: var(--text-secondary);
+    text-decoration: line-through;
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.plan-discount {
+    background: var(--success-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.plan-description {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.plan-features li i {
+    color: var(--success-color);
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+}
+
+.plan-button {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.plan-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 91, 255, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.plan-card.recommended .plan-button {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    box-shadow: 0 4px 15px rgba(99, 91, 255, 0.2);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.guarantee-info {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.guarantee-info h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.guarantee-info p {
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .subscription-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .subscription-header h1 {
+        font-size: 2rem;
+    }
+    
+    .plans-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .course-meta {
+        gap: 1rem;
+    }
+    
+    .plan-card {
+        padding: 1.5rem;
+    }
+    
+    .plan-price {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="tile-wrap">
+        <div class="subscription-container">
+            <a href="{{ url('courses:course_detail', slug=course.slug) }}" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                Back to Course
+            </a>
+            
+            <div class="subscription-header">
+                <h1>Choose Your Learning Plan</h1>
+                <p>Select the perfect plan for your learning journey and get instant access to premium content</p>
+            </div>
+            
+            <div class="course-info">
+                <h2>{{ course.title }}</h2>
+                <p>{{ course.short_description }}</p>
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ course.duration_hours|default(12) }} hours</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-signal"></i>
+                        <span>{{ course.get_difficulty_display() }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-users"></i>
+                        <span>{{ course.enrollments.count() }} students</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-play-circle"></i>
+                        <span>{{ course.modules.count() }} modules</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="plans-grid">
+                {% for plan in subscription_plans %}
+                <div class="plan-card {{ 'recommended' if plan.is_recommended else '' }}">
+                    <div class="plan-header">
+                        <div class="plan-name">{{ plan.name }}</div>
+                        <div class="plan-duration">{{ plan.get_duration_display() }}</div>
+                    </div>
+
+                    <div class="plan-pricing">
+                        <div class="plan-price">
+                            ${{ plan.effective_price }}
+                            {% if plan.has_discount %}
+                                <span class="plan-original-price">${{ plan.original_price }}</span>
+                                <span class="plan-discount">{{ plan.discount_percentage }}% OFF</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="plan-description">
+                        {{ plan.description }}
+                    </div>
+
+                    <ul class="plan-features">
+                        {% if plan.features %}
+                            {% for feature in plan.features %}
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>{{ feature }}</span>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Full course access for {{ plan.get_duration_display()|lower }}</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>All video lessons</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Downloadable resources</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Community support</span>
+                            </li>
+                            {% if plan.duration == 'unlimited' %}
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Certificate of completion</span>
+                            </li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+
+                    <a href="{{ url('courses:subscription_checkout', course_slug=course.slug, plan_id=plan.id) }}" class="plan-button">
+                        Select This Plan
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="guarantee-info">
+                <h3><i class="fas fa-shield-alt"></i> 30-Day Money Back Guarantee</h3>
+                <p>Not satisfied with your purchase? Get a full refund within 30 days, no questions asked.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -7,7 +7,7 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from .models import (
     Course, CourseModule, CourseLesson, UserCourseEnrollment,
-    CourseReview, CourseCertificate, CoursePayment
+    CourseReview, CourseCertificate, CoursePayment, SubscriptionPlan, UserSubscription
 )
 
 
@@ -90,6 +90,19 @@ class CourseAdmin(ImportExportModelAdmin):
             return format_html('{} ({}/5)', stars, rating)
         return 'No ratings'
     average_rating_display.short_description = 'Average Rating'
+
+
+# Subscription Plan Resources
+class SubscriptionPlanResource(resources.ModelResource):
+    class Meta:
+        model = SubscriptionPlan
+        fields = ('id', 'name', 'duration', 'price', 'original_price', 'plan_type', 'course__title', 'is_active', 'is_recommended')
+
+
+class UserSubscriptionResource(resources.ModelResource):
+    class Meta:
+        model = UserSubscription
+        fields = ('id', 'user__email', 'course__title', 'plan__name', 'status', 'start_date', 'end_date', 'amount_paid')
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('instructor')
@@ -283,3 +296,119 @@ class CoursePaymentAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(SubscriptionPlan)
+class SubscriptionPlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'course_display', 'duration', 'price', 'is_active', 'is_recommended', 'sort_order')
+    list_filter = ('duration', 'plan_type', 'is_active', 'is_recommended', 'course')
+    search_fields = ('name', 'description', 'course__title')
+    list_editable = ('is_active', 'is_recommended', 'sort_order')
+    ordering = ('sort_order', 'course', 'duration')
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'duration', 'plan_type', 'course')
+        }),
+        ('Pricing', {
+            'fields': ('price', 'original_price')
+        }),
+        ('Content', {
+            'fields': ('description', 'features')
+        }),
+        ('Settings', {
+            'fields': ('is_active', 'is_recommended', 'sort_order')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+
+    def course_display(self, obj):
+        if obj.course:
+            return obj.course.title
+        return "All Courses"
+    course_display.short_description = 'Course'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('course')
+
+
+@admin.register(UserSubscription)
+class UserSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user_email', 'course_title', 'plan_name', 'status', 'start_date', 'end_date', 'time_remaining_display')
+    list_filter = ('status', 'plan__duration', 'start_date', 'end_date')
+    search_fields = ('user__email', 'course__title', 'plan__name')
+    date_hierarchy = 'start_date'
+    ordering = ('-created_at',)
+
+    fieldsets = (
+        ('Subscription Details', {
+            'fields': ('user', 'course', 'plan', 'enrollment')
+        }),
+        ('Timeline', {
+            'fields': ('start_date', 'end_date', 'status')
+        }),
+        ('Payment', {
+            'fields': ('amount_paid', 'payment_reference')
+        }),
+        ('Notifications', {
+            'fields': ('expiry_notification_sent', 'final_notification_sent'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    readonly_fields = ('created_at', 'updated_at')
+
+    def user_email(self, obj):
+        return obj.user.email
+    user_email.short_description = 'User'
+
+    def course_title(self, obj):
+        return obj.course.title
+    course_title.short_description = 'Course'
+
+    def plan_name(self, obj):
+        return obj.plan.name
+    plan_name.short_description = 'Plan'
+
+    def time_remaining_display(self, obj):
+        if obj.end_date is None:
+            return "Unlimited"
+
+        if obj.status != 'active':
+            return f"Status: {obj.get_status_display()}"
+
+        remaining = obj.end_date - timezone.now()
+        if remaining.days > 0:
+            return f"{remaining.days} days"
+        elif remaining.seconds > 3600:
+            hours = remaining.seconds // 3600
+            return f"{hours} hours"
+        else:
+            return "Expires soon"
+    time_remaining_display.short_description = 'Time Remaining'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'course', 'plan', 'enrollment')
+
+    actions = ['activate_subscriptions', 'expire_subscriptions']
+
+    def activate_subscriptions(self, request, queryset):
+        for subscription in queryset:
+            subscription.activate()
+        self.message_user(request, f"Activated {queryset.count()} subscriptions.")
+    activate_subscriptions.short_description = "Activate selected subscriptions"
+
+    def expire_subscriptions(self, request, queryset):
+        for subscription in queryset:
+            subscription.expire()
+        self.message_user(request, f"Expired {queryset.count()} subscriptions.")
+    expire_subscriptions.short_description = "Expire selected subscriptions"
