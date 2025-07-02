@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
@@ -6,7 +7,7 @@
 <div class="subscription-container">
     <div class="subscription-header">
         <div class="breadcrumb">
-            <a href="{% url 'challenges:challenges_list' %}"
+            <a href="{% url 'challenges:challenges_list' %}">
                 <span class="material-icons">arrow_back</span>
                 Back to Challenges
             </a>
@@ -88,12 +89,17 @@
                 <div class="plan-features">
                     <h4>What's included:</h4>
                     <ul>
-                        {% for feature in plan.features %}
-                            <li>
-                                <span class="material-icons">check_circle</span>
-                                {{ feature }}
-                            </li>
-                        {% empty %}
+                        {% if plan.features and plan.features|length > 0 %}
+                            {% for feature in plan.features %}
+                                {% if feature and feature != "[]" and feature != "" %}
+                                    <li>
+                                        <span class="material-icons">check_circle</span>
+                                        {{ feature|safe }}
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <!-- Default features if none specified -->
                             <li>
                                 <span class="material-icons">check_circle</span>
                                 Access to all premium challenges
@@ -112,12 +118,12 @@
                                 Lifetime access
                             </li>
                             {% endif %}
-                        {% endfor %}
+                        {% endif %}
                     </ul>
                 </div>
                 
                 <div class="plan-action">
-                    <a href="{% url 'challenges:subscription_checkout' plan.id %}" class="btn btn-primary"
+                    <a href="{% url 'challenges:subscription_checkout' plan.id %}" class="btn btn-primary">
                         Choose {{ plan.name }}
                     </a>
                 </div>
@@ -160,38 +166,55 @@
 {% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/challenge-button-fixes.css' %}">
 <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 .subscription-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Pending Subscriptions Alert */
 .pending-subscriptions-alert {
-    background: #fef3c7;
-    border: 2px solid #f59e0b;
-    border-radius: 12px;
+    background: linear-gradient(135deg, var(--warning-bg), var(--warning-bg));
+    border: 2px solid var(--warning-color);
+    border-radius: 16px;
     padding: 2rem;
     margin-bottom: 3rem;
+    backdrop-filter: blur(10px);
 }
 
 .pending-subscriptions-alert h2 {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #92400e;
+    color: var(--warning-color);
     margin-bottom: 1rem;
+    font-weight: 700;
 }
 
 .pending-subscription-item {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.3s ease;
+}
+
+.pending-subscription-item:hover {
+    background: var(--bg-hover);
+    transform: translateY(-2px);
 }
 
 .pending-subscription-item:last-child {
@@ -201,6 +224,7 @@
 .pending-info h3 {
     margin-bottom: 0.5rem;
     color: var(--text-primary);
+    font-weight: 600;
 }
 
 .pending-info p {
@@ -219,13 +243,16 @@
     margin: 0;
 }
 
+/* Header Styles */
 .subscription-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 4rem;
+    padding: 2rem 0;
 }
 
 .breadcrumb {
     margin-bottom: 2rem;
+    text-align: left;
 }
 
 .breadcrumb a {
@@ -234,217 +261,355 @@
     gap: 0.5rem;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
 }
 
 .breadcrumb a:hover {
     color: var(--primary-color);
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .header-content h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
     color: var(--text-primary);
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .header-content p {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
 }
 
+/* Plans Container */
 .plans-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-bottom: 4rem;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 5rem;
 }
 
+/* Plan Cards */
 .plan-card {
-    background: var(--card-background);
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
     border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 2rem;
+    border-radius: 20px;
+    padding: 2.5rem;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.plan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color), var(--success-color));
+    border-radius: 20px 20px 0 0;
 }
 
 .plan-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-hover) 100%);
 }
 
 .plan-card.recommended {
     border-color: var(--primary-color);
-    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+    box-shadow: var(--shadow-xl);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-hover) 100%);
+}
+
+.plan-card.recommended::before {
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+    height: 6px;
 }
 
 .recommended-badge {
     position: absolute;
-    top: -12px;
+    top: -15px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--primary-color);
+    background: linear-gradient(45deg, var(--primary-color), var(--info-color));
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    box-shadow: var(--shadow-lg);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .plan-header h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
     color: var(--text-primary);
+    font-weight: 700;
 }
 
 .plan-duration {
     color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    font-weight: 500;
 }
 
 .plan-pricing {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     position: relative;
 }
 
 .original-price {
     text-decoration: line-through;
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .discount-badge {
-    background: #ef4444;
+    background: linear-gradient(45deg, var(--error-color), var(--error-hover));
     color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
     display: inline-block;
-    margin-left: 0.5rem;
+    margin-left: 0.75rem;
+    box-shadow: var(--shadow-md);
 }
 
 .current-price {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: var(--primary-color);
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     display: flex;
     align-items: baseline;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
 }
 
 .price-period {
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
-    font-weight: normal;
+    font-weight: 500;
 }
 
+/* Plan Content */
 .plan-description {
     color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 2rem;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-size: 1rem;
 }
 
 .plan-features h4 {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .plan-features ul {
     list-style: none;
     padding: 0;
-    margin: 0 0 2rem 0;
+    margin: 0 0 2.5rem 0;
 }
 
 .plan-features li {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
     color: var(--text-secondary);
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
 }
 
 .plan-features .material-icons {
     color: var(--success-color);
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    background: var(--success-bg);
+    border-radius: 50%;
+    padding: 0.25rem;
 }
 
+/* Plan Action Button */
 .plan-action {
     margin-top: auto;
 }
 
-.btn-full {
+.plan-action .btn {
     width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    background: linear-gradient(45deg, var(--primary-color), var(--info-color));
+    color: white;
+    border: none;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-lg);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
+.plan-action .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+    background: linear-gradient(45deg, var(--primary-hover), var(--info-hover));
+}
+
+.plan-card.recommended .plan-action .btn {
+    background: linear-gradient(45deg, var(--success-hover), var(--success-color));
+    box-shadow: var(--shadow-lg);
+}
+
+.plan-card.recommended .plan-action .btn:hover {
+    background: linear-gradient(45deg, var(--success-hover), var(--success-color));
+    box-shadow: var(--shadow-xl);
+}
+
+/* No Plans State */
 .no-plans {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 3rem;
+    padding: 4rem;
     color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    border-radius: 20px;
+    border: 2px dashed var(--border-color);
 }
 
 .no-plans .material-icons {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
     color: var(--primary-color);
 }
 
+/* Subscription Benefits */
 .subscription-benefits {
     text-align: center;
+    margin-top: 5rem;
 }
 
 .subscription-benefits h2 {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
     color: var(--text-primary);
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .benefits-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
 }
 
 .benefit-item {
-    padding: 1.5rem;
+    padding: 2rem;
     text-align: center;
+    background: var(--bg-tertiary);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.benefit-item:hover {
+    transform: translateY(-5px);
+    background: var(--primary-light);
+    border-color: var(--primary-color);
 }
 
 .benefit-item .material-icons {
-    font-size: 3rem;
+    font-size: 3.5rem;
     color: var(--primary-color);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    background: var(--primary-light);
+    border-radius: 50%;
+    padding: 1rem;
 }
 
 .benefit-item h3 {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.2rem;
 }
 
 .benefit-item p {
     color: var(--text-secondary);
     line-height: 1.6;
+    font-size: 0.95rem;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
     .subscription-container {
         padding: 1rem;
     }
-    
+
     .plans-container {
         grid-template-columns: 1fr;
+        gap: 2rem;
     }
-    
+
+    .plan-card {
+        padding: 2rem;
+    }
+
     .current-price {
+        font-size: 2.5rem;
+    }
+
+    .header-content h1 {
+        font-size: 2.5rem;
+    }
+
+    .subscription-benefits h2 {
         font-size: 2rem;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 }
 </style>

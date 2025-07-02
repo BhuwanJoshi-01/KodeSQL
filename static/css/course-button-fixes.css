@@ -1,0 +1,272 @@
+/* Course Page Button Fixes */
+/* This file specifically fixes button styling issues on course pages */
+
+/* Reset any problematic admin overrides for course pages */
+.course-detail-header .btn,
+.course-content-section .btn,
+.enrollment-card .btn,
+.enrollment-actions .btn,
+.course-tabs .btn,
+.course-actions .btn,
+.courses-container .btn,
+.courses-grid .btn {
+    /* Ensure proper button display */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    
+    /* Proper sizing and spacing */
+    padding: 0.75rem 1.5rem !important;
+    margin: 0.25rem !important;
+    
+    /* Typography */
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    
+    /* Layout and positioning */
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    
+    /* Ensure visibility */
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+    
+    /* Reset problematic properties */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    min-width: auto !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    
+    /* Ensure proper box model */
+    box-sizing: border-box !important;
+}
+
+/* Primary button styling */
+.course-detail-header .btn-primary,
+.course-content-section .btn-primary,
+.enrollment-card .btn-primary,
+.enrollment-actions .btn-primary,
+.course-tabs .btn-primary,
+.course-actions .btn-primary,
+.courses-container .btn-primary,
+.courses-grid .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.course-detail-header .btn-primary:hover,
+.course-content-section .btn-primary:hover,
+.enrollment-card .btn-primary:hover,
+.enrollment-actions .btn-primary:hover,
+.course-tabs .btn-primary:hover,
+.course-actions .btn-primary:hover,
+.courses-container .btn-primary:hover,
+.courses-grid .btn-primary:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3) !important;
+}
+
+/* Secondary button styling */
+.course-detail-header .btn-secondary,
+.course-content-section .btn-secondary,
+.enrollment-card .btn-secondary,
+.enrollment-actions .btn-secondary,
+.course-tabs .btn-secondary,
+.course-actions .btn-secondary,
+.courses-container .btn-secondary,
+.courses-grid .btn-secondary {
+    background-color: transparent !important;
+    color: var(--primary-color) !important;
+    border: 1px solid var(--primary-color) !important;
+}
+
+.course-detail-header .btn-secondary:hover,
+.course-content-section .btn-secondary:hover,
+.enrollment-card .btn-secondary:hover,
+.enrollment-actions .btn-secondary:hover,
+.course-tabs .btn-secondary:hover,
+.course-actions .btn-secondary:hover,
+.courses-container .btn-secondary:hover,
+.courses-grid .btn-secondary:hover {
+    background-color: rgba(var(--primary-rgb), 0.1) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Form buttons */
+.course-detail-header form button,
+.enrollment-card form button,
+.enrollment-actions form button {
+    /* Ensure form buttons are visible */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    
+    /* Proper sizing */
+    padding: 0.75rem 1.5rem !important;
+    margin: 0.25rem !important;
+    
+    /* Typography */
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    
+    /* Styling */
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    
+    /* Ensure visibility */
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    
+    /* Reset problematic properties */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    min-width: auto !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Tab buttons specific styling */
+.course-tabs .tab-btn,
+.course-tabs button {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.course-tabs .tab-btn.active,
+.course-tabs button.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+.course-tabs .tab-btn:hover,
+.course-tabs button:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Breadcrumb buttons */
+.course-breadcrumb .btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+    margin-right: 0.5rem !important;
+}
+
+/* Enrollment action buttons - full width */
+.enrollment-actions .btn,
+.enrollment-actions button {
+    width: 100% !important;
+    margin-bottom: 0.75rem !important;
+    padding: 1rem 1.5rem !important;
+    font-size: 0.95rem !important;
+}
+
+/* Course card action buttons */
+.course-card .course-actions .btn {
+    flex: 1 !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.85rem !important;
+}
+
+/* Fix for any inline styles that might interfere */
+.course-detail-header .btn[style],
+.course-content-section .btn[style],
+.enrollment-card .btn[style],
+.enrollment-actions .btn[style],
+.course-tabs .btn[style],
+.course-actions .btn[style],
+.courses-container .btn[style],
+.courses-grid .btn[style] {
+    /* Override any problematic inline styles */
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure buttons are always visible and clickable */
+.course-detail-header .btn,
+.course-content-section .btn,
+.enrollment-card .btn,
+.enrollment-actions .btn,
+.course-tabs .btn,
+.course-actions .btn,
+.courses-container .btn,
+.courses-grid .btn {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Fix for any z-index issues */
+.course-detail-header,
+.course-content-section,
+.enrollment-card,
+.enrollment-actions,
+.course-tabs,
+.course-actions,
+.courses-container,
+.courses-grid {
+    position: relative !important;
+    z-index: 0 !important;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .course-detail-header .btn,
+    .course-content-section .btn,
+    .enrollment-card .btn,
+    .enrollment-actions .btn,
+    .course-tabs .btn,
+    .course-actions .btn,
+    .courses-container .btn,
+    .courses-grid .btn {
+        padding: 0.6rem 1rem !important;
+        font-size: 0.8rem !important;
+        gap: 0.25rem !important;
+    }
+    
+    .enrollment-actions .btn,
+    .enrollment-actions button {
+        padding: 0.8rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .course-tabs .tab-btn,
+    .course-tabs button {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
+    }
+}

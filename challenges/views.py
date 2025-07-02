@@ -14,6 +14,7 @@ from datetime import timedelta
 import json
 import sqlite3
 import os
+import time
 
 from .models import Challenge, UserChallengeProgress, ChallengeSubscriptionPlan, UserChallengeSubscription
 from users.models import UserDatabase
@@ -125,7 +126,7 @@ def challenges_list(request):
 
 def challenge_detail(request, challenge_id):
     """
-    Challenge detail view with content and access control.
+    Enhanced challenge detail view with integrated SQL editor.
     """
     challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
 
@@ -149,13 +150,96 @@ def challenge_detail(request, challenge_id):
             challenge=challenge
         )
 
+        # Initialize challenge database for this user if they have access
+        if has_access:
+            try:
+                challenge.initialize_challenge_database(request.user)
+            except Exception as e:
+                messages.error(request, f'Error initializing challenge database: {str(e)}')
+
     context = {
         'page_title': f'Challenge: {challenge.title}',
         'challenge': challenge,
         'user_progress': user_progress,
         'has_access': has_access,
+        'database_schema': challenge.database_schema,
     }
-    return render(request, 'challenges/challenge_detail.html', context)
+    return render(request, 'challenges/challenge_solve.html', context)
+
+
+@require_http_methods(["POST"])
+@login_required
+def execute_challenge_query(request, challenge_id):
+    """
+    Execute a SQL query for a specific challenge.
+    """
+    challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
+
+    # Check if user has access to this challenge
+    if not challenge.user_has_access(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'You do not have access to this challenge.'
+        })
+
+    try:
+        data = json.loads(request.body)
+        user_query = data.get('query', '').strip()
+
+        if not user_query:
+            return JsonResponse({
+                'success': False,
+                'error': 'Query cannot be empty.'
+            })
+
+        # Get challenge-specific database path
+        db_path = challenge.get_challenge_database_path(request.user)
+
+        if not os.path.exists(db_path):
+            # Initialize database if it doesn't exist
+            try:
+                challenge.initialize_challenge_database(request.user)
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Failed to initialize challenge database: {str(e)}'
+                })
+
+        # Execute user query
+        start_time = time.time()
+        result = execute_sql_query(db_path, user_query)
+        execution_time = int((time.time() - start_time) * 1000)
+
+        if not result['success']:
+            return JsonResponse({
+                'success': False,
+                'error': f'Query execution failed: {result["error"]}',
+                'execution_time': execution_time
+            })
+
+        user_results = result.get('results', [])
+        columns = result.get('columns', [])
+        row_count = result.get('row_count', 0)
+
+        return JsonResponse({
+            'success': True,
+            'results': user_results,
+            'columns': columns,
+            'row_count': row_count,
+            'execution_time': execution_time,
+            'message': f'Query executed successfully. {row_count} row(s) returned.'
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'An error occurred: {str(e)}'
+        })
 
 
 @login_required
@@ -183,14 +267,13 @@ def submit_challenge(request, challenge_id):
         # Increment attempts
         user_progress.attempts += 1
 
-        # Get user database
-        user_db = UserDatabase.objects.get(user=request.user)
-        db_path = user_db.full_path
+        # Get challenge-specific database path
+        db_path = challenge.get_challenge_database_path(request.user)
 
         if not os.path.exists(db_path):
             return JsonResponse({
                 'success': False,
-                'error': 'User database not found. Please run a query in the SQL editor first.'
+                'error': 'Challenge database not found. Please refresh the page.'
             })
 
         # Execute user query

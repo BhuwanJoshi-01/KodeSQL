@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
@@ -8,7 +9,7 @@
         <!-- Challenge Header -->
         <div class="challenge-header">
             <div class="breadcrumb">
-                <a href="{% url 'challenges:challenges_list' %}"
+                <a href="{% url 'challenges:challenges_list' %}">
                     <span class="material-icons">arrow_back</span>
                     Back to Challenges
                 </a>
@@ -147,7 +148,7 @@
                         </div>
                     {% else %}
                         <p class="login-prompt">
-                            <a href="{% url 'users:login' %}" class="btn btn-primary"Login</a> to track your progress
+                            <a href="{% url 'users:login' %}" class="btn btn-primary">Login</a> to track your progress
                         </p>
                     {% endif %}
                 </div>
@@ -158,11 +159,11 @@
                         Need Help?
                     </h3>
                     <div class="help-links">
-                        <a href="{% url 'core:home' %}"
+                        <a href="{% url 'core:home' %}" class="help-link">
                             <span class="material-icons">code</span>
                             Practice in SQL Editor
                         </a>
-                        <a href="{% url 'tutorials:tutorials_list' %}"
+                        <a href="{% url 'tutorials:tutorials_list' %}" class="help-link">
                             <span class="material-icons">school</span>
                             Learn with Tutorials
                         </a>
@@ -174,6 +175,22 @@
 </div>
 
 <style>
+/* Challenge Detail Page CSS - Based on Reference ProblemsPage.html with Dark/Light Theme Support */
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Challenge Detail Page Styling */
+.tile-wrap {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
 .challenge-header {
     margin-bottom: 3rem;
 }
@@ -188,11 +205,16 @@
     gap: 0.5rem;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: all 0.2s;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    background: #ea580c;
+    color: white;
 }
 
 .breadcrumb a:hover {
-    color: var(--primary-color);
+    background: #dc2626;
 }
 
 .challenge-title-section {
@@ -202,7 +224,7 @@
 }
 
 .challenge-icon {
-    background: linear-gradient(135deg, #ffd700, #ffb300);
+    background: linear-gradient(135deg, #ea580c, #dc2626);
     color: white;
     width: 80px;
     height: 80px;
@@ -211,7 +233,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
 }
 
 .challenge-icon .material-icons {
@@ -221,6 +243,8 @@
 .challenge-title-info h1 {
     margin: 0 0 1rem 0;
     color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 700;
 }
 
 .challenge-meta {
@@ -238,18 +262,18 @@
 }
 
 .difficulty-easy {
-    background: #e8f5e8;
-    color: #2e7d32;
+    background: #dcfce7;
+    color: #166534;
 }
 
 .difficulty-medium {
-    background: #fff3e0;
-    color: #f57c00;
+    background: #fef3c7;
+    color: #92400e;
 }
 
 .difficulty-hard {
-    background: #ffebee;
-    color: #c62828;
+    background: #fecaca;
+    color: #991b1b;
 }
 
 .status-badge {
@@ -263,13 +287,13 @@
 }
 
 .status-badge.completed {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success-color);
+    background: #dcfce7;
+    color: #10b981;
 }
 
 .status-badge.attempted {
-    background: rgba(245, 124, 0, 0.1);
-    color: #f57c00;
+    background: #fef3c7;
+    color: #f59e0b;
 }
 
 .subscription-badge {
@@ -283,13 +307,13 @@
 }
 
 .subscription-badge.premium {
-    background: rgba(234, 88, 12, 0.1);
+    background: #fef3c7;
     color: #ea580c;
 }
 
 .subscription-badge.free {
-    background: rgba(34, 197, 94, 0.1);
-    color: #22c55e;
+    background: #dcfce7;
+    color: #10b981;
 }
 
 .company-badge {
@@ -300,8 +324,8 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .challenge-content-section {
@@ -312,6 +336,13 @@
 
 .challenge-main-content {
     min-width: 0;
+}
+
+.card {
+    background: var(--bg-primary);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
 }
 
 .problem-section,
@@ -329,23 +360,27 @@
     gap: 0.5rem;
     margin: 0 0 1.5rem 0;
     color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 .problem-description {
     line-height: 1.7;
     margin-bottom: 2rem;
+    color: var(--text-primary);
 }
 
 .problem-question {
-    background: var(--background-secondary);
+    background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: 8px;
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid #6366f1;
 }
 
 .problem-question h3 {
     margin: 0 0 1rem 0;
     color: var(--text-primary);
+    font-weight: 600;
 }
 
 .problem-question p {
@@ -366,11 +401,45 @@
 }
 
 .editor-actions {
-    background: var(--background-secondary);
+    background: var(--bg-secondary);
     padding: 1rem;
     display: flex;
     gap: 1rem;
     border-top: 1px solid var(--border-color);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: #ea580c;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
 }
 
 .challenge-sidebar {
@@ -382,7 +451,11 @@
 .hint-section,
 .progress-section,
 .help-section {
+    background: var(--bg-primary);
     padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
 }
 
 .hint-section h3,
@@ -392,13 +465,13 @@
     align-items: center;
     gap: 0.5rem;
     margin: 0 0 1rem 0;
-    color: var(--text-primary);
+    color: #6366f1;
     font-size: 1.1rem;
+    font-weight: bold;
 }
 
 .hint-section {
-    background: rgba(255, 193, 7, 0.1);
-    border-left: 4px solid #ffc107;
+    border-left: 4px solid #f59e0b;
 }
 
 .hint-section p {
@@ -430,7 +503,7 @@
 }
 
 .stat-value.success {
-    color: var(--success-color);
+    color: #10b981;
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -443,7 +516,7 @@
 }
 
 .login-prompt a {
-    color: var(--primary-color);
+    color: #6366f1;
     text-decoration: none;
 }
 
@@ -458,7 +531,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem;
-    background: var(--background-secondary);
+    background: var(--bg-secondary);
     border-radius: 6px;
     text-decoration: none;
     color: var(--text-primary);
@@ -466,7 +539,7 @@
 }
 
 .help-link:hover {
-    background: var(--border-color);
+    background: var(--bg-hover);
 }
 
 .results-table {
@@ -483,7 +556,7 @@
 }
 
 .results-table th {
-    background: var(--background-secondary);
+    background: var(--bg-secondary);
     font-weight: 500;
     color: var(--text-primary);
 }
@@ -503,23 +576,24 @@
 }
 
 .result-status.success {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success-color);
-    border: 1px solid rgba(46, 125, 50, 0.2);
+    background: #dcfce7;
+    color: #10b981;
+    border: 1px solid #10b981;
 }
 
 .result-status.error {
-    background: rgba(198, 40, 40, 0.1);
-    color: var(--error-color);
-    border: 1px solid rgba(198, 40, 40, 0.2);
+    background: #fecaca;
+    color: #ef4444;
+    border: 1px solid #ef4444;
 }
 
 .result-status.incorrect {
-    background: rgba(245, 124, 0, 0.1);
-    color: #f57c00;
-    border: 1px solid rgba(245, 124, 0, 0.2);
+    background: #fef3c7;
+    color: #f59e0b;
+    border: 1px solid #f59e0b;
 }
 
+/* Responsive Design */
 @media (max-width: 1024px) {
     .challenge-content-section {
         grid-template-columns: 1fr;

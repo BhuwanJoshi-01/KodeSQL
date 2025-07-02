@@ -1,0 +1,1075 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Challenge Solve Page CSS - Based on Reference SQLeditor_htmlLayout.html */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Content wrapper for challenge page */
+.content-wrapper {
+    position: fixed;
+    top: 70px; /* Account for fixed navigation */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* Override base template styles for full-screen challenge interface */
+.content-wrapper .tile-wrap {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+}
+
+[data-theme="dark"] body {
+    background: var(--bg-primary);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-primary);
+    border: none;
+}
+
+[data-theme="dark"] .container {
+    background: var(--bg-primary);
+}
+
+/* Challenge Action Bar */
+.challenge-action-bar {
+    background: var(--bg-primary);
+    padding: 15px 25px;
+    box-shadow: 0 2px 20px var(--shadow-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.challenge-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.challenge-title-compact {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Old header styles removed - using challenge action bar instead */
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #4f46e5, #7c3aed);
+    color: white;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+}
+
+.btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+.main-layout {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+}
+
+.left-panel {
+    width: 45%;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    min-width: 300px;
+    max-width: 60%;
+}
+
+[data-theme="dark"] .left-panel {
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+}
+
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .right-panel {
+    background: var(--bg-primary);
+}
+
+.resizer {
+    width: 6px;
+    background: linear-gradient(45deg, #4f46e5, #7c3aed);
+    cursor: col-resize;
+    position: relative;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+}
+
+.resizer:hover {
+    opacity: 1;
+}
+
+.resizer::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 40px;
+    background: rgba(79, 70, 229, 0.1);
+    border-radius: 10px;
+}
+
+.question-section {
+    padding: 25px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .question-section {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.question-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.difficulty-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: linear-gradient(45deg, #f59e0b, #d97706);
+    color: white;
+    margin-bottom: 15px;
+}
+
+.difficulty-badge.difficulty-easy {
+    background: linear-gradient(45deg, #10b981, #059669);
+}
+
+.difficulty-badge.difficulty-medium {
+    background: linear-gradient(45deg, #f59e0b, #d97706);
+}
+
+.difficulty-badge.difficulty-hard {
+    background: linear-gradient(45deg, #ef4444, #dc2626);
+}
+
+.difficulty-badge.difficulty-extreme {
+    background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+}
+
+.question-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.table-schema {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    overflow-x: auto;
+}
+
+[data-theme="dark"] .table-schema {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+}
+
+.table-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.editor-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .editor-header {
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+}
+
+.editor-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.database-selector {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+[data-theme="dark"] .database-selector {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.editor-container {
+    flex: 1;
+    position: relative;
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .editor-container {
+    background: #1e293b;
+}
+
+.code-editor {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 20px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    resize: none;
+    outline: none;
+}
+
+[data-theme="dark"] .code-editor {
+    background: #1e293b;
+    color: #e2e8f0;
+}
+
+.code-editor::placeholder {
+    color: var(--text-secondary);
+}
+
+.output-section {
+    height: 40%;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    min-height: 200px;
+    max-height: 60%;
+}
+
+[data-theme="dark"] .output-section {
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+}
+
+.output-header {
+    display: flex;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .output-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .tab.active {
+    background: var(--bg-primary);
+}
+
+.tab:hover:not(.active) {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.tab-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .tab-content {
+    background: var(--bg-primary);
+}
+
+.tab-panel {
+    display: none;
+    height: 100%;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .result-table {
+    background: var(--bg-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.result-table th {
+    background: linear-gradient(45deg, #4f46e5, #7c3aed);
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.result-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.result-table tr:hover {
+    background: var(--bg-hover);
+}
+
+.loading-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.vertical-resizer {
+    height: 6px;
+    background: linear-gradient(45deg, #4f46e5, #7c3aed);
+    cursor: row-resize;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+.vertical-resizer:hover {
+    opacity: 1;
+}
+
+.placeholder-content {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: 40px;
+}
+
+.placeholder-content .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Hint Box Styling */
+.hint-box {
+    background: var(--warning-bg);
+    border-left: 4px solid var(--warning-color);
+    padding: 12px 16px;
+    margin: 10px 0;
+    border-radius: 0 6px 6px 0;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .hint-box {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid #f59e0b;
+    color: var(--text-primary);
+}
+
+/* Expected Output Section */
+.expected-output-section {
+    background: var(--success-bg);
+    border: 1px solid var(--success-color);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+[data-theme="dark"] .expected-output-section {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--success-color);
+}
+
+.expected-output-title {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+/* Status Bar */
+.status-bar {
+    background: var(--bg-secondary);
+    padding: 8px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-primary);
+    font-size: 13px;
+    border-top: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .status-bar {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Error Display */
+.error-display {
+    background: var(--error-bg);
+    border: 1px solid var(--error-color);
+    border-radius: 8px;
+    padding: 15px;
+    color: var(--error-text);
+}
+
+[data-theme="dark"] .error-display {
+    background: var(--error-bg);
+    border: 1px solid var(--error-color);
+    color: var(--error-text);
+}
+
+@media (max-width: 1024px) {
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        max-width: none;
+        height: 50%;
+    }
+
+    .resizer {
+        display: none;
+    }
+
+    .vertical-resizer {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 10px 15px;
+    }
+
+    .nav-items {
+        display: none;
+    }
+
+    .question-section {
+        padding: 15px;
+    }
+
+    .editor-header {
+        padding: 10px 15px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+<div class="container">
+    <!-- Challenge Action Bar -->
+    <div class="challenge-action-bar">
+        <div class="challenge-info">
+            <h1 class="challenge-title-compact">{{ challenge.title }}</h1>
+            <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
+                {{ challenge.get_difficulty_display }}
+                {% if challenge.is_premium %}
+                    - Premium
+                {% endif %}
+            </span>
+        </div>
+        <div class="action-buttons">
+            {% if user_progress and user_progress.is_completed %}
+                <span class="btn btn-primary" style="background: var(--success-color);">
+                    <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                    Completed
+                </span>
+            {% else %}
+                <button id="submit-solution-btn" class="btn btn-primary" disabled>
+                    <span class="material-icons" style="font-size: 16px;">send</span>
+                    Submit Solution
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="left-panel" id="leftPanel">
+            <div class="question-section">
+                <div class="question-header">
+                    <div>
+                        <h2 class="question-title">{{ challenge.title }}</h2>
+                        <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
+                            {{ challenge.get_difficulty_display }}
+                            {% if challenge.is_premium %}
+                                - Premium
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="question-content">
+                    {{ challenge.description|safe }}
+                </div>
+
+                <div class="question-content">
+                    <h3>Question:</h3>
+                    {{ challenge.question|safe }}
+                </div>
+
+                {% if database_schema.tables %}
+                    {% for table_name, table_info in database_schema.tables.items %}
+                        <div class="table-schema">
+                            <div class="table-title">Table: {{ table_name }}</div>
+                            <pre>{% for column in table_info.columns %}{{ column.name }} - {{ column.type }}
+{% endfor %}</pre>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="right-panel">
+            <div class="editor-section">
+                <div class="editor-header">
+                    <div class="editor-title">SQL Editor</div>
+                    <div class="editor-actions">
+                        <select class="database-selector">
+                            <option>SQLite</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+                        <button class="btn btn-primary" onclick="runQuery()">
+                            <span id="runText">Run Code</span>
+                            <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="editor-container">
+                    <div id="challenge-editor" style="height: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="vertical-resizer" id="verticalResizer"></div>
+
+            <div class="output-section" id="outputSection">
+                <div class="output-header">
+                    <div class="tab active" onclick="switchTab('output')">Output</div>
+                    {% if challenge.hint %}
+                        <div class="tab" onclick="switchTab('hints')">Hints</div>
+                    {% endif %}
+                    <div class="tab" onclick="switchTab('expected')">Expected Output</div>
+                </div>
+                
+                <div class="tab-content">
+                    <div class="tab-panel active" id="outputPanel">
+                        <div class="placeholder-content" style="text-align: center; color: #94a3b8; margin-top: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📊</div>
+                            <p>Run your SQL query to see results here</p>
+                        </div>
+                    </div>
+                    
+                    {% if challenge.hint %}
+                        <div class="tab-panel" id="hintsPanel">
+                            <div class="hints-content">
+                                <h3 style="margin-bottom: 15px; color: var(--text-primary);">💡 Hints</h3>
+                                <div class="hint-box">
+                                    {{ challenge.hint|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="tab-panel" id="expectedPanel">
+                        <div class="expected-output-section">
+                            <h3 class="expected-output-title">📋 Expected Output</h3>
+                            {% if challenge.expected_result %}
+                                <table class="result-table">
+                                    <thead>
+                                        <tr>
+                                            {% for key in challenge.expected_result.0.keys %}
+                                                <th>{{ key }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in challenge.expected_result %}
+                                            <tr>
+                                                {% for value in row.values %}
+                                                    <td>{{ value }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <p>Expected output will be shown after you submit your solution.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></div>
+                <span>Ready</span>
+            </div>
+            <div id="executionTime" style="display: none;">
+                ⚡ Executed in <span id="timeValue">0ms</span>
+            </div>
+            <div id="rowCount" style="display: none;">
+                📊 <span id="rowValue">0</span> rows returned
+            </div>
+        </div>
+        <div>Challenge Database Connected</div>
+    </div>
+</div>
+</div>
+
+<script>
+// Global variables
+let editor;
+let isResizing = false;
+let isVerticalResizing = false;
+
+// Initialize Monaco Editor
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs' } });
+require(['vs/editor/editor.main'], function () {
+    // Get theme from base template
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    editor = monaco.editor.create(document.getElementById('challenge-editor'), {
+        value: '-- Write your SQL query here\n',
+        language: 'sql',
+        theme: currentTheme === 'dark' ? 'vs-dark' : 'vs',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        fontSize: 14,
+        lineNumbers: 'on',
+        roundedSelection: false,
+        scrollbar: {
+            vertical: 'auto',
+            horizontal: 'auto'
+        }
+    });
+
+    // Listen for theme changes from base template
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'data-theme') {
+                const newTheme = document.documentElement.getAttribute('data-theme');
+                monaco.editor.setTheme(newTheme === 'dark' ? 'vs-dark' : 'vs');
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    // Add keyboard shortcut for running query
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function () {
+        runQuery();
+    });
+});
+
+// Resizer functionality
+const resizer = document.getElementById('resizer');
+const leftPanel = document.getElementById('leftPanel');
+const verticalResizer = document.getElementById('verticalResizer');
+const outputSection = document.getElementById('outputSection');
+
+// Horizontal resizer
+resizer.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    document.addEventListener('mousemove', handleHorizontalResize);
+    document.addEventListener('mouseup', stopResize);
+});
+
+// Vertical resizer
+verticalResizer.addEventListener('mousedown', (e) => {
+    isVerticalResizing = true;
+    document.addEventListener('mousemove', handleVerticalResize);
+    document.addEventListener('mouseup', stopVerticalResize);
+});
+
+function handleHorizontalResize(e) {
+    if (!isResizing) return;
+
+    const containerRect = document.querySelector('.main-layout').getBoundingClientRect();
+    const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+    if (newWidth > 20 && newWidth < 70) {
+        leftPanel.style.width = newWidth + '%';
+    }
+}
+
+function handleVerticalResize(e) {
+    if (!isVerticalResizing) return;
+
+    const rightPanelRect = document.querySelector('.right-panel').getBoundingClientRect();
+    const newHeight = ((e.clientY - rightPanelRect.top) / rightPanelRect.height) * 100;
+
+    if (newHeight > 30 && newHeight < 80) {
+        outputSection.style.height = (100 - newHeight) + '%';
+    }
+}
+
+function stopResize() {
+    isResizing = false;
+    document.removeEventListener('mousemove', handleHorizontalResize);
+    document.removeEventListener('mouseup', stopResize);
+}
+
+function stopVerticalResize() {
+    isVerticalResizing = false;
+    document.removeEventListener('mousemove', handleVerticalResize);
+    document.removeEventListener('mouseup', stopVerticalResize);
+}
+
+// Tab switching
+function switchTab(tabName) {
+    // Remove active class from all tabs and panels
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+    // Add active class to clicked tab and corresponding panel
+    event.target.classList.add('active');
+    document.getElementById(tabName + 'Panel').classList.add('active');
+}
+
+// Query execution
+async function runQuery() {
+    if (!editor) return;
+
+    const query = editor.getValue().trim();
+
+    if (!query) {
+        alert('Please enter a SQL query');
+        return;
+    }
+
+    // Show loading state
+    document.getElementById('runText').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'inline-block';
+
+    // Switch to output tab
+    switchTab('output');
+    document.querySelector('.tab').click();
+
+    try {
+        const response = await fetch(`/challenges/api/execute/{{ challenge.id }}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ query: query })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            displayResults(data.results, data.columns);
+            updateStatusBar(data.execution_time, data.row_count);
+
+            // Enable submit button if results are returned
+            document.getElementById('submit-solution-btn').disabled = false;
+        } else {
+            displayError(data.error);
+        }
+    } catch (error) {
+        displayError('Network error: ' + error.message);
+    } finally {
+        // Hide loading state
+        document.getElementById('runText').style.display = 'inline';
+        document.getElementById('loadingSpinner').style.display = 'none';
+    }
+}
+
+function displayResults(results, columns) {
+    const outputPanel = document.getElementById('outputPanel');
+
+    if (!results || results.length === 0) {
+        outputPanel.innerHTML = '<p style="text-align: center; color: #94a3b8; margin-top: 40px;">No results returned</p>';
+        return;
+    }
+
+    let tableHTML = '<table class="result-table"><thead><tr>';
+
+    // Add column headers
+    columns.forEach(column => {
+        tableHTML += `<th>${column}</th>`;
+    });
+
+    tableHTML += '</tr></thead><tbody>';
+
+    // Add data rows
+    results.forEach(row => {
+        tableHTML += '<tr>';
+        columns.forEach(column => {
+            tableHTML += `<td>${row[column] !== null ? row[column] : 'NULL'}</td>`;
+        });
+        tableHTML += '</tr>';
+    });
+
+    tableHTML += '</tbody></table>';
+    outputPanel.innerHTML = tableHTML;
+}
+
+function displayError(error) {
+    const outputPanel = document.getElementById('outputPanel');
+    outputPanel.innerHTML = `
+        <div class="error-display">
+            <h4 style="margin-bottom: 10px;">❌ Error</h4>
+            <p>${error}</p>
+        </div>
+    `;
+}
+
+function updateStatusBar(executionTime, rowCount) {
+    document.getElementById('executionTime').style.display = 'block';
+    document.getElementById('timeValue').textContent = executionTime + 'ms';
+    document.getElementById('rowCount').style.display = 'block';
+    document.getElementById('rowValue').textContent = rowCount;
+}
+
+function clearEditor() {
+    if (editor) {
+        editor.setValue('-- Write your SQL query here\n');
+    }
+}
+
+// Submit solution
+document.getElementById('submit-solution-btn').addEventListener('click', async function() {
+    if (!editor) return;
+
+    const query = editor.getValue().trim();
+
+    if (!query) {
+        alert('Please enter a SQL query before submitting');
+        return;
+    }
+
+    this.disabled = true;
+    this.innerHTML = '<span class="material-icons" style="font-size: 16px;">hourglass_empty</span> Submitting...';
+
+    try {
+        const response = await fetch(`/challenges/api/submit/{{ challenge.id }}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `query=${encodeURIComponent(query)}`
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.correct) {
+                alert('🎉 Congratulations! Your solution is correct!');
+                this.innerHTML = '<span class="material-icons" style="font-size: 16px;">check_circle</span> Completed';
+                this.style.background = '#10b981';
+                location.reload(); // Reload to show completion status
+            } else {
+                alert(`❌ ${data.message}\n\nAttempts: ${data.attempts}`);
+                this.disabled = false;
+                this.innerHTML = '<span class="material-icons" style="font-size: 16px;">send</span> Submit Solution';
+            }
+        } else {
+            alert('Error: ' + data.error);
+            this.disabled = false;
+            this.innerHTML = '<span class="material-icons" style="font-size: 16px;">send</span> Submit Solution';
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+        this.disabled = false;
+        this.innerHTML = '<span class="material-icons" style="font-size: 16px;">send</span> Submit Solution';
+    }
+});
+
+// Utility function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Listen for theme changes from navigation bar
+document.addEventListener('DOMContentLoaded', function() {
+    // Update Monaco editor theme when theme changes
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                const newTheme = document.documentElement.getAttribute('data-theme');
+                if (editor) {
+                    monaco.editor.setTheme(newTheme === 'dark' ? 'vs-dark' : 'vs');
+                }
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        runQuery();
+    }
+});
+</script>
+{% endblock %}

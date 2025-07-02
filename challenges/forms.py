@@ -219,7 +219,19 @@ class ChallengeSubscriptionPlanForm(forms.ModelForm):
         # Convert features list to string for display
         if self.instance and self.instance.pk and self.instance.features:
             if isinstance(self.instance.features, list):
-                self.fields['features'].initial = '\n'.join(self.instance.features)
+                # Handle case where features is a list containing a string representation of a list
+                if len(self.instance.features) == 1 and isinstance(self.instance.features[0], str) and self.instance.features[0].startswith('['):
+                    try:
+                        import ast
+                        actual_features = ast.literal_eval(self.instance.features[0])
+                        if isinstance(actual_features, list):
+                            self.fields['features'].initial = '\n'.join(actual_features)
+                        else:
+                            self.fields['features'].initial = '\n'.join(self.instance.features)
+                    except (ValueError, SyntaxError):
+                        self.fields['features'].initial = '\n'.join(self.instance.features)
+                else:
+                    self.fields['features'].initial = '\n'.join(self.instance.features)
 
     def clean_features(self):
         """Convert features string to list"""
@@ -229,7 +241,16 @@ class ChallengeSubscriptionPlanForm(forms.ModelForm):
 
         # Split by lines and clean up
         features = [line.strip() for line in features_text.split('\n') if line.strip()]
-        return features
+
+        # Remove bullet points if present
+        cleaned_features = []
+        for feature in features:
+            # Remove common bullet point characters
+            feature = feature.lstrip('•·*-').strip()
+            if feature:
+                cleaned_features.append(feature)
+
+        return cleaned_features
 
 
 class UserChallengeSubscriptionForm(forms.ModelForm):

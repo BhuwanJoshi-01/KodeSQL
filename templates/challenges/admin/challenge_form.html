@@ -56,11 +56,12 @@
 }
 
 .sample-data-info {
-    background: #e7f3ff;
-    border: 1px solid #b3d9ff;
+    background: var(--info-bg);
+    border: 1px solid var(--info-color);
     border-radius: 8px;
     padding: 1rem;
     margin-top: 1rem;
+    color: var(--info-text);
 }
 </style>
 {% endblock %}
@@ -78,19 +79,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const value = jsonField.value.trim();
             if (!value) {
                 jsonPreview.textContent = 'No expected result entered...';
-                jsonPreview.style.color = '#6c757d';
+                jsonPreview.style.color = 'var(--text-tertiary)';
                 return;
             }
-            
+
             try {
                 const parsed = JSON.parse(value);
                 jsonPreview.textContent = JSON.stringify(parsed, null, 2);
-                jsonPreview.style.color = '#28a745';
-                jsonField.style.borderColor = '#28a745';
+                jsonPreview.style.color = 'var(--success-color)';
+                jsonField.style.borderColor = 'var(--success-color)';
             } catch (e) {
                 jsonPreview.textContent = `Invalid JSON: ${e.message}`;
-                jsonPreview.style.color = '#dc3545';
-                jsonField.style.borderColor = '#dc3545';
+                jsonPreview.style.color = 'var(--error-color)';
+                jsonField.style.borderColor = 'var(--error-color)';
             }
         }
         
@@ -140,10 +141,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <strong>Size:</strong> ${fileSize} KB<br>
                     <strong>Type:</strong> ${fileType.toUpperCase()}
                 `;
-                filePreview.style.color = '#28a745';
+                filePreview.style.color = 'var(--success-color)';
             } else {
                 filePreview.innerHTML = 'No file selected';
-                filePreview.style.color = '#6c757d';
+                filePreview.style.color = 'var(--text-tertiary)';
             }
         });
     }
