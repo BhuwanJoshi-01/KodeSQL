@@ -6,7 +6,7 @@
 <div class="subscription-container">
     <div class="subscription-header">
         <div class="breadcrumb">
-            <a href="{{ url('challenges:challenges_list') }}">
+            <a href="{% url 'challenges:challenges_list' %}"
                 <span class="material-icons">arrow_back</span>
                 Back to Challenges
             </a>
@@ -35,14 +35,14 @@
             <div class="pending-info">
                 <h3>{{ pending.plan.name }}</h3>
                 <p>Amount: ${{ pending.amount_paid }}</p>
-                <p>Expires: {{ pending.pending_expires_at|date("M d, Y g:i A") }}</p>
+                <p>Expires: {{ pending.pending_expires_at|date:"M d, Y g:i A" }}</p>
             </div>
             <div class="pending-actions">
-                <a href="{{ url('challenges:subscription_checkout', pending.plan.id) }}" class="btn btn-primary">
+                <a href="{% url 'challenges:subscription_checkout' pending.plan.id %}" class="btn btn-primary">
                     Complete Payment
                 </a>
-                <form method="post" action="{{ url('challenges:cancel_pending_subscription', pending.id) }}" style="display: inline;">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                <form method="post" action="{% url 'challenges:cancel_pending_subscription' pending.id %}" style="display: inline;">
+                    {% csrf_token %}
                     <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to cancel this pending payment?')">
                         Cancel
                     </button>
@@ -65,7 +65,7 @@
                 
                 <div class="plan-header">
                     <h3>{{ plan.name }}</h3>
-                    <div class="plan-duration">{{ plan.get_duration_display() }}</div>
+                    <div class="plan-duration">{{ plan.get_duration_display }}</div>
                 </div>
                 
                 <div class="plan-pricing">
@@ -76,7 +76,7 @@
                     <div class="current-price">
                         ${{ plan.effective_price }}
                         {% if plan.duration != 'unlimited' %}
-                            <span class="price-period">/ {{ plan.get_duration_display()|lower }}</span>
+                            <span class="price-period">/ {{ plan.get_duration_display|lower }}</span>
                         {% endif %}
                     </div>
                 </div>
@@ -93,7 +93,7 @@
                                 <span class="material-icons">check_circle</span>
                                 {{ feature }}
                             </li>
-                        {% else %}
+                        {% empty %}
                             <li>
                                 <span class="material-icons">check_circle</span>
                                 Access to all premium challenges
@@ -117,12 +117,12 @@
                 </div>
                 
                 <div class="plan-action">
-                    <a href="{{ url('challenges:subscription_checkout', plan.id) }}" class="btn btn-primary btn-full">
+                    <a href="{% url 'challenges:subscription_checkout' plan.id %}" class="btn btn-primary"
                         Choose {{ plan.name }}
                     </a>
                 </div>
             </div>
-        {% else %}
+        {% empty %}
             <div class="no-plans">
                 <span class="material-icons">info</span>
                 <h3>No subscription plans available</h3>

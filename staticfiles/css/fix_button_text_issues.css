@@ -1,0 +1,207 @@
+/* Fix for Button Text Truncation Issues */
+
+/* Admin Button Fixes */
+.admin-btn {
+    /* Remove overflow hidden that's causing text truncation */
+    overflow: visible !important;
+    
+    /* Ensure proper text display */
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    
+    /* Ensure minimum width for text */
+    min-width: auto !important;
+    width: auto !important;
+    
+    /* Proper flex properties for text display */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Ensure proper padding for text */
+    padding: 0.75rem 1.5rem !important;
+    
+    /* Ensure text is visible */
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    
+    /* Ensure proper positioning */
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Fix for admin button text specifically */
+.admin-btn span.material-icons {
+    /* Ensure icons don't interfere with text */
+    flex-shrink: 0 !important;
+    margin-right: 0.5rem !important;
+    font-size: 1.1rem !important;
+}
+
+/* Fix for admin button text content */
+.admin-btn:not(:empty) {
+    /* Ensure text content is visible */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+}
+
+/* Fix for button pseudo-elements that might be covering text */
+.admin-btn::before,
+.admin-btn::after {
+    /* Ensure pseudo-elements don't cover text */
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* General button fixes for all button types */
+.btn,
+.button,
+input[type="submit"],
+input[type="button"],
+button {
+    /* Ensure all buttons display text properly */
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    min-width: auto !important;
+    width: auto !important;
+    
+    /* Ensure proper text alignment */
+    text-align: center !important;
+    vertical-align: middle !important;
+    
+    /* Ensure text is not hidden */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    font-size: inherit !important;
+    line-height: normal !important;
+}
+
+/* Fix for specific admin interface buttons */
+.admin-interface .button,
+.admin-interface input[type=submit],
+.admin-interface input[type=button],
+.admin-interface .submit-row input,
+.admin-interface a.button {
+    /* Ensure admin interface buttons show text */
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    text-indent: 0 !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* Fix for action buttons in admin lists */
+.admin-table .btn,
+.admin-table .admin-btn,
+.admin-table a[class*="btn"] {
+    /* Ensure table action buttons show text */
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    min-width: auto !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+/* Fix for Quick Actions buttons */
+.quick-actions .admin-btn,
+.admin-actions .admin-btn {
+    /* Ensure quick action buttons show text */
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    min-width: auto !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+}
+
+/* Fix for form buttons */
+.admin-form .admin-btn,
+.admin-card .admin-btn {
+    /* Ensure form buttons show text */
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* Fix for pagination and other UI buttons */
+.paginator a,
+.paginator .this-page {
+    /* Ensure pagination buttons show text */
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: visible !important;
+    text-indent: 0 !important;
+}
+
+/* Fix for any buttons with material icons */
+.btn .material-icons,
+.admin-btn .material-icons,
+.button .material-icons {
+    /* Ensure icons don't interfere with text layout */
+    flex-shrink: 0 !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-right: 0.5rem !important;
+    font-size: 1.1rem !important;
+}
+
+/* Fix for buttons that might have text-indent issues */
+.btn:not(:empty),
+.admin-btn:not(:empty),
+.button:not(:empty) {
+    /* Reset any text-indent that might hide text */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+}
+
+/* Responsive fixes for mobile */
+@media (max-width: 768px) {
+    .admin-btn {
+        /* Ensure mobile buttons show text */
+        font-size: 0.8rem !important;
+        padding: 0.5rem 1rem !important;
+        min-width: auto !important;
+        width: auto !important;
+        overflow: visible !important;
+        white-space: nowrap !important;
+    }
+    
+    .admin-btn .material-icons {
+        font-size: 1rem !important;
+        margin-right: 0.25rem !important;
+    }
+}
+
+/* Debug styles to identify problematic buttons */
+.admin-btn[style*="overflow"],
+.btn[style*="overflow"],
+.button[style*="overflow"] {
+    /* Override any inline overflow styles */
+    overflow: visible !important;
+}
+
+/* Ensure button containers don't clip content */
+.admin-actions,
+.admin-header .admin-actions,
+.quick-actions {
+    /* Ensure button containers don't clip buttons */
+    overflow: visible !important;
+}
+
+/* Fix for any buttons with fixed width that might be too small */
+.admin-btn[style*="width"],
+.btn[style*="width"],
+.button[style*="width"] {
+    /* Override restrictive width styles */
+    width: auto !important;
+    min-width: auto !important;
+}

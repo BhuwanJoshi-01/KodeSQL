@@ -66,7 +66,7 @@
     </div>
     
     <div class="content">
-        <p>Hi {{ user.first_name or user.username }},</p>
+        <p>Hi {% if user.first_name %}user.first_name{% else %}user.username {% endif %},</p>
         
         <div class="urgent-box">
             <h2>⏰ Last Chance!</h2>

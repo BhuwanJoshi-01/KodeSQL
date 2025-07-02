@@ -1,10 +1,12 @@
 {% extends "admin_base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-{{ super() }}
+{{ block.super }}
 {{ form.media.css }}
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
 <style>
 /* Additional form-specific styles */
 .formset-form {
@@ -81,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% if is_edit %}Edit Tutorial{% else %}Create Tutorial{% endif %}
     </h1>
     <div class="admin-actions">
-        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+        <a href="{% url 'tutorials:admin_tutorials_list' %}"
             <span class="material-icons">arrow_back</span>
             Back to List
         </a>
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <form method="post" enctype="multipart/form-data" class="admin-form">
-    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    {% csrf_token %}
     
     <div class="admin-card">
         <h3>Tutorial Information</h3>
@@ -185,16 +187,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% for lesson_form in formset %}
                     <div class="formset-form">
                         <div class="formset-header">
-                            <h4>Lesson {{ loop.index }}</h4>
+                            <h4>Lesson {{ forloop.counter }}</h4>
                             {% if lesson_form.instance.pk %}
-                                <button type="button" class="admin-btn danger delete-form-btn">
+                                <button type="button" class="btn btn-danger delete-form-btn">
                                     <span class="material-icons">delete</span>
                                     Delete
                                 </button>
                             {% endif %}
                         </div>
                         
-                        {% for field in lesson_form.visible_fields() %}
+                        {% for field in lesson_form.visible_fields %}
                             <div class="form-group">
                                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                                 {{ field }}
@@ -207,14 +209,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         {% endfor %}
                         
-                        {% for field in lesson_form.hidden_fields() %}
+                        {% for field in lesson_form.hidden_fields %}
                             {{ field }}
                         {% endfor %}
                     </div>
                 {% endfor %}
             </div>
             
-            <button type="button" id="add-lesson-form" class="admin-btn secondary add-form-btn">
+            <button type="button" id="add-lesson-form" class="btn btn-secondary add-form-btn">
                 <span class="material-icons">add</span>
                 Add Another Lesson
             </button>
@@ -224,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="formset-form">
                 <div class="formset-header">
                     <h4>New Lesson</h4>
-                    <button type="button" class="admin-btn danger delete-form-btn">
+                    <button type="button" class="btn btn-danger delete-form-btn">
                         <span class="material-icons">delete</span>
                         Delete
                     </button>
@@ -235,11 +237,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     
     <div class="admin-actions" style="margin-top: 2rem;">
-        <button type="submit" class="admin-btn">
+        <button type="submit" class="btn btn-primary">
             <span class="material-icons">save</span>
             {% if is_edit %}Update Tutorial{% else %}Create Tutorial{% endif %}
         </button>
-        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+        <a href="{% url 'tutorials:admin_tutorials_list' %}"
             <span class="material-icons">cancel</span>
             Cancel
         </a>

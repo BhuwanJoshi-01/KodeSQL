@@ -80,21 +80,6 @@ ROOT_URLCONF = "sqlplayground.urls"
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.jinja2.Jinja2",
-        "DIRS": [BASE_DIR / "templates"],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "environment": "sqlplayground.jinja2.environment",
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.template.context_processors.csrf",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-    {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
@@ -220,6 +205,13 @@ X_FRAME_OPTIONS = 'DENY'
 # Session Settings
 SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
+
+# CSRF Settings
+CSRF_COOKIE_AGE = 31449600  # 1 year
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access for debugging
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False  # Use cookies instead of sessions for CSRF tokens
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
 # CKEditor 5 Configuration
 CKEDITOR_5_UPLOAD_PATH = "uploads/"

@@ -5,9 +5,12 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.middleware.csrf import get_token
+from django.db import models
+from datetime import timedelta
 import json
 import sqlite3
 import os
@@ -15,7 +18,7 @@ import os
 from .models import Challenge, UserChallengeProgress, ChallengeSubscriptionPlan, UserChallengeSubscription
 from users.models import UserDatabase
 from editor.views import execute_sql_query
-from .forms import ChallengeForm, ChallengeFilterForm
+from .forms import ChallengeForm, ChallengeFilterForm, UserChallengeSubscriptionForm, SubscriptionFilterForm, ChallengeSubscriptionPlanForm
 
 
 def challenges_list(request):
@@ -24,20 +27,24 @@ def challenges_list(request):
     """
     challenges = Challenge.objects.filter(is_active=True).order_by('order', 'difficulty')
 
-    # Get user progress if authenticated
-    user_progress = {}
+    # Get user progress if authenticated and attach to challenges
     user_subscription = None
     if request.user.is_authenticated:
         progress_data = UserChallengeProgress.objects.filter(
             user=request.user
         ).select_related('challenge')
 
+        # Create a dictionary for quick lookup
+        progress_dict = {}
         for progress in progress_data:
-            user_progress[progress.challenge.id] = {
-                'is_completed': progress.is_completed,
-                'attempts': progress.attempts,
-                'completed_at': progress.completed_at
-            }
+            progress_dict[progress.challenge.id] = progress
+
+        # Attach progress to each challenge using a different attribute name
+        for challenge in challenges:
+            if challenge.id in progress_dict:
+                challenge.progress_data = progress_dict[challenge.id]
+            else:
+                challenge.progress_data = None
 
         # Get user's active challenge subscription
         user_subscription = UserChallengeSubscription.objects.filter(
@@ -57,10 +64,10 @@ def challenges_list(request):
     completed_extreme = 0
 
     if request.user.is_authenticated:
-        completed_challenges = len([p for p in user_progress.values() if p['is_completed']])
+        completed_challenges = len([c for c in challenges if c.progress_data and c.progress_data.is_completed])
 
         for challenge in challenges:
-            if challenge.id in user_progress and user_progress[challenge.id]['is_completed']:
+            if challenge.progress_data and challenge.progress_data.is_completed:
                 if challenge.difficulty == 'easy':
                     completed_easy += 1
                 elif challenge.difficulty == 'medium':
@@ -79,7 +86,6 @@ def challenges_list(request):
     context = {
         'page_title': 'SQL Challenges',
         'challenges': challenges,
-        'user_progress': user_progress,
         'user_subscription': user_subscription,
         'has_active_subscription': user_subscription and user_subscription.is_active if user_subscription else False,
         'total_challenges': total_challenges,
@@ -87,11 +93,31 @@ def challenges_list(request):
         'paid_challenges': paid_challenges,
         'completed_challenges': completed_challenges,
         'progress_stats': {
-            'total': {'completed': completed_challenges, 'total': total_challenges},
-            'easy': {'completed': completed_easy, 'total': easy_total},
-            'medium': {'completed': completed_medium, 'total': medium_total},
-            'hard': {'completed': completed_hard, 'total': hard_total},
-            'extreme': {'completed': completed_extreme, 'total': extreme_total},
+            'total': {
+                'completed': completed_challenges,
+                'total': total_challenges,
+                'percentage': round((completed_challenges / total_challenges * 100) if total_challenges > 0 else 0)
+            },
+            'easy': {
+                'completed': completed_easy,
+                'total': easy_total,
+                'percentage': round((completed_easy / easy_total * 100) if easy_total > 0 else 0)
+            },
+            'medium': {
+                'completed': completed_medium,
+                'total': medium_total,
+                'percentage': round((completed_medium / medium_total * 100) if medium_total > 0 else 0)
+            },
+            'hard': {
+                'completed': completed_hard,
+                'total': hard_total,
+                'percentage': round((completed_hard / hard_total * 100) if hard_total > 0 else 0)
+            },
+            'extreme': {
+                'completed': completed_extreme,
+                'total': extreme_total,
+                'percentage': round((completed_extreme / extreme_total * 100) if extreme_total > 0 else 0)
+            },
         }
     }
     return render(request, 'challenges/challenges_list.html', context)
@@ -337,6 +363,7 @@ def admin_challenge_detail(request, challenge_id):
     ).count()
 
     completion_rate = (completed_attempts / total_attempts * 100) if total_attempts > 0 else 0
+    failed_attempts = total_attempts - completed_attempts
 
     context = {
         'page_title': f'Challenge: {challenge.title}',
@@ -344,6 +371,7 @@ def admin_challenge_detail(request, challenge_id):
         'stats': {
             'total_attempts': total_attempts,
             'completed_attempts': completed_attempts,
+            'failed_attempts': failed_attempts,
             'completion_rate': round(completion_rate, 1),
         }
     }
@@ -723,3 +751,427 @@ def calculate_user_streak(user):
             break
 
     return streak
+
+
+# Challenge Subscription Admin Views (Superuser Only)
+@staff_member_required
+def admin_subscriptions_list(request):
+    """
+    Admin view to list all challenge subscriptions with management options.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    subscriptions = UserChallengeSubscription.objects.select_related(
+        'user', 'plan'
+    ).order_by('-created_at')
+
+    # Apply filters
+    filter_form = SubscriptionFilterForm(request.GET)
+    if filter_form.is_valid():
+        if filter_form.cleaned_data['status']:
+            subscriptions = subscriptions.filter(status=filter_form.cleaned_data['status'])
+
+        if filter_form.cleaned_data['plan']:
+            subscriptions = subscriptions.filter(plan=filter_form.cleaned_data['plan'])
+
+        if filter_form.cleaned_data['search']:
+            search_term = filter_form.cleaned_data['search']
+            subscriptions = subscriptions.filter(
+                Q(user__email__icontains=search_term) |
+                Q(user__first_name__icontains=search_term) |
+                Q(user__last_name__icontains=search_term) |
+                Q(plan__name__icontains=search_term) |
+                Q(payment_reference__icontains=search_term)
+            )
+
+    # Get statistics
+    total_subscriptions = subscriptions.count()
+    active_subscriptions = subscriptions.filter(status='active').count()
+    pending_subscriptions = subscriptions.filter(status='pending').count()
+    expired_subscriptions = subscriptions.filter(status='expired').count()
+
+    # Pagination
+    paginator = Paginator(subscriptions, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Add convenience attributes for templates
+    for subscription in page_obj:
+        subscription.user.full_name_or_email = subscription.user.get_full_name() or subscription.user.email
+
+    context = {
+        'page_title': 'Manage Challenge Subscriptions',
+        'subscriptions': page_obj,
+        'filter_form': filter_form,
+        'total_subscriptions': total_subscriptions,
+        'active_subscriptions': active_subscriptions,
+        'pending_subscriptions': pending_subscriptions,
+        'expired_subscriptions': expired_subscriptions,
+    }
+    return render(request, 'challenges/admin/subscriptions_list.html', context)
+
+
+@staff_member_required
+def admin_subscription_create(request):
+    """
+    Admin view to create a new challenge subscription for a user.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    if request.method == 'POST':
+        form = UserChallengeSubscriptionForm(request.POST)
+        if form.is_valid():
+            subscription = form.save(commit=False)
+
+            # Set default values if not provided
+            if not subscription.start_date:
+                subscription.start_date = timezone.now()
+
+            # Set end date based on plan duration if not provided and not unlimited
+            if not subscription.end_date and subscription.plan.duration != 'unlimited':
+                duration_days = subscription.plan.get_duration_days()
+                if duration_days:
+                    subscription.end_date = subscription.start_date + timedelta(days=duration_days)
+
+            subscription.save()
+            messages.success(request, f'Subscription created successfully for {subscription.user.email}!')
+            return redirect('challenges:admin_subscription_detail', subscription_id=subscription.id)
+    else:
+        form = UserChallengeSubscriptionForm()
+
+    context = {
+        'page_title': 'Create Challenge Subscription',
+        'form': form,
+    }
+    return render(request, 'challenges/admin/subscription_form.html', context)
+
+
+@staff_member_required
+def admin_subscription_detail(request, subscription_id):
+    """
+    Admin view to view challenge subscription details.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    subscription = get_object_or_404(
+        UserChallengeSubscription.objects.select_related('user', 'plan'),
+        id=subscription_id
+    )
+
+    # Add convenience attributes for templates
+    subscription.user.full_name_or_email = subscription.user.get_full_name() or subscription.user.email
+
+    context = {
+        'page_title': f'Subscription: {subscription.user.email}',
+        'subscription': subscription,
+    }
+    return render(request, 'challenges/admin/subscription_detail.html', context)
+
+
+@staff_member_required
+def admin_subscription_edit(request, subscription_id):
+    """
+    Admin view to edit an existing challenge subscription.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    subscription = get_object_or_404(UserChallengeSubscription, id=subscription_id)
+
+    if request.method == 'POST':
+        form = UserChallengeSubscriptionForm(request.POST, instance=subscription)
+        if form.is_valid():
+            subscription = form.save()
+            messages.success(request, f'Subscription for {subscription.user.email} updated successfully!')
+            return redirect('challenges:admin_subscription_detail', subscription_id=subscription.id)
+    else:
+        form = UserChallengeSubscriptionForm(instance=subscription)
+
+    context = {
+        'page_title': f'Edit Subscription: {subscription.user.email}',
+        'form': form,
+        'subscription': subscription,
+    }
+    return render(request, 'challenges/admin/subscription_form.html', context)
+
+
+@staff_member_required
+def admin_subscription_cancel(request, subscription_id):
+    """
+    Admin view to cancel a challenge subscription.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    subscription = get_object_or_404(UserChallengeSubscription, id=subscription_id)
+
+    if request.method == 'POST':
+        subscription.status = 'cancelled'
+        subscription.save()
+        messages.success(request, f'Subscription for {subscription.user.email} cancelled successfully!')
+        return redirect('challenges:admin_subscription_detail', subscription_id=subscription.id)
+
+    context = {
+        'page_title': f'Cancel Subscription: {subscription.user.email}',
+        'subscription': subscription,
+    }
+    return render(request, 'challenges/admin/subscription_confirm_delete.html', context)
+
+
+@staff_member_required
+def admin_subscription_confirm_delete(request, subscription_id):
+    """
+    Admin view to confirm deletion of a challenge subscription.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    subscription = get_object_or_404(UserChallengeSubscription, id=subscription_id)
+
+    # Add convenience attributes for templates
+    subscription.user.full_name_or_email = subscription.user.get_full_name() or subscription.user.email
+
+    context = {
+        'page_title': f'Delete Subscription: {subscription.user.email}',
+        'subscription': subscription,
+    }
+    return render(request, 'challenges/admin/subscription_confirm_delete.html', context)
+
+
+@staff_member_required
+def admin_subscription_delete(request, subscription_id):
+    """
+    Admin view to permanently delete a challenge subscription.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription management.')
+        return redirect('challenges:admin_challenges_list')
+
+    subscription = get_object_or_404(UserChallengeSubscription, id=subscription_id)
+
+    if request.method == 'POST':
+        user_email = subscription.user.email
+        subscription.delete()
+        messages.success(request, f'Subscription for {user_email} deleted successfully!')
+        return redirect('challenges:admin_subscriptions_list')
+
+    # If not POST, redirect to confirm delete page
+    return redirect('challenges:admin_subscription_confirm_delete', subscription_id=subscription_id)
+
+
+# Challenge Subscription Plan Admin Views (Staff Only)
+@staff_member_required
+def admin_subscription_plans_list(request):
+    """
+    Admin subscription plan management list.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription plan management.')
+        return redirect('challenges:admin_challenges_list')
+
+    plans = ChallengeSubscriptionPlan.objects.annotate(
+        subscription_count=Count('subscriptions', filter=Q(subscriptions__status='active'))
+    ).order_by('sort_order', 'price')
+
+    # Apply filters
+    search = request.GET.get('search')
+    if search:
+        plans = plans.filter(
+            Q(name__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    duration_filter = request.GET.get('duration')
+    if duration_filter:
+        plans = plans.filter(duration=duration_filter)
+
+    is_active_filter = request.GET.get('is_active')
+    if is_active_filter:
+        plans = plans.filter(is_active=is_active_filter == 'true')
+
+    # Pagination
+    paginator = Paginator(plans, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_plans = ChallengeSubscriptionPlan.objects.count()
+    active_plans = ChallengeSubscriptionPlan.objects.filter(is_active=True).count()
+    total_subscriptions = UserChallengeSubscription.objects.filter(status='active').count()
+
+    context = {
+        'page_title': 'Manage Challenge Subscription Plans',
+        'plans': page_obj,
+        'total_plans': total_plans,
+        'active_plans': active_plans,
+        'total_subscriptions': total_subscriptions,
+        'search': search,
+        'duration_filter': duration_filter,
+        'is_active_filter': is_active_filter,
+        'duration_choices': ChallengeSubscriptionPlan.DURATION_CHOICES,
+    }
+    return render(request, 'challenges/admin/subscription_plans_list.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_create(request):
+    """
+    Create subscription plan (admin).
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription plan management.')
+        return redirect('challenges:admin_challenges_list')
+
+    if request.method == 'POST':
+        form = ChallengeSubscriptionPlanForm(request.POST)
+        if form.is_valid():
+            plan = form.save()
+            messages.success(request, f'Subscription plan "{plan.name}" created successfully!')
+            return redirect('challenges:admin_subscription_plan_detail', plan_id=plan.id)
+    else:
+        form = ChallengeSubscriptionPlanForm()
+
+    context = {
+        'page_title': 'Create Challenge Subscription Plan',
+        'form': form,
+        'csrf_token': get_token(request),
+    }
+    return render(request, 'challenges/admin/subscription_plan_form.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_detail(request, plan_id):
+    """
+    Admin subscription plan detail view.
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription plan management.')
+        return redirect('challenges:admin_challenges_list')
+
+    plan = get_object_or_404(
+        ChallengeSubscriptionPlan.objects.prefetch_related(
+            'subscriptions__user'
+        ),
+        id=plan_id
+    )
+
+    # Get plan statistics
+    total_subscriptions = plan.subscriptions.count()
+    active_subscriptions = plan.subscriptions.filter(status='active').count()
+    expired_subscriptions = plan.subscriptions.filter(status='expired').count()
+    pending_subscriptions = plan.subscriptions.filter(status='pending').count()
+    total_revenue = plan.subscriptions.filter(status='active').aggregate(
+        total=models.Sum('amount_paid')
+    )['total'] or 0
+
+    # Calculate average revenue per user
+    average_revenue_per_user = 0
+    if active_subscriptions > 0:
+        average_revenue_per_user = total_revenue / active_subscriptions
+
+    # Recent subscriptions
+    recent_subscriptions = plan.subscriptions.select_related('user').order_by('-created_at')[:10]
+
+    # Add convenience attributes for templates
+    for subscription in recent_subscriptions:
+        subscription.user.full_name_or_email = subscription.user.get_full_name() or subscription.user.email
+
+    context = {
+        'page_title': f'Plan: {plan.name}',
+        'plan': plan,
+        'total_subscriptions': total_subscriptions,
+        'active_subscriptions': active_subscriptions,
+        'expired_subscriptions': expired_subscriptions,
+        'pending_subscriptions': pending_subscriptions,
+        'total_revenue': total_revenue,
+        'average_revenue_per_user': average_revenue_per_user,
+        'recent_subscriptions': recent_subscriptions,
+    }
+    return render(request, 'challenges/admin/subscription_plan_detail.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_edit(request, plan_id):
+    """
+    Edit subscription plan (admin).
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription plan management.')
+        return redirect('challenges:admin_challenges_list')
+
+    plan = get_object_or_404(ChallengeSubscriptionPlan, id=plan_id)
+
+    if request.method == 'POST':
+        form = ChallengeSubscriptionPlanForm(request.POST, instance=plan)
+        if form.is_valid():
+            plan = form.save()
+            messages.success(request, f'Subscription plan "{plan.name}" updated successfully!')
+            return redirect('challenges:admin_subscription_plan_detail', plan_id=plan.id)
+    else:
+        form = ChallengeSubscriptionPlanForm(instance=plan)
+
+    context = {
+        'page_title': f'Edit Plan: {plan.name}',
+        'form': form,
+        'plan': plan,
+        'csrf_token': get_token(request),
+    }
+    return render(request, 'challenges/admin/subscription_plan_form.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_confirm_delete(request, plan_id):
+    """
+    Confirm deletion of subscription plan (admin).
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription plan management.')
+        return redirect('challenges:admin_challenges_list')
+
+    plan = get_object_or_404(ChallengeSubscriptionPlan, id=plan_id)
+
+    # Check if plan has active subscriptions
+    active_subscriptions = plan.subscriptions.filter(status='active').count()
+
+    context = {
+        'page_title': f'Delete Plan: {plan.name}',
+        'plan': plan,
+        'active_subscriptions': active_subscriptions,
+    }
+    return render(request, 'challenges/admin/subscription_plan_confirm_delete.html', context)
+
+
+@staff_member_required
+def admin_subscription_plan_delete(request, plan_id):
+    """
+    Delete subscription plan (admin).
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'You do not have permission to access subscription plan management.')
+        return redirect('challenges:admin_challenges_list')
+
+    plan = get_object_or_404(ChallengeSubscriptionPlan, id=plan_id)
+
+    if request.method == 'POST':
+        # Check if plan has active subscriptions
+        active_subscriptions = plan.subscriptions.filter(status='active').count()
+        if active_subscriptions > 0:
+            messages.error(request, f'Cannot delete plan "{plan.name}" because it has {active_subscriptions} active subscriptions.')
+            return redirect('challenges:admin_subscription_plan_detail', plan_id=plan_id)
+
+        plan_name = plan.name
+        plan.delete()
+        messages.success(request, f'Subscription plan "{plan_name}" deleted successfully!')
+        return redirect('challenges:admin_subscription_plans_list')
+
+    # If not POST, redirect to confirm delete page
+    return redirect('challenges:admin_subscription_plan_confirm_delete', plan_id=plan_id)

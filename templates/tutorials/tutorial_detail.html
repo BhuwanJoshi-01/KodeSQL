@@ -8,7 +8,7 @@
         <!-- Tutorial Header -->
         <div class="tutorial-header-section">
             <div class="breadcrumb">
-                <a href="{{ url('tutorials:tutorials_list') }}">
+                <a href="{% url 'tutorials:tutorials_list' %}" class="btn btn-primary">
                     <span class="material-icons">arrow_back</span>
                     Back to Tutorials
                 </a>
@@ -22,7 +22,7 @@
                     <h1>{{ tutorial.title }}</h1>
                     <div class="tutorial-meta">
                         <span class="difficulty difficulty-{{ tutorial.difficulty }}">
-                            {{ tutorial.get_difficulty_display() }}
+                            {{ tutorial.get_difficulty_display }}
                         </span>
                         <span class="lesson-count">
                             {{ lessons|length }} lesson{{ lessons|length|pluralize }}
@@ -67,14 +67,14 @@
                             </div>
 
                             <div class="lesson-content">
-                                <h3>{{ loop.index }}. {{ lesson.title }}</h3>
+                                <h3>{{ forloop.counter }}. {{ lesson.title }}</h3>
                                 {% if lesson.content %}
-                                    <div class="lesson-preview">{{ lesson.content|truncate(200)|safe }}</div>
+                                    <div class="lesson-preview">{{ lesson.content|truncatechars:200|safe }}</div>
                                 {% endif %}
                             </div>
 
                             <div class="lesson-actions">
-                                <a href="{{ url('tutorials:lesson_detail', tutorial.id, lesson.id) }}" class="btn btn-primary">
+                                <a href="{% url 'tutorials:lesson_detail' tutorial.id lesson.id %}" class="btn btn-primary">
                                     {% if lesson.id in completed_lessons %}
                                         <span class="material-icons">replay</span>
                                         Review

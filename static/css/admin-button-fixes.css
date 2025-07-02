@@ -1,0 +1,238 @@
+/* Admin Button Fixes - Override problematic styles from admin_base.html */
+
+/* Reset all button overrides from admin_base.html that are causing issues */
+.btn,
+.admin-btn {
+    /* Reset problematic overrides */
+    background: unset !important;
+    color: unset !important;
+    border: unset !important;
+    padding: unset !important;
+    border-radius: unset !important;
+    text-decoration: unset !important;
+    display: unset !important;
+    align-items: unset !important;
+    gap: unset !important;
+    font-size: unset !important;
+    font-weight: unset !important;
+    transition: unset !important;
+    cursor: unset !important;
+    transform: unset !important;
+    box-shadow: unset !important;
+    
+    /* Apply proper theme-based styles */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    
+    /* Ensure text is always visible */
+    overflow: visible;
+    white-space: nowrap;
+    text-overflow: visible;
+    min-width: auto;
+    width: auto;
+    text-indent: 0;
+    letter-spacing: normal;
+    line-height: normal;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Primary button styles */
+.btn-primary,
+.btn.btn-primary,
+.admin-btn:not(.secondary):not(.warning):not(.danger):not(.info) {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.btn-primary:hover,
+.btn.btn-primary:hover,
+.admin-btn:not(.secondary):not(.warning):not(.danger):not(.info):hover {
+    background-color: var(--primary-hover) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Secondary button styles */
+.btn-secondary,
+.btn.btn-secondary,
+.admin-btn.secondary {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.btn-secondary:hover,
+.btn.btn-secondary:hover,
+.admin-btn.secondary:hover {
+    background-color: var(--bg-hover) !important;
+    border-color: var(--border-hover) !important;
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+}
+
+/* Warning button styles */
+.btn-warning,
+.btn.btn-warning,
+.admin-btn.warning {
+    background-color: var(--warning-color) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-warning:hover,
+.btn.btn-warning:hover,
+.admin-btn.warning:hover {
+    background-color: var(--warning-hover) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Danger button styles */
+.btn-danger,
+.btn.btn-danger,
+.admin-btn.danger {
+    background-color: var(--error-color) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-danger:hover,
+.btn.btn-danger:hover,
+.admin-btn.danger:hover {
+    background-color: var(--error-hover) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Info button styles */
+.btn-info,
+.btn.btn-info,
+.admin-btn.info {
+    background-color: var(--info-color) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-info:hover,
+.btn.btn-info:hover,
+.admin-btn.info:hover {
+    background-color: var(--info-hover) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Success button styles */
+.btn-success,
+.btn.btn-success {
+    background-color: var(--success-color) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-success:hover,
+.btn.btn-success:hover {
+    background-color: var(--success-hover) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Outline button styles */
+.btn-outline,
+.btn.btn-outline {
+    background-color: transparent !important;
+    color: var(--primary-color) !important;
+    border: 2px solid var(--primary-color) !important;
+}
+
+.btn-outline:hover,
+.btn.btn-outline:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    text-decoration: none !important;
+}
+
+/* Size modifiers */
+.btn-sm,
+.btn.btn-sm {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.75rem !important;
+}
+
+.btn-lg,
+.btn.btn-lg {
+    padding: 1rem 2rem !important;
+    font-size: 1rem !important;
+}
+
+/* Icon spacing */
+.btn .material-icons,
+.admin-btn .material-icons {
+    flex-shrink: 0 !important;
+    margin-right: 0.5rem !important;
+    font-size: 1.1rem !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* Ensure button containers don't clip content */
+.admin-actions,
+.admin-header .admin-actions,
+.quick-actions,
+.form-actions,
+.action-buttons {
+    overflow: visible !important;
+}
+
+/* Fix for buttons that might have restrictive width styles */
+.btn[style*="width"],
+.admin-btn[style*="width"] {
+    width: auto !important;
+    min-width: auto !important;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .btn,
+    .admin-btn {
+        font-size: 0.8rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .btn .material-icons,
+    .admin-btn .material-icons {
+        font-size: 1rem !important;
+        margin-right: 0.25rem !important;
+    }
+}
+
+/* Disabled button styles */
+.btn:disabled,
+.btn[disabled],
+.admin-btn:disabled,
+.admin-btn[disabled] {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* Focus styles for accessibility */
+.btn:focus,
+.admin-btn:focus {
+    outline: 2px solid var(--primary-color) !important;
+    outline-offset: 2px !important;
+}

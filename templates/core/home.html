@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/editor.css') }}">
+<link rel="stylesheet" href="{% static 'css/editor.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -142,7 +143,7 @@
         </div>
         <div class="modal-body">
             <form id="save-query-form" onsubmit="handleSaveQuery(event)">
-                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">>
+                {% csrf_token %}>
                 <div class="form-group">
                     <label class="form-label" for="query-title">Query Title</label>
                     <input type="text" id="query-title" name="title" class="form-input" required>
@@ -194,7 +195,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ static('js/editor.js') }}"></script>
+<script src="{% static 'js/editor.js' %}"></script>
 <script>
     // Initialize editor when page loads
     document.addEventListener('DOMContentLoaded', function() {
