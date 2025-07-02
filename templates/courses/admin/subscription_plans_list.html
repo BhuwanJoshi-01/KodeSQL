@@ -1,9 +1,11 @@
 {% extends 'admin_base.html' %}
+{% load static %}
 
 {% block title %}Manage Subscription Plans - Admin{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
 {% endblock %}
 
 {% block admin_content %}
@@ -15,7 +17,7 @@
                 Manage Subscription Plans
             </h1>
             <div class="admin-actions">
-                <a href="{{ url('courses:admin_subscription_plan_create') }}" class="btn-primary">
+                <a href="{% url 'courses:admin_subscription_plan_create' %}" class="btn btn-primary">
                     <span class="material-icons">add</span>
                     Create Subscription Plan
                 </a>
@@ -104,7 +106,7 @@
                         <span class="material-icons">search</span>
                         Filter
                     </button>
-                    <a href="{{ url('courses:admin_subscription_plans_list') }}" class="btn-outline">
+                    <a href="{% url 'courses:admin_subscription_plans_list' %}"
                         <span class="material-icons">clear</span>
                         Clear
                     </a>
@@ -122,11 +124,8 @@
                         <div class="plan-header">
                             <div class="plan-title">
                                 <h3>
-                                    <a href="{{ url('courses:admin_subscription_plan_detail', plan.id) }}">
-                                        {{ plan.name }}
-                                    </a>
-                                    {% if plan.is_recommended %}
-                                        <span class="badge badge-recommended">Recommended</span>
+                                    <a href="{% url 'courses:admin_subscription_plan_detail' plan.id %}" class="btn btn-primary">{{ plan.name }}</a>
+                                    {% if plan.is_recommended %}<span class="recommended">Recommended</span>
                                     {% endif %}
                                 </h3>
                                 <div class="plan-meta">
@@ -166,7 +165,7 @@
                             </div>
 
                             <div class="plan-description">
-                                {{ plan.description|truncatewords(20) }}
+                                {{ plan.description|truncatewords:20 }}
                             </div>
 
                             <div class="plan-stats">
@@ -178,18 +177,15 @@
                         </div>
 
                         <div class="plan-actions">
-                            <a href="{{ url('courses:admin_subscription_plan_detail', plan.id) }}"
-                               class="btn-secondary btn-sm">
+                            <a href="{% url 'courses:admin_subscription_plan_detail' plan.id %}" class="btn btn-info">
                                 <span class="material-icons">visibility</span>
                                 View
                             </a>
-                            <a href="{{ url('courses:admin_subscription_plan_edit', plan.id) }}"
-                               class="btn-outline btn-sm">
+                            <a href="{% url 'courses:admin_subscription_plan_edit' plan.id %}" class="btn btn-warning">
                                 <span class="material-icons">edit</span>
                                 Edit
                             </a>
-                            <a href="{{ url('courses:admin_subscription_plan_confirm_delete', plan.id) }}"
-                               class="btn-danger btn-sm">
+                            <a href="{% url 'courses:admin_subscription_plan_confirm_delete' plan.id %}" class="btn btn-danger">
                                 <span class="material-icons">delete</span>
                                 Delete
                             </a>
@@ -233,7 +229,7 @@
                 {% else %}
                     Get started by creating your first subscription plan.
                 {% endif %}</p>
-                <a href="{{ url('courses:admin_subscription_plan_create') }}" class="btn-primary">
+                <a href="{% url 'courses:admin_subscription_plan_create' %}" class="btn btn-primary">
                     <span class="material-icons">add</span>
                     Create Subscription Plan
                 </a>

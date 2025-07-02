@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/auth.css') }}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -19,31 +20,31 @@
                 <div class="profile-info">
                     <div class="profile-avatar">
                         <div style="width: 80px; height: 80px; background-color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
-                            {{ request.user.email[0]|upper }}
+                            {{ request.user.email|first|upper }}
                         </div>
                     </div>
                     
                     <div class="profile-details">
-                        <h3>{{ request.user.first_name or request.user.username }} {{ request.user.last_name or '' }}</h3>
+                        <h3>{% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %} {{ request.user.last_name|default:"" }}</h3>
                         <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ request.user.email }}</p>
                         
                         <div class="profile-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                             <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">{{ request.user.query_history.count() }}</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">{{ request.user.query_history.count }}</div>
                                 <div style="font-size: 0.875rem; color: var(--text-secondary);">Queries Executed</div>
                             </div>
                             <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">{{ request.user.saved_queries.count() }}</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">{{ request.user.saved_queries.count }}</div>
                                 <div style="font-size: 0.875rem; color: var(--text-secondary);">Saved Queries</div>
                             </div>
                             <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color);">{{ request.user.date_joined.strftime('%b %Y') }}</div>
+                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color);">{{ request.user.date_joined|date:"M Y" }}</div>
                                 <div style="font-size: 0.875rem; color: var(--text-secondary);">Member Since</div>
                             </div>
                         </div>
                         
                         <div class="profile-actions" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <a href="{{ url('users:change_password') }}" class="btn btn-primary">
+                            <a href="{% url 'users:change_password' %}" class="btn btn-primary">
                                 <span class="material-icons">lock</span>
                                 Change Password
                             </a>
@@ -51,7 +52,7 @@
                                 <span class="material-icons">palette</span>
                                 Toggle Theme
                             </button>
-                            <a href="{{ url('core:dashboard') }}" class="btn btn-secondary">
+                            <a href="{% url 'core:dashboard' %}" class="btn btn-secondary">
                                 <span class="material-icons">dashboard</span>
                                 Dashboard
                             </a>
@@ -72,11 +73,11 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
                             <span style="font-weight: 500;">Email Verified:</span>
-                            <span style="color: {{ 'var(--success-color)' if request.user.is_email_verified else 'var(--error-color)' }};">
+                            <span style="color: {% if request.user.is_email_verified %}var(--success-color){% else %}var(--error-color){% endif %};">
                                 <span class="material-icons" style="font-size: 16px; vertical-align: middle;">
-                                    {{ 'check_circle' if request.user.is_email_verified else 'cancel' }}
+                                    {% if request.user.is_email_verified %}check_circle{% else %}cancel{% endif %}
                                 </span>
-                                {{ 'Yes' if request.user.is_email_verified else 'No' }}
+                                {% if request.user.is_email_verified %}Yes{% else %}No{% endif %}
                             </span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
@@ -85,7 +86,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
                             <span style="font-weight: 500;">Last Login:</span>
-                            <span>{{ request.user.last_login.strftime('%b %d, %Y %H:%M') if request.user.last_login else 'Never' }}</span>
+                            <span>{% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}Never{% endif %}</span>
                         </div>
                     </div>
                 </div>

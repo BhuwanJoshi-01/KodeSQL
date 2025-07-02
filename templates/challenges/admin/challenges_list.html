@@ -1,38 +1,62 @@
 {% extends "admin_base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+{% endblock %}
+
 {% block admin_content %}
 <div class="admin-header">
-    <h1 class="admin-title">
-        <span class="material-icons">quiz</span>
-        Manage Challenges
-    </h1>
-    <div class="admin-actions">
-        <a href="{{ url('challenges:admin_challenge_create') }}" class="admin-btn">
-            <span class="material-icons">add</span>
-            Create Challenge
-        </a>
+    <div class="admin-header-content">
+        <h1>
+            <span class="material-icons">quiz</span>
+            Manage Challenges
+        </h1>
+        <div class="admin-actions">
+            <a href="{% url 'challenges:admin_challenge_create' %}" class="btn btn-primary">
+                <span class="material-icons">add</span>
+                Create Challenge
+            </a>
+        </div>
     </div>
 </div>
 
-<div class="admin-card">
-    <div class="stats-grid">
-        <div class="stat-item">
+<!-- Statistics Cards -->
+<div class="admin-stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <span class="material-icons">quiz</span>
+        </div>
+        <div class="stat-content">
             <h3>{{ total_challenges }}</h3>
             <p>Total Challenges</p>
         </div>
-        <div class="stat-item">
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <span class="material-icons">filter_list</span>
+        </div>
+        <div class="stat-content">
             <h3>{{ challenges.paginator.count }}</h3>
             <p>Filtered Results</p>
         </div>
-        <div class="stat-item">
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">
+            <span class="material-icons">view_list</span>
+        </div>
+        <div class="stat-content">
             <h3>{{ challenges|length }}</h3>
             <p>On This Page</p>
         </div>
     </div>
-    
-    <!-- Filter Form -->
+</div>
+
+<!-- Filters -->
+<div class="admin-filters">
     <form method="get" class="filter-form">
         <div class="filter-group">
             <label for="{{ filter_form.difficulty.id_for_label }}">{{ filter_form.difficulty.label }}</label>
@@ -46,75 +70,93 @@
             <label for="{{ filter_form.search.id_for_label }}">{{ filter_form.search.label }}</label>
             {{ filter_form.search }}
         </div>
-        <div class="filter-group">
-            <button type="submit" class="admin-btn secondary">
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-secondary">
                 <span class="material-icons">search</span>
                 Filter
             </button>
-            <a href="{{ url('challenges:admin_challenges_list') }}" class="admin-btn secondary">
+            <a href="{% url 'challenges:admin_challenges_list' %}" class="btn btn-secondary">
                 <span class="material-icons">clear</span>
                 Clear
             </a>
         </div>
     </form>
+</div>
+
+<!-- Challenges List -->
+<div class="admin-content-section">
     
     {% if challenges %}
-        <div class="table-responsive">
+        <div class="admin-table-container">
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Difficulty</th>
-                        <th>Status</th>
-                        <th>Sample Data</th>
-                        <th>Created</th>
-                        <th>Actions</th>
+                        <th class="title-col">Title</th>
+                        <th class="difficulty-col">Difficulty</th>
+                        <th class="status-col">Status</th>
+                        <th class="file-col">Sample Data</th>
+                        <th class="date-col">Created</th>
+                        <th class="actions-col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for challenge in challenges %}
-                        <tr>
-                            <td>
-                                <strong>{{ challenge.title }}</strong>
-                                <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem;">
-                                    {{ challenge.description|striptags|truncate(10, True, "") }}
+                        <tr class="challenge-row {% if not challenge.is_active %}inactive{% endif %}">
+                            <td class="title-cell">
+                                <div class="challenge-title">
+                                    <a href="{% url 'challenges:admin_challenge_detail' challenge.id %}" class="title-link">
+                                        {{ challenge.title }}
+                                    </a>
+                                    <div class="challenge-description">
+                                        {{ challenge.description|striptags|truncatewords:15 }}
+                                    </div>
                                 </div>
                             </td>
-                            <td>
-                                <span class="status-badge difficulty-{{ challenge.difficulty }}">
+                            <td class="difficulty-cell">
+                                <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
                                     {{ challenge.get_difficulty_display }}
                                 </span>
                             </td>
-                            <td>
-                                <span class="status-badge {% if challenge.is_active %}status-active{% else %}status-inactive{% endif %}">
-                                    {% if challenge.is_active %}Active{% else %}Inactive{% endif %}
-                                </span>
-                            </td>
-                            <td>
-                                {% if challenge.sample_data %}
-                                    <span class="material-icons" style="color: #28a745;" title="Has Sample Data">attach_file</span>
-                                    <span style="font-size: 0.875rem;">{{ challenge.sample_data.name|truncate(20) }}</span>
+                            <td class="status-cell">
+                                {% if challenge.is_active %}
+                                    <span class="status-badge active">
+                                        <span class="material-icons">check_circle</span>
+                                        Active
+                                    </span>
                                 {% else %}
-                                    <span style="color: var(--text-muted); font-size: 0.875rem;">No file</span>
+                                    <span class="status-badge inactive">
+                                        <span class="material-icons">cancel</span>
+                                        Inactive
+                                    </span>
                                 {% endif %}
                             </td>
-                            <td>{{ challenge.created_at.strftime('%b %d, %Y') }}</td>
-                            <td>
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <a href="{{ url('challenges:admin_challenge_detail', challenge_id=challenge.id) }}" 
-                                       class="admin-btn info" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
-                                        <span class="material-icons" style="font-size: 16px;">visibility</span>
-                                        View
+                            <td class="file-cell">
+                                {% if challenge.sample_data %}
+                                    <div class="file-info">
+                                        <span class="material-icons">attach_file</span>
+                                        <span class="file-name">{{ challenge.sample_data.name|truncatechars:20 }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="no-file">
+                                        <span class="material-icons">description</span>
+                                        No file
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="date-cell">
+                                <span class="date-text">{{ challenge.created_at|date:"M d, Y" }}</span>
+                                <span class="time-text">{{ challenge.created_at|date:"g:i A" }}</span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-buttons">
+                                    <a href="{% url 'challenges:admin_challenge_detail' challenge.id %}" class="btn btn-sm btn-secondary" title="View Challenge">
+                                        <span class="material-icons">visibility</span>
                                     </a>
-                                    <a href="{{ url('challenges:admin_challenge_edit', challenge_id=challenge.id) }}" 
-                                       class="admin-btn secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
-                                        <span class="material-icons" style="font-size: 16px;">edit</span>
-                                        Edit
+                                    <a href="{% url 'challenges:admin_challenge_edit' challenge.id %}" class="btn btn-sm btn-warning" title="Edit Challenge">
+                                        <span class="material-icons">edit</span>
                                     </a>
-                                    <a href="{{ url('challenges:admin_challenge_delete', challenge_id=challenge.id) }}" 
-                                       class="admin-btn danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
-                                        <span class="material-icons" style="font-size: 16px;">delete</span>
-                                        Delete
+                                    <a href="{% url 'challenges:admin_challenge_delete' challenge.id %}" class="btn btn-sm btn-danger" title="Delete Challenge">
+                                        <span class="material-icons">delete</span>
                                     </a>
                                 </div>
                             </td>
@@ -124,35 +166,42 @@
             </table>
         </div>
         
+        <!-- Pagination -->
         {% if challenges.has_other_pages %}
-            <div class="pagination">
-                {% if challenges.has_previous %}
-                    <a href="?page=1{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">&laquo; First</a>
-                    <a href="?page={{ challenges.previous_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a>
-                {% endif %}
-                
-                <span class="current">
-                    Page {{ challenges.number }} of {{ challenges.paginator.num_pages }}
-                </span>
-                
-                {% if challenges.has_next %}
-                    <a href="?page={{ challenges.next_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a>
-                    <a href="?page={{ challenges.paginator.num_pages }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Last &raquo;</a>
-                {% endif %}
+            <div class="pagination-wrapper">
+                <div class="pagination">
+                    {% if challenges.has_previous %}
+                        <a href="?page={{ challenges.previous_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">
+                            <span class="material-icons">chevron_left</span>
+                        </a>
+                    {% endif %}
+
+                    <span class="page-info">
+                        Page {{ challenges.number }} of {{ challenges.paginator.num_pages }}
+                    </span>
+
+                    {% if challenges.has_next %}
+                        <a href="?page={{ challenges.next_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">
+                            <span class="material-icons">chevron_right</span>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         {% endif %}
     {% else %}
         <div class="empty-state">
-            <span class="material-icons">quiz</span>
+            <div class="empty-icon">
+                <span class="material-icons">quiz</span>
+            </div>
             <h3>No challenges found</h3>
-            <p>{% if request.GET.search or request.GET.difficulty or request.GET.status %}No challenges match your current filters.{% else %}Create your first challenge to get started.{% endif %}</p>
+            <p>{% if request.GET.search or request.GET.difficulty or request.GET.status %}No challenges match your current filters. Try adjusting your filters or{% else %}Create your first challenge to get started.{% endif %}</p>
             {% if request.GET.search or request.GET.difficulty or request.GET.status %}
-                <a href="{{ url('challenges:admin_challenges_list') }}" class="admin-btn secondary">
+                <a href="{% url 'challenges:admin_challenges_list' %}" class="btn btn-secondary">
                     <span class="material-icons">clear</span>
                     Clear Filters
                 </a>
             {% endif %}
-            <a href="{{ url('challenges:admin_challenge_create') }}" class="admin-btn">
+            <a href="{% url 'challenges:admin_challenge_create' %}" class="btn btn-primary">
                 <span class="material-icons">add</span>
                 Create Challenge
             </a>

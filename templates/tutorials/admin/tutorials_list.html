@@ -1,18 +1,26 @@
 {% extends "admin_base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+{% endblock %}
+
 {% block admin_content %}
 <div class="admin-header">
-    <h1 class="admin-title">
-        <span class="material-icons">school</span>
-        Manage Tutorials
-    </h1>
-    <div class="admin-actions">
-        <a href="{{ url('tutorials:admin_tutorial_create') }}" class="admin-btn">
-            <span class="material-icons">add</span>
-            Create Tutorial
-        </a>
+    <div class="admin-header-content">
+        <h1>
+            <span class="material-icons">school</span>
+            Manage Tutorials
+        </h1>
+        <div class="admin-actions">
+            <a href="{% url 'tutorials:admin_tutorial_create' %}" class="btn btn-primary">
+                <span class="material-icons">add</span>
+                Create Tutorial
+            </a>
+        </div>
     </div>
 </div>
 
@@ -61,21 +69,21 @@
                                     {% if tutorial.is_active %}Active{% else %}Inactive{% endif %}
                                 </span>
                             </td>
-                            <td>{{ tutorial.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ tutorial.created_at|date:"M d, Y" }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <a href="{{ url('tutorials:admin_tutorial_detail', tutorial_id=tutorial.id) }}"
-                                       class="admin-btn secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    <a href="{% url 'tutorials:admin_tutorial_detail' tutorial.id %}"
+                                       class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                                         <span class="material-icons" style="font-size: 16px;">visibility</span>
                                         View
                                     </a>
-                                    <a href="{{ url('tutorials:admin_tutorial_edit', tutorial_id=tutorial.id) }}"
-                                       class="admin-btn secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    <a href="{% url 'tutorials:admin_tutorial_edit' tutorial.id %}"
+                                       class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                                         <span class="material-icons" style="font-size: 16px;">edit</span>
                                         Edit
                                     </a>
-                                    <a href="{{ url('tutorials:admin_tutorial_delete', tutorial_id=tutorial.id) }}"
-                                       class="admin-btn danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    <a href="{% url 'tutorials:admin_tutorial_delete' tutorial.id %}"
+                                       class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
                                         <span class="material-icons" style="font-size: 16px;">delete</span>
                                         Delete
                                     </a>
@@ -90,8 +98,8 @@
         {% if tutorials.has_other_pages %}
             <div class="pagination">
                 {% if tutorials.has_previous %}
-                    <a href="?page=1">&laquo; First</a>
-                    <a href="?page={{ tutorials.previous_page_number }}">Previous</a>
+                    <a href="?page=1" class="btn btn-primary">&laquo; First</a>
+                    <a href="?page={{ tutorials.previous_page_number }}" class="btn btn-primary">Previous</a>
                 {% endif %}
                 
                 <span class="current">
@@ -99,8 +107,8 @@
                 </span>
                 
                 {% if tutorials.has_next %}
-                    <a href="?page={{ tutorials.next_page_number }}">Next</a>
-                    <a href="?page={{ tutorials.paginator.num_pages }}">Last &raquo;</a>
+                    <a href="?page={{ tutorials.next_page_number }}" class="btn btn-primary">Next</a>
+                    <a href="?page={{ tutorials.paginator.num_pages }}" class="btn btn-primary">Last &raquo;</a>
                 {% endif %}
             </div>
         {% endif %}
@@ -109,7 +117,7 @@
             <span class="material-icons" style="font-size: 48px; color: var(--text-muted);">school</span>
             <h3>No tutorials found</h3>
             <p>Create your first tutorial to get started.</p>
-            <a href="{{ url('tutorials:admin_tutorial_create') }}" class="admin-btn">
+            <a href="{% url 'tutorials:admin_tutorial_create' %}" class="btn btn-primary">
                 <span class="material-icons">add</span>
                 Create Tutorial
             </a>

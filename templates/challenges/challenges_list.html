@@ -3,292 +3,695 @@
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block content %}
-<div class="tile-wrap">
-    <div style="padding: 2rem 0;">
-        <div class="page-header" style="text-align: center; margin-bottom: 3rem;">
-            <h1>
-                <span class="material-icons" style="vertical-align: middle; margin-right: 0.5rem;">emoji_events</span>
-                SQL Challenges
-            </h1>
-            <p style="color: var(--text-secondary);">Test your SQL skills with interactive challenges</p>
-        </div>
+<div class="challenges-container">
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Column - Challenges -->
+        <div class="left-column">
+            <!-- Premium Banner -->
+            {% if not has_active_subscription %}
+            <div class="premium-banner">
+                <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary">
+                    🔒 Unlock Premium Challenges - Subscribe Now
+                </a>
+            </div>
+            {% endif %}
 
-        {% if challenges %}
-            <!-- Difficulty Filter -->
-            <div class="filter-section">
-                <div class="difficulty-filters">
-                    <button class="filter-btn active" data-difficulty="all">All Challenges</button>
-                    <button class="filter-btn" data-difficulty="easy">Easy</button>
-                    <button class="filter-btn" data-difficulty="medium">Medium</button>
-                    <button class="filter-btn" data-difficulty="hard">Hard</button>
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <select id="difficulty">
+                            <option value="">Difficulty</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="extreme">Extreme Hard</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="tags">
+                            <option value="">Select Tags</option>
+                            <option value="joins">Joins</option>
+                            <option value="aggregation">Aggregation</option>
+                            <option value="subqueries">Subqueries</option>
+                            <option value="window-functions">Window Functions</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="company">
+                            <option value="">Select Company</option>
+                            <option value="amazon">Amazon</option>
+                            <option value="google">Google</option>
+                            <option value="microsoft">Microsoft</option>
+                            <option value="netflix">Netflix</option>
+                            <option value="deloitte">Deloitte</option>
+                            <option value="tcs">TCS</option>
+                            <option value="infosys">Infosys</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="status">
+                            <option value="">Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="attempted">Attempted</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="subscription_type">
+                            <option value="">All Challenges</option>
+                            <option value="free">Free Only</option>
+                            <option value="paid">Premium Only</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="search-section">
+                    <input type="text" class="search-input" placeholder="Search challenges..." id="searchInput">
+                    <button class="btn btn-primary" onclick="searchChallenges()">Search</button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
                 </div>
             </div>
 
-            <div class="challenges-grid">
-                {% for challenge in challenges %}
-                    <div class="challenge-card card" data-difficulty="{{ challenge.difficulty }}">
-                        <div class="challenge-header">
-                            <div class="challenge-info">
-                                <h3>{{ challenge.title }}</h3>
-                                <div class="challenge-meta">
-                                    <span class="difficulty difficulty-{{ challenge.difficulty }}">
-                                        {{ challenge.get_difficulty_display() }}
-                                    </span>
-                                    {% if user.is_authenticated and challenge.id in user_progress %}
-                                        {% if user_progress[challenge.id].is_completed %}
-                                            <span class="status-badge completed">
-                                                <span class="material-icons">check_circle</span>
-                                                Completed
-                                            </span>
-                                        {% else %}
-                                            <span class="status-badge attempted">
-                                                {{ user_progress[challenge.id].attempts }} attempt{{ user_progress[challenge.id].attempts|pluralize }}
-                                            </span>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
+            <!-- Challenges Table -->
+            <div class="challenges-section">
+                <div class="table-header">
+                    <div>Challenge Title</div>
+                    <div>Company</div>
+                    <div>Difficulty</div>
+                    <div>Status</div>
+                </div>
+                
+                <div id="challengesContainer">
+                    {% for challenge in challenges %}
+                        <div class="challenge-row"
+                             data-difficulty="{{ challenge.difficulty }}"
+                             data-company="{{ challenge.company|lower }}"
+                             data-subscription="{{ challenge.subscription_type }}"
+                             data-status="{% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}"
+                             onclick="window.location.href='{% url 'challenges:challenge_detail' challenge.id %}'">
+                            <div class="challenge-title">
+                                {{ challenge.title }}
+                                {% if challenge.is_premium %}
+                                    <span class="premium-icon">🔒</span>
+                                {% endif %}
                             </div>
-
-                            {% if user.is_authenticated and challenge.id in user_progress and user_progress[challenge.id].is_completed %}
-                                <div class="completion-icon">
-                                    <span class="material-icons">emoji_events</span>
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="challenge-description">
-                            <p>{{ challenge.description }}</p>
-                        </div>
-
-                        <div class="challenge-actions">
-                            <a href="{{ url('challenges:challenge_detail', challenge.id) }}" class="btn btn-primary">
-                                {% if user.is_authenticated and challenge.id in user_progress %}
-                                    {% if user_progress[challenge.id].is_completed %}
-                                        <span class="material-icons">replay</span>
-                                        Solve Again
+                            <div class="company">{{ challenge.company|default:"General" }}</div>
+                            <div class="difficulty {{ challenge.difficulty }}">{{ challenge.get_difficulty_display }}</div>
+                            <div class="status {% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}">
+                                {% if user.is_authenticated and challenge.progress_data %}
+                                    {% if challenge.progress_data.is_completed %}
+                                        ✓
                                     {% else %}
-                                        <span class="material-icons">play_arrow</span>
-                                        Continue
+                                        ⋯
                                     {% endif %}
                                 {% else %}
-                                    <span class="material-icons">play_arrow</span>
-                                    Start Challenge
+                                    ⋯
                                 {% endif %}
-                            </a>
+                            </div>
                         </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="empty-state card" style="max-width: 600px; margin: 0 auto;">
-                <div style="padding: 3rem 2rem; text-align: center;">
-                    <span class="material-icons" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;">emoji_events</span>
-                    <h3>No Challenges Available</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
-                        Challenges are being created. Check back soon!
-                    </p>
-                    <a href="{{ url('core:home') }}" class="btn btn-primary">
-                        <span class="material-icons">code</span>
-                        Practice in SQL Editor
-                    </a>
+                    {% empty %}
+                        <div class="no-results">
+                            <h3>No challenges available</h3>
+                            <p>Check back soon for new challenges!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- No Results Message -->
+                <div class="no-results" id="noResults" style="display: none;">
+                    <h3>No challenges match your filters</h3>
+                    <p>Try adjusting your search criteria or clearing filters</p>
                 </div>
             </div>
-        {% endif %}
+        </div>
+
+        <!-- Right Column - Progress & Leaderboard -->
+        <div class="right-column">
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <h3 class="progress-title">Your Progress</h3>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Total</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ progress_stats.total.percentage }}%"></div>
+                    </div>
+                    <span class="progress-stats">{{ progress_stats.total.completed }}/{{ progress_stats.total.total }}</span>
+                </div>
+
+                <div class="progress-item">
+                    <span class="progress-label">Easy</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ progress_stats.easy.percentage }}%"></div>
+                    </div>
+                    <span class="progress-stats">{{ progress_stats.easy.completed }}/{{ progress_stats.easy.total }}</span>
+                </div>
+
+                <div class="progress-item">
+                    <span class="progress-label">Medium</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ progress_stats.medium.percentage }}%"></div>
+                    </div>
+                    <span class="progress-stats">{{ progress_stats.medium.completed }}/{{ progress_stats.medium.total }}</span>
+                </div>
+
+                <div class="progress-item">
+                    <span class="progress-label">Hard</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ progress_stats.hard.percentage }}%"></div>
+                    </div>
+                    <span class="progress-stats">{{ progress_stats.hard.completed }}/{{ progress_stats.hard.total }}</span>
+                </div>
+
+                <div class="progress-item">
+                    <span class="progress-label">Extreme</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ progress_stats.extreme.percentage }}%"></div>
+                    </div>
+                    <span class="progress-stats">{{ progress_stats.extreme.completed }}/{{ progress_stats.extreme.total }}</span>
+                </div>
+            </div>
+
+            <!-- Analytics Link -->
+            {% if user.is_authenticated %}
+            <div class="analytics-section">
+                <h3 class="analytics-title">Your Analytics</h3>
+                <div class="analytics-preview">
+                    <p>Track your detailed progress and performance</p>
+                    <a href="{% url 'challenges:analytics_dashboard' %}" class="btn btn-primary"View Analytics</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Subscription Status -->
+            {% if user.is_authenticated %}
+            <div class="subscription-section">
+                <h3 class="subscription-title">Subscription Status</h3>
+                {% if user_subscription and user_subscription.is_active %}
+                    <div class="subscription-active">
+                        <div class="subscription-plan">{{ user_subscription.plan.name }}</div>
+                        <div class="subscription-time">{{ user_subscription.time_remaining }}</div>
+                        {% if user_subscription.is_expiring_soon %}
+                            <div class="subscription-warning">Expires soon!</div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="subscription-inactive">
+                        <p>No active subscription</p>
+                        <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary"Subscribe Now</a>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_css %}
 <style>
-.filter-section {
-    margin-bottom: 2rem;
-    text-align: center;
+.challenges-container {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 0;
 }
 
-.difficulty-filters {
-    display: inline-flex;
-    background: var(--card-background);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.filter-btn {
-    background: none;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-secondary);
-    border-right: 1px solid var(--border-color);
-}
-
-.filter-btn:last-child {
-    border-right: none;
-}
-
-.filter-btn:hover,
-.filter-btn.active {
-    background: var(--primary-color);
-    color: white;
-}
-
-.challenges-grid {
+/* Main Container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: 1fr 320px;
     gap: 2rem;
-    margin-top: 2rem;
+    min-height: calc(100vh - 80px);
 }
 
-.challenge-card {
-    padding: 1.5rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    position: relative;
-}
-
-.challenge-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.challenge-card.hidden {
-    display: none;
-}
-
-.challenge-header {
+/* Left Column - Challenges */
+.left-column {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.challenge-info h3 {
-    margin: 0 0 0.5rem 0;
-    color: var(--text-primary);
+/* Premium Banner */
+.premium-banner {
+    background: linear-gradient(135deg, #ea580c, #dc2626);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: transform 0.2s ease;
 }
 
-.challenge-meta {
+.premium-banner:hover {
+    transform: translateY(-1px);
+}
+
+/* Filters Section */
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-group select, .filter-group input {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: white;
+    color: #374151;
+    width: 100%;
+}
+
+.filter-group select:focus, .filter-group input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.search-section {
     display: flex;
     gap: 1rem;
     align-items: center;
-    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #ea580c;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Challenges Table */
+.challenges-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+    flex: 1;
+}
+
+.table-header {
+    background: #6366f1;
+    color: white;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 120px 80px;
+    gap: 1rem;
+    font-weight: 600;
+}
+
+.challenge-row {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 120px 80px;
+    gap: 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    align-items: center;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.challenge-row:hover {
+    background: #f9fafb;
+}
+
+.challenge-row:last-child {
+    border-bottom: none;
+}
+
+.challenge-title {
+    font-weight: 500;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.premium-icon {
+    font-size: 0.875rem;
+    opacity: 0.7;
+}
+
+.company {
+    color: #666;
+    font-size: 0.9rem;
 }
 
 .difficulty {
     padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
+    border-radius: 16px;
+    font-size: 0.8rem;
     font-weight: 500;
+    text-align: center;
 }
 
-.difficulty-easy {
-    background: #e8f5e8;
-    color: #2e7d32;
+.difficulty.easy {
+    background: #dcfce7;
+    color: #166534;
 }
 
-.difficulty-medium {
-    background: #fff3e0;
-    color: #f57c00;
+.difficulty.medium {
+    background: #fef3c7;
+    color: #92400e;
 }
 
-.difficulty-hard {
-    background: #ffebee;
-    color: #c62828;
+.difficulty.hard {
+    background: #fecaca;
+    color: #991b1b;
 }
 
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
+.difficulty.extreme {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+.status {
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.status.completed {
+    color: #10b981;
+}
+
+.status.attempted {
+    color: #f59e0b;
+}
+
+.status.pending {
+    color: #6b7280;
+}
+
+/* Right Column */
+.right-column {
     display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Progress Section */
+.progress-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-title {
+    color: #6366f1;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.progress-item {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.25rem;
+    margin-bottom: 0.75rem;
 }
 
-.status-badge.completed {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success-color);
+.progress-item:last-child {
+    margin-bottom: 0;
 }
 
-.status-badge.attempted {
-    background: rgba(245, 124, 0, 0.1);
-    color: #f57c00;
+.progress-label {
+    font-weight: 500;
+    color: #374151;
+    min-width: 80px;
 }
 
-.completion-icon {
-    color: #ffd700;
-    font-size: 2rem;
+.progress-bar {
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+    flex: 1;
+    margin: 0 0.75rem;
 }
 
-.challenge-description {
-    margin-bottom: 1.5rem;
+.progress-fill {
+    height: 100%;
+    background: #ea580c;
+    transition: width 0.3s ease;
 }
 
-.challenge-description p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin: 0;
+.progress-stats {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: right;
 }
 
-.challenge-actions {
-    display: flex;
-    gap: 1rem;
+/* Analytics Section */
+.analytics-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.analytics-title {
+    color: #6366f1;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.analytics-preview {
+    text-align: center;
+}
+
+.analytics-preview p {
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+/* Subscription Section */
+.subscription-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.subscription-title {
+    color: #6366f1;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.subscription-active {
+    text-align: center;
+}
+
+.subscription-plan {
+    font-weight: 600;
+    color: #10b981;
+    margin-bottom: 0.5rem;
+}
+
+.subscription-time {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.subscription-warning {
+    color: #f59e0b;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.subscription-inactive {
+    text-align: center;
+}
+
+.subscription-inactive p {
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+/* Empty state */
+.no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #666;
+}
+
+.no-results h3 {
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .right-column {
+        order: -1;
+    }
+
+    .filters-row {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .search-section {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .search-input {
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
-    .challenges-grid {
+    .container {
+        padding: 1rem;
+    }
+
+    .table-header, .challenge-row {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.5rem;
     }
 
-    .difficulty-filters {
-        flex-direction: column;
-        width: 100%;
-        max-width: 300px;
-    }
-
-    .filter-btn {
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .filter-btn:last-child {
-        border-bottom: none;
-    }
-
-    .challenge-header {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .challenge-meta {
-        justify-content: center;
+    .filters-row {
+        grid-template-columns: 1fr;
     }
 }
 </style>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const challengeCards = document.querySelectorAll('.challenge-card');
+// Filter functionality
+function searchChallenges() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const difficulty = document.getElementById('difficulty').value;
+    const company = document.getElementById('company').value;
+    const status = document.getElementById('status').value;
+    const subscriptionType = document.getElementById('subscription_type').value;
 
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Update active filter
-            filterBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    const challenges = document.querySelectorAll('.challenge-row');
+    let visibleCount = 0;
 
-            const difficulty = this.dataset.difficulty;
+    challenges.forEach(challenge => {
+        const title = challenge.querySelector('.challenge-title').textContent.toLowerCase();
+        const challengeDifficulty = challenge.dataset.difficulty;
+        const challengeCompany = challenge.dataset.company;
+        const challengeStatus = challenge.dataset.status;
+        const challengeSubscription = challenge.dataset.subscription;
 
-            // Filter challenges
-            challengeCards.forEach(card => {
-                if (difficulty === 'all' || card.dataset.difficulty === difficulty) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        });
+        const matchesSearch = title.includes(searchTerm);
+        const matchesDifficulty = !difficulty || challengeDifficulty === difficulty;
+        const matchesCompany = !company || challengeCompany === company;
+        const matchesStatus = !status || challengeStatus === status;
+        const matchesSubscription = !subscriptionType || challengeSubscription === subscriptionType;
+
+        if (matchesSearch && matchesDifficulty && matchesCompany && matchesStatus && matchesSubscription) {
+            challenge.style.display = 'grid';
+            visibleCount++;
+        } else {
+            challenge.style.display = 'none';
+        }
     });
+
+    // Show/hide no results message
+    const noResults = document.getElementById('noResults');
+    if (visibleCount === 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('difficulty').value = '';
+    document.getElementById('tags').value = '';
+    document.getElementById('company').value = '';
+    document.getElementById('status').value = '';
+    document.getElementById('subscription_type').value = '';
+
+    const challenges = document.querySelectorAll('.challenge-row');
+    challenges.forEach(challenge => {
+        challenge.style.display = 'grid';
+    });
+
+    document.getElementById('noResults').style.display = 'none';
+}
+
+// Add event listeners for real-time filtering
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('difficulty').addEventListener('change', searchChallenges);
+    document.getElementById('company').addEventListener('change', searchChallenges);
+    document.getElementById('status').addEventListener('change', searchChallenges);
+    document.getElementById('subscription_type').addEventListener('change', searchChallenges);
+    document.getElementById('searchInput').addEventListener('input', searchChallenges);
 });
 </script>
 {% endblock %}

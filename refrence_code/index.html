@@ -1,875 +1,537 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeSQL - Learn Data Analytics with Vijay Pratap</title>
-  
-  <!-- CSS Link -->
-  <link rel="stylesheet" href="style.css">
-  
-  <!-- Favicon -->
-  <link rel="shortcut icon" href="https://raw.githubusercontent.com/codewithsadee/desinic/master/assets/images/favicon.svg" type="image/svg+xml">
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Source+Sans+Pro:wght@600;700&display=swap" rel="stylesheet">
+<head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Master - Learn SQL the Right Way</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px 25px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e7ff;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            text-decoration: none;
+            color: #4f46e5;
+            font-weight: 700;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: "⚡";
+            font-size: 28px;
+        }
+
+        .nav-items {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: #4f46e5;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-login {
+            color: #4f46e5;
+            border: 1px solid #e0e7ff;
+            background: white;
+        }
+
+        .btn-login:hover {
+            border-color: #4f46e5;
+            background: #fafafa;
+        }
+
+        .btn-register {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 160px 0 80px;
+            text-align: center;
+            background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            padding: 30px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #4f46e5;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+        }
+
+        .feature-card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Courses Section */
+        .courses {
+            padding: 80px 0;
+            background: #f8fafc;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: #64748b;
+            font-size: 18px;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .course-image {
+            width: 100%;
+            height: 200px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .course-content {
+            padding: 24px;
+        }
+
+        .course-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            color: #4f46e5;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .course-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .course-desc {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .course-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 100px 0;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .cta p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta .btn {
+            background: white;
+            color: #4f46e5;
+            font-size: 16px;
+            padding: 15px 30px;
+        }
+
+        .cta .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            padding: 60px 0 30px;
+            color: #64748b;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h4 {
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-col ul a {
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-col ul a:hover {
+            color: #4f46e5;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .nav-items {
+                display: none;
+            }
+
+            .features-grid,
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
-<body id="top">
-  <!-- 
-    - #HEADER
-  -->
-
-  <header class="header" data-header>
-    <div class="container">
-      <div class="overlay" data-overlay></div>
-
-      <a href="#">
-        <h1 class="logo">CodeSQL</h1>
-      </a>
-
-      <nav class="navbar" data-navbar>
-        <div class="navbar-top">
-          <a href="#" class="logo">CodeSQL</a>
-
-          <button
-            class="nav-close-btn"
-            aria-label="Close Menu"
-            data-nav-close-btn
-          >
-            <ion-icon name="close-outline"></ion-icon>
-          </button>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo">SQL Master</a>
+        <div class="nav-items">
+            <a href="course_page.html" class="nav-item">Courses</a>
+            <a href="ProblemsPage.html" class="nav-item">Practice</a>
+            <a href="help_support.html" class="nav-item">Help</a>
         </div>
-
-        <ul class="navbar-list">
-          <li class="navbar-item">
-            <a href="#home" class="navbar-link" data-navbar-link>Home</a>
-          </li>
-
-          <li class="navbar-item">
-            <a href="#about" class="navbar-link" data-navbar-link>About</a>
-          </li>
-
-          <li class="navbar-item">
-            <a href="#services" class="navbar-link" data-navbar-link
-              >Courses</a
-            >
-          </li>
-
-          <li class="navbar-item">
-            <a href="#features" class="navbar-link" data-navbar-link
-              >Features</a
-            >
-          </li>
-
-          <li class="navbar-item">
-            <a href="#blog" class="navbar-link" data-navbar-link>Resources</a>
-          </li>
-
-          <li class="navbar-item" data-auth-state="logged-out">
-            <a href="login.html" class="navbar-link" data-navbar-link>Login</a>
-          </li>
-          <li class="navbar-item" data-auth-state="logged-out">
-            <a href="register.html" class="navbar-link" data-navbar-link>Register</a>
-          </li>
-          <li class="navbar-item" data-auth-state="logged-in">
-            <a href="profile.html" class="navbar-link" data-navbar-link>My Profile</a>
-          </li>
-        </ul>
-      </nav>
-
-      <!-- Login button (shown when logged out) -->
-      <a href="login.html" class="btn" data-auth-state="logged-out">
-        <ion-icon name="log-in-outline" aria-hidden="true"></ion-icon>
-        <span>Login</span>
-      </a>
-      
-      <!-- User profile button (shown when logged in) -->
-      <div class="user-profile-menu" data-auth-state="logged-in" style="display: none;">
-        <button class="profile-toggle">
-          <img data-user-profile="picture" src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
-          <span data-user-profile="name">User</span>
-          <ion-icon name="chevron-down-outline"></ion-icon>
-        </button>
-        <div class="profile-dropdown">
-          <div class="profile-header">
-            <img data-user-profile="picture" src="https://via.placeholder.com/60" alt="Profile" class="dropdown-profile-img">
-            <div class="profile-info">
-              <p class="profile-name" data-user-profile="name">User</p>
-              <p class="profile-email" data-user-profile="email">user@example.com</p>
-            </div>
-          </div>
-          <ul class="profile-menu">
-            <li><a href="profile.html"><ion-icon name="person-outline"></ion-icon> My Profile</a></li>
-            <li><a href="courses.html"><ion-icon name="book-outline"></ion-icon> My Courses</a></li>
-            <li><a href="settings.html"><ion-icon name="settings-outline"></ion-icon> Settings</a></li>
-            <li><a href="#" id="logout-btn"><ion-icon name="log-out-outline"></ion-icon> Logout</a></li>
-          </ul>
+        <div class="auth-buttons">
+            <a href="login.html" class="btn btn-login">Sign In</a>
+            <a href="register.html" class="btn btn-register">Get Started</a>
         </div>
-      </div>
+    </header>
 
-      <button class="nav-open-btn" aria-label="Open Menu" data-nav-open-btn>
-        <ion-icon name="menu-outline"></ion-icon>
-      </button>
-    </div>
-  </header>
-
-  <main>
-    <article>
-      <!-- 
-        - #HERO
-      -->
-
-      <section class="hero" id="home">
+    <section class="hero">
         <div class="container">
-          <div class="hero-content">
-            <h2 class="h2 hero-title">Learn with Vijay Pratap</h2>
-
-            <p class="hero-subtitle">Start Your Data Analytics Journey Today</p>
-
-            <p class="hero-text">
-              CodeSQL is a one-stop platform designed to help you master SQL and data analytics from the ground up. 
-              We provide easy-to-follow tutorials, high-quality SQL practice problems, and an interactive coding workspace 
-              where you can write and run queries directly in your browser. Whether you're a beginner or looking to improve 
-              your skills, CodeSQL offers everything you need to learn SQL effectively and confidently.
-            </p>
-
-            <button class="btn">Learn More</button>
-          </div>
-
-          <figure class="hero-banner">
-            <img
-              src="https://media.licdn.com/dms/image/v2/D5603AQH6rZlX9Me-Ig/profile-displayphoto-crop_800_800/B56Ze1DVCGH8AI-/0/1751089238836?e=1756944000&v=beta&t=RSPKVNMeXKvWWyGrIpo9korPT6-GlwU7goirGKyjayA"
-              width="694"
-              height="529"
-              loading="lazy"
-              alt="Vijay Pratap profile photo"
-              class="w-100 banner-animation"
-            />
-          </figure>
+            <h1>Master SQL with Interactive Learning</h1>
+            <p>Learn SQL through hands-on practice, real-world projects, and expert-crafted courses. Join thousands of learners mastering database skills.</p>
+            <a href="register.html" class="btn btn-register">Start Learning for Free</a>
         </div>
-      </section>
+    </section>
 
-      <!-- 
-        - #ABOUT
-      -->
-
-      <section class="section about" id="about">
+    <section class="features">
         <div class="container">
-          <figure class="about-banner">
-            <img
-              src="https://raw.githubusercontent.com/codewithsadee/desinic/master/assets/images/about-banner.png"
-              width="700"
-              height="532"
-              loading="lazy"
-              alt="about banner"
-              class="w-100 banner-animation"
-            />
-          </figure>
-
-          <div class="about-content">
-            <h2 class="h2 section-title underline">Why Choose CodeSQL</h2>
-
-            <p class="about-text">
-              CodeSQL provides a comprehensive learning experience for data analytics and SQL. Our platform is designed 
-              by industry experts with years of experience in database management and data science.
-            </p>
-
-            <p class="about-text">
-              We focus on practical, hands-on learning with real-world examples and interactive exercises that help you 
-              build job-ready skills for today's data-driven world.
-            </p>
-
-            <div class="testimonial-card">
-              <div class="testimonial-content">
-                <p class="testimonial-text">
-                  <ion-icon name="quote-outline" class="quote-icon"></ion-icon>
-                  CodeSQL transformed my career. I went from struggling with basic queries to confidently handling complex data analysis in just 3 months. The interactive platform made all the difference.
-                </p>
-                <div class="testimonial-author">- Sarah J., Data Analyst at TechCorp</div>
-              </div>
+            <div class="section-header">
+                <h2>Why Choose SQL Master?</h2>
+                <p>Everything you need to become proficient in SQL</p>
             </div>
-
-            <ul class="stats-list">
-              <li class="stats-card">
-                <p class="h3 stats-title">10,000+</p>
-
-                <p class="stats-text">Students Enrolled</p>
-              </li>
-
-              <li class="stats-card">
-                <p class="h3 stats-title">500+</p>
-
-                <p class="stats-text">Practice Problems</p>
-              </li>
-
-              <li class="stats-card">
-                <p class="h3 stats-title">95%</p>
-
-                <p class="stats-text">Success Rate</p>
-              </li>
-            </ul>
-          </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                        </svg>
+                    </div>
+                    <h3>Interactive Learning</h3>
+                    <p>Practice SQL directly in your browser with our interactive editor. Get instant feedback and learn by doing.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    <h3>Comprehensive Courses</h3>
+                    <p>From basics to advanced topics, our structured courses cover everything you need to know about SQL.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3>Real-world Problems</h3>
+                    <p>Practice with problems inspired by real business scenarios. Build practical skills that employers value.</p>
+                </div>
+            </div>
         </div>
-      </section>
+    </section>
 
-      <!-- 
-        - #SERVICE
-      -->
-
-      <!-- 
-        - #SERVICE
-      -->
-
-      <!-- Commented out as requested
-      <section class="section service" id="services">
+    <section class="courses">
         <div class="container">
-          <h2 class="h2 section-title underline">Our Courses</h2>
-
-          <ul class="service-list">
-            <li>
-              <div class="service-card">
-                <div class="card-icon">
-                  <ion-icon name="school-outline"></ion-icon>
-                </div>
-
-                <h3 class="h3 title">SQL Fundamentals</h3>
-
-                <p class="text">
-                  Master the basics of SQL with our comprehensive beginner course.
-                  Learn database concepts, query writing, and data manipulation
-                  with hands-on exercises and real-world examples.
-                </p>
-
-                <button class="card-btn" aria-label="Show More">
-                  <ion-icon name="chevron-forward-outline"></ion-icon>
-                </button>
-              </div>
-            </li>
-
-            <li>
-              <div class="service-card">
-                <div class="card-icon">
-                  <ion-icon name="analytics-outline"></ion-icon>
-                </div>
-
-                <h3 class="h3 title">Data Analytics</h3>
-
-                <p class="text">
-                  Take your SQL skills to the next level with advanced data analysis
-                  techniques. Learn how to extract insights, create visualizations,
-                  and build dashboards from complex datasets.
-                </p>
-
-                <button class="card-btn" aria-label="Show More">
-                  <ion-icon name="chevron-forward-outline"></ion-icon>
-                </button>
-              </div>
-            </li>
-
-            <li>
-              <div class="service-card">
-                <div class="card-icon">
-                  <ion-icon name="server-outline"></ion-icon>
-                </div>
-
-                <h3 class="h3 title">Database Design</h3>
-
-                <p class="text">
-                  Learn how to design efficient, scalable databases for various applications.
-                  Master entity-relationship diagrams, normalization, and best practices
-                  for database architecture and optimization.
-                </p>
-
-                <button class="card-btn" aria-label="Show More">
-                  <ion-icon name="chevron-forward-outline"></ion-icon>
-                </button>
-              </div>
-            </li>
-          </ul>
+            <div class="section-header">
+                <h2>Featured Courses</h2>
+                <p>Start your journey with our most popular courses</p>
+            </div>
+            <div class="courses-grid">
+                <a href="course_page.html" class="course-card">
+                    <div class="course-image">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
+                            <path d="M3 3h18v18H3zM21 12H3M12 3v18"/>
+                        </svg>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-tag">Beginner</span>
+                        <h3 class="course-title">SQL Fundamentals</h3>
+                        <p class="course-desc">Learn the basics of SQL including queries, joins, and database design.</p>
+                        <div class="course-meta">
+                            <span>4.8 ★★★★★</span>
+                            <span>2,345 students</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="course_page.html" class="course-card">
+                    <div class="course-image">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                        </svg>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-tag">Advanced</span>
+                        <h3 class="course-title">Advanced SQL Optimization</h3>
+                        <p class="course-desc">Master query optimization, indexing, and database performance tuning.</p>
+                        <div class="course-meta">
+                            <span>4.9 ★★★★★</span>
+                            <span>1,567 students</span>
+                        </div>
+                    </div>
+                </a>
+                <a href="course_page.html" class="course-card">
+                    <div class="course-image">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                        </svg>
+                    </div>
+                    <div class="course-content">
+                        <span class="course-tag">Intermediate</span>
+                        <h3 class="course-title">SQL for Data Analysis</h3>
+                        <p class="course-desc">Learn how to analyze data effectively using SQL for business insights.</p>
+                        <div class="course-meta">
+                            <span>4.7 ★★★★★</span>
+                            <span>1,892 students</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
-      </section>
-      -->
+    </section>
 
-      <section class="section comparison" id="comparison">
+    <section class="cta">
         <div class="container">
-          <h2 class="h2 section-title underline">Compare CODESQL With Others</h2>
-
-          <div class="comparison-content">
-            <p class="comparison-text">
-              See how CODESQL stacks up against other SQL learning platforms in the market. We pride ourselves on offering the most comprehensive and practical SQL education experience available.
-            </p>
-
-            <div class="comparison-table-wrapper">
-              <table class="comparison-table">
-                <thead>
-                  <tr>
-                    <th>Features</th>
-                    <th>CODESQL</th>
-                    <th>Other Platforms</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Interactive Learning Environment</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Limited</td>
-                  </tr>
-                  <tr>
-                    <td>100+ Hand-Picked Coding Problems</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Varies</td>
-                  </tr>
-                  <tr>
-                    <td>In-Depth Video Explanations</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Not Always</td>
-                  </tr>
-                  <tr>
-                    <td>Expert Instructor Support</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Limited</td>
-                  </tr>
-                  <tr>
-                    <td>Real-world Industry Datasets</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Rarely</td>
-                  </tr>
-                  <tr>
-                    <td>Affordable Pricing</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Often Expensive</td>
-                  </tr>
-                  <tr>
-                    <td>Job Placement Assistance</td>
-                    <td><ion-icon name="checkmark-circle" class="check-icon"></ion-icon></td>
-                    <td>Rarely Offered</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="comparison-features">
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <ion-icon name="school-outline"></ion-icon>
-                </div>
-                <div class="feature-content">
-                  <h3 class="feature-title">Learn from Industry Experts</h3>
-                  <p class="feature-text">Our instructors have 13+ years of experience in data engineering at top tech companies.</p>
-                </div>
-              </div>
-              
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <ion-icon name="code-slash-outline"></ion-icon>
-                </div>
-                <div class="feature-content">
-                  <h3 class="feature-title">Think SQL Mindset</h3>
-                  <p class="feature-text">We teach you how to break complex problems into simple steps and become a SQL expert.</p>
-                </div>
-              </div>
-              
-              <div class="feature-item">
-                <div class="feature-icon">
-                  <ion-icon name="trending-up-outline"></ion-icon>
-                </div>
-                <div class="feature-content">
-                  <h3 class="feature-title">Career Growth</h3>
-                  <p class="feature-text">Our students have secured positions at top companies with competitive salaries.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            <h2>Ready to Start Your SQL Journey?</h2>
+            <p>Join our community of learners and master SQL with hands-on practice and expert guidance.</p>
+            <a href="register.html" class="btn">Create Free Account</a>
         </div>
-      </section>
+    </section>
 
-      <!-- 
-        - #FEATURES
-      -->
-
-      <!-- Commented out as requested
-      <section class="section features" id="features">
+    <footer class="footer">
         <div class="container">
-          <h2 class="h2 section-title underline">Platform Features</h2>
-
-          <div class="testimonial-card feature-testimonial">
-            <div class="testimonial-content">
-              <p class="testimonial-text">
-                <ion-icon name="quote-outline" class="quote-icon"></ion-icon>
-                The interactive SQL environment is a game-changer. Being able to practice queries and see results instantly helped me learn faster than any other platform I've tried.
-              </p>
-              <div class="testimonial-author">- Michael T., Business Intelligence Analyst</div>
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Learn</h4>
+                    <ul>
+                        <li><a href="course_page.html">Courses</a></li>
+                        <li><a href="ProblemsPage.html">Practice Problems</a></li>
+                        <li><a href="SQLeditor_htmlLayout.html">SQL Editor</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="help_support.html">Help Center</a></li>
+                        <li><a href="pages_list.html">All Pages</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                    </ul>
+                </div>
             </div>
-          </div>
-
-          <ul class="features-list">
-            <li>
-              <div class="features-card">
-                <div class="icon">
-                  <ion-icon name="bulb-outline"></ion-icon>
-                </div>
-
-                <div class="content">
-                  <h3 class="h3 title">Interactive Learning</h3>
-
-                  <p class="text">
-                    Practice SQL directly in your browser with our interactive coding environment.
-                    Get instant feedback and see your queries in action.
-                  </p>
-                </div>
-              </div>
-            </li>
-
-            <li>
-              <div class="features-card">
-                <div class="icon">
-                  <ion-icon name="color-palette-outline"></ion-icon>
-                </div>
-
-                <div class="content">
-                  <h3 class="h3 title">Real-world Datasets</h3>
-
-                  <p class="text">
-                    Work with actual industry datasets to gain practical experience
-                    and prepare for real job scenarios in data analytics.
-                  </p>
-                </div>
-              </div>
-            </li>
-          </ul>
-
-          <figure class="features-banner">
-            <img
-              src="https://raw.githubusercontent.com/codewithsadee/desinic/master/assets/images/features-banner.png"
-              width="369"
-              height="318"
-              loading="lazy"
-              alt="Features Banner"
-              class="w-100 banner-animation"
-            />
-          </figure>
-
-          <ul class="features-list">
-            <li>
-              <div class="features-card">
-                <div class="icon">
-                  <ion-icon name="code-slash-outline"></ion-icon>
-                </div>
-
-                <div class="content">
-                  <h3 class="h3 title">Expert Guidance</h3>
-
-                  <p class="text">
-                    Learn from industry professionals with years of experience in
-                    database management and data science applications.
-                  </p>
-                </div>
-              </div>
-            </li>
-
-            <li>
-              <div class="features-card">
-                <div class="icon">
-                  <ion-icon name="rocket-outline"></ion-icon>
-                </div>
-
-                <div class="content">
-                  <h3 class="h3 title">Progress Tracking</h3>
-
-                  <p class="text">
-                    Monitor your learning journey with detailed progress tracking
-                    and performance analytics to identify areas for improvement.
-                  </p>
-                </div>
-              </div>
-            </li>
-          </ul>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SQL Master. All rights reserved.</p>
+            </div>
         </div>
-      </section>
-      -->
-
-      <!-- 
-        - #BLOG
-      -->
-
-      <section class="section testimonials" id="blog">
-        <div class="container">
-          <h2 class="h2 section-title underline">What Students Say</h2>
-
-          <ul class="testimonials-list">
-            <li>
-              <div class="testimonial-card">
-                <div class="profile">
-                  <figure class="avatar">
-                    <img
-                      src="https://randomuser.me/api/portraits/women/67.jpg"
-                      alt="Sarah Johnson"
-                    />
-                  </figure>
-
-                  <div>
-                    <h3 class="h3 name">Sarah Johnson</h3>
-                    <p class="title">Data Analyst at TechCorp</p>
-                  </div>
-                </div>
-
-                <div class="rating">
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                </div>
-
-                <p class="text">
-                  "CodeSQL transformed my career! The interactive exercises and real-world projects helped me master complex SQL concepts that I now use daily in my job. The instructors were incredibly knowledgeable and supportive throughout my learning journey."
-                </p>
-              </div>
-            </li>
-
-            <li>
-              <div class="testimonial-card">
-                <div class="profile">
-                  <figure class="avatar">
-                    <img
-                      src="https://randomuser.me/api/portraits/men/54.jpg"
-                      alt="Michael Chen"
-                    />
-                  </figure>
-
-                  <div>
-                    <h3 class="h3 name">Michael Chen</h3>
-                    <p class="title">Business Intelligence Specialist</p>
-                  </div>
-                </div>
-
-                <div class="rating">
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star-half"></ion-icon>
-                </div>
-
-                <p class="text">
-                  "After trying several other SQL courses, CodeSQL was the one that finally made advanced concepts click for me. The curriculum is well-structured, and the practice problems are challenging but achievable. I especially appreciated the detailed feedback on my solutions."
-                </p>
-              </div>
-            </li>
-
-            <li>
-              <div class="testimonial-card">
-                <div class="profile">
-                  <figure class="avatar">
-                    <img
-                      src="https://randomuser.me/api/portraits/women/33.jpg"
-                      alt="Priya Patel"
-                    />
-                  </figure>
-
-                  <div>
-                    <h3 class="h3 name">Priya Patel</h3>
-                    <p class="title">Data Science Student</p>
-                  </div>
-                </div>
-
-                <div class="rating">
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star-outline"></ion-icon>
-                </div>
-
-                <p class="text">
-                  "As someone with no prior programming experience, I was worried about learning SQL. CodeSQL made it approachable with clear explanations and a gradual learning curve. The community forums were incredibly helpful whenever I got stuck on a problem."
-                </p>
-              </div>
-            </li>
-
-            <li>
-              <div class="testimonial-card">
-                <div class="profile">
-                  <figure class="avatar">
-                    <img
-                      src="https://randomuser.me/api/portraits/men/41.jpg"
-                      alt="James Wilson"
-                    />
-                  </figure>
-
-                  <div>
-                    <h3 class="h3 name">James Wilson</h3>
-                    <p class="title">Senior Database Administrator</p>
-                  </div>
-                </div>
-
-                <div class="rating">
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                  <ion-icon name="star"></ion-icon>
-                </div>
-
-                <p class="text">
-                  "Even as an experienced DBA, I found tremendous value in CodeSQL's advanced courses. The performance tuning and optimization modules contained practical techniques that I was able to immediately implement in our production environment, resulting in significant query speed improvements."
-                </p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </section>
-    </article>
-  </main>
-
-  <!-- 
-    - #FOOTER
-  -->
-
-  <section class="section join-family" id="join-family">
-    <div class="container">
-      <h2 class="h2 section-title underline">Join Our Family</h2>
-      
-      <div class="join-family-content">
-        <p class="join-family-text">
-          Connect with us on social media to stay updated with the latest SQL tips, tutorials, and course announcements. Join our growing community of data enthusiasts!
-        </p>
-        
-        <ul class="join-family-social-list">
-          <li>
-            <a href="https://www.linkedin.com/" class="social-link linkedin" target="_blank">
-              <ion-icon name="logo-linkedin" class="social-icon"></ion-icon>
-              <span class="social-name">LinkedIn</span>
-            </a>
-          </li>
-          
-          <li>
-            <a href="https://www.youtube.com/" class="social-link youtube" target="_blank">
-              <ion-icon name="logo-youtube" class="social-icon"></ion-icon>
-              <span class="social-name">YouTube</span>
-            </a>
-          </li>
-          
-          <li>
-            <a href="https://www.instagram.com/" class="social-link instagram" target="_blank">
-              <ion-icon name="logo-instagram" class="social-icon"></ion-icon>
-              <span class="social-name">Instagram</span>
-            </a>
-          </li>
-        </ul>
-        
-        <div class="join-family-benefits">
-          <div class="benefit-item">
-            <ion-icon name="videocam-outline" class="benefit-icon"></ion-icon>
-            <p class="benefit-text">Free Tutorial Videos</p>
-          </div>
-          
-          <div class="benefit-item">
-            <ion-icon name="people-outline" class="benefit-icon"></ion-icon>
-            <p class="benefit-text">Community Support</p>
-          </div>
-          
-          <div class="benefit-item">
-            <ion-icon name="gift-outline" class="benefit-icon"></ion-icon>
-            <p class="benefit-text">Exclusive Offers</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="footer-top section">
-      <div class="container">
-        <div class="footer-brand">
-          <a href="#" class="logo">CodeSQL</a>
-
-          <p class="text">
-            Elevate your data skills with our comprehensive SQL courses.
-          </p>
-
-          <ul class="social-list">
-            <li>
-              <a href="https://www.linkedin.com/" class="social-link" target="_blank">
-                <ion-icon name="logo-linkedin"></ion-icon>
-              </a>
-            </li>
-
-            <li>
-              <a href="https://www.youtube.com/" class="social-link" target="_blank">
-                <ion-icon name="logo-youtube"></ion-icon>
-              </a>
-            </li>
-
-            <li>
-              <a href="https://www.instagram.com/" class="social-link" target="_blank">
-                <ion-icon name="logo-instagram"></ion-icon>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <ul class="footer-list">
-          <li>
-            <p class="footer-list-title">Our links</p>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Home</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">About Us</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Services</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Team</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Blog</a>
-          </li>
-        </ul>
-
-        <ul class="footer-list">
-          <li>
-            <p class="footer-list-title">Our Services</p>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">SQL Fundamentals</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Advanced SQL</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">SQL for Data Science</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Database Design</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Performance Tuning</a>
-          </li>
-        </ul>
-
-        <ul class="footer-list">
-          <li>
-            <p class="footer-list-title">Other links</p>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">FAQ</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Portfolio</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Privacy Policy</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Terms & Conditions</a>
-          </li>
-
-          <li>
-            <a href="#" class="footer-link">Support</a>
-          </li>
-        </ul>
-
-        <ul class="footer-list">
-          <li>
-            <p class="footer-list-title">Contact Us</p>
-          </li>
-
-          <li class="footer-item">
-            <div class="footer-item-icon">
-              <ion-icon name="call"></ion-icon>
-            </div>
-
-            <div>
-              <a href="tel:+2484214313" class="footer-item-link">+248-421-4313</a>
-              <a href="tel:+2486871365" class="footer-item-link">+248-687-1365</a>
-            </div>
-          </li>
-
-          <li class="footer-item">
-            <div class="footer-item-icon">
-              <ion-icon name="mail"></ion-icon>
-            </div>
-
-            <div>
-              <a href="mailto:info@codesql.com" class="footer-item-link">info@codesql.com</a>
-              <a href="mailto:support@codesql.com" class="footer-item-link">support@codesql.com</a>
-            </div>
-          </li>
-
-          <li class="footer-item">
-            <div class="footer-item-icon">
-              <ion-icon name="location"></ion-icon>
-            </div>
-
-            <address class="footer-item-link">
-              123 Tech Avenue, Suite 101, San Francisco, CA 94107
-            </address>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <div class="container">
-        <p class="copyright">
-          &copy; 2023 <a href="#" class="copyright-link">CodeSQL</a>. All Rights Reserved
-        </p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- 
-    - #GO TO TOP
-  -->
-
-  <a href="#top" class="go-top active" aria-label="Go To Top" data-go-top>
-    <ion-icon name="arrow-up-outline"></ion-icon>
-  </a>
-
-  <!-- JavaScript Links -->
-  <script src="main.js"></script>
-  <script src="auth.js"></script>
-  
-  <!-- Ionicon Link -->
-  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-  
-  <script>
-    // Initialize authentication state when DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      // Update UI based on authentication state
-      AUTH.updateUI();
-      
-      // Add logout functionality
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          AUTH.logout();
-        });
-      }
-    });
-  </script>
+    </footer>
 </body>
-</html>
+</html> 

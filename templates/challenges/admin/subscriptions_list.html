@@ -1,0 +1,232 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Manage Challenge Subscriptions - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">card_membership</span>
+                Manage Challenge Subscriptions
+            </h1>
+            <div class="admin-actions">
+                <a href="{% url 'challenges:admin_subscription_plans_list' %}" class="btn btn-secondary">
+                    <span class="material-icons">card_membership</span>
+                    Manage Plans
+                </a>
+                <a href="{% url 'challenges:admin_subscription_create' %}" class="btn btn-primary">
+                    <span class="material-icons">add</span>
+                    Create User Subscription
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <!-- Statistics Cards -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">card_membership</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_subscriptions }}</h3>
+                <p>Total Subscriptions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">check_circle</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ active_subscriptions }}</h3>
+                <p>Active Subscriptions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">pending</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ pending_subscriptions }}</h3>
+                <p>Pending Subscriptions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">schedule</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ expired_subscriptions }}</h3>
+                <p>Expired Subscriptions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-filters">
+        <form method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search">Search:</label>
+                    <input type="text" id="search" name="search" value="{{ filter_form.search.value|default:'' }}"
+                           placeholder="Search users, plans, references..." class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    {{ filter_form.status }}
+                </div>
+                <div class="filter-group">
+                    <label for="plan">Plan:</label>
+                    {{ filter_form.plan }}
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-secondary">
+                        <span class="material-icons">search</span>
+                        Filter
+                    </button>
+                    <a href="{% url 'challenges:admin_subscriptions_list' %}" class="btn-secondary">
+                        <span class="material-icons">clear</span>
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Subscriptions List -->
+    <div class="admin-content-section">
+        {% if subscriptions %}
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Amount Paid</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Time Remaining</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subscription in subscriptions %}
+                        <tr>
+                            <td>
+                                <div class="user-info">
+                                    <strong>{{ subscription.user.full_name_or_email }}</strong>
+                                    <small>{{ subscription.user.email }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="plan-info">
+                                    <strong>{{ subscription.plan.name }}</strong>
+                                    <small>{{ subscription.plan.duration_display }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ subscription.status }}">
+                                    {{ subscription.get_status_display }}
+                                </span>
+                            </td>
+                            <td>${{ subscription.amount_paid }}</td>
+                            <td>{{ subscription.start_date|date:"M d, Y g:i A" }}</td>
+                            <td>
+                                {% if subscription.end_date %}
+                                    {{ subscription.end_date|date:"M d, Y g:i A" }}
+                                {% else %}
+                                    <span class="text-muted">Unlimited</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if subscription.status == 'active' %}
+                                    <span class="time-remaining">{{ subscription.time_remaining }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="plan-actions">
+                                    <a href="{% url 'challenges:admin_subscription_detail' subscription.id %}" class="btn btn-secondary">
+                                        <span class="material-icons">visibility</span>
+                                        View
+                                    </a>
+                                    <a href="{% url 'challenges:admin_subscription_edit' subscription.id %}" class="btn btn-warning">
+                                        <span class="material-icons">edit</span>
+                                        Edit
+                                    </a>
+                                    {% if subscription.status == 'active' %}
+                                    <a href="{% url 'challenges:admin_subscription_cancel' subscription.id %}" class="btn btn-warning">
+                                        <span class="material-icons">cancel</span>
+                                        Cancel
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'challenges:admin_subscription_confirm_delete' subscription.id   %}" class="btn btn-danger">
+                                        <span class="material-icons">delete</span>
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if subscriptions.has_other_pages %}
+            <div class="pagination-wrapper">
+                <div class="pagination">
+                    {% if subscriptions.has_previous %}
+                        <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.plan %}&plan={{ request.GET.plan }}{% endif %}" class="page-link">
+                            <span class="material-icons">first_page</span>
+                        </a>
+                        <a href="?page={{ subscriptions.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.plan %}&plan={{ request.GET.plan }}{% endif %}" class="page-link">
+                            <span class="material-icons">chevron_left</span>
+                        </a>
+                    {% endif %}
+
+                    <span class="page-info">
+                        Page {{ subscriptions.number }} of {{ subscriptions.paginator.num_pages }}
+                    </span>
+
+                    {% if subscriptions.has_next %}
+                        <a href="?page={{ subscriptions.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.plan %}&plan={{ request.GET.plan }}{% endif %}" class="page-link">
+                            <span class="material-icons">chevron_right</span>
+                        </a>
+                        <a href="?page={{ subscriptions.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.plan %}&plan={{ request.GET.plan }}{% endif %}" class="page-link">
+                            <span class="material-icons">last_page</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <span class="material-icons">card_membership</span>
+                </div>
+                <h3>No subscriptions found</h3>
+                <p>{% if filter_form.search.value or filter_form.status.value or filter_form.plan.value %}
+                    No subscriptions match your current filters. Try adjusting your search criteria.
+                {% else %}
+                    Get started by creating the first challenge subscription.
+                {% endif %}</p>
+                <a href="{% url 'challenges:admin_subscription_create' %}" class="btn btn-primary">
+                    <span class="material-icons">add</span>
+                    Create Subscription
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

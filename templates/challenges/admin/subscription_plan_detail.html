@@ -1,0 +1,299 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ plan.name }} - Subscription Plan Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">card_membership</span>
+                {{ plan.name }}
+                {% if plan.is_recommended %}
+                    <span class="badge badge-recommended">Recommended</span>
+                {% endif %}
+                {% if not plan.is_active %}
+                    <span class="badge badge-inactive">Inactive</span>
+                {% endif %}
+            </h1>
+            <div class="admin-actions">
+                <a href="{% url 'challenges:admin_subscription_plans_list' %}" class="btn btn-secondary">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Plans
+                </a>
+                <a href="{% url 'challenges:admin_subscription_plan_edit' plan.id %}" class="btn btn-warning">
+                    <span class="material-icons">edit</span>
+                    Edit Plan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <!-- Statistics Cards -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">people</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_subscriptions }}</h3>
+                <p>Total Subscriptions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">check_circle</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ active_subscriptions }}</h3>
+                <p>Active Subscriptions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">schedule</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ expired_subscriptions }}</h3>
+                <p>Expired Subscriptions</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">attach_money</span>
+            </div>
+            <div class="stat-content">
+                <h3>${{ total_revenue }}</h3>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-content-grid">
+        <!-- Plan Details -->
+        <div class="admin-content-main">
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="material-icons">info</span>
+                        Plan Details
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Plan Name:</label>
+                            <span>{{ plan.name }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Duration:</label>
+                            <span>{{ plan.get_duration_display }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Price:</label>
+                            <span>
+                                ${{ plan.price }}
+                                {% if plan.original_price and plan.original_price > plan.price %}
+                                    <span class="original-price">(was ${{ plan.original_price }})</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Status:</label>
+                            <span>
+                                {% if plan.is_active %}
+                                    <span class="status-badge active">Active</span>
+                                {% else %}
+                                    <span class="status-badge inactive">Inactive</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Recommended:</label>
+                            <span>
+                                {% if plan.is_recommended %}
+                                    <span class="status-badge recommended">Yes</span>
+                                {% else %}
+                                    <span class="status-badge">No</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Sort Order:</label>
+                            <span>{{ plan.sort_order }}</span>
+                        </div>
+                        <div class="detail-item full-width">
+                            <label>Description:</label>
+                            <span>{{ plan.description }}</span>
+                        </div>
+                        {% if plan.features %}
+                        <div class="detail-item full-width">
+                            <label>Features:</label>
+                            <div class="features-list">
+                                {% for feature in plan.features %}
+                                    <div class="feature-item">• {{ feature }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="detail-item">
+                            <label>Created:</label>
+                            <span>{{ plan.created_at|date:"M d, Y g:i A" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Last Updated:</label>
+                            <span>{{ plan.updated_at|date:"M d, Y g:i A" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Subscriptions -->
+            {% if recent_subscriptions %}
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="material-icons">history</span>
+                        Recent Subscriptions
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subscription in recent_subscriptions %}
+                                <tr>
+                                    <td>
+                                        <div class="user-info">
+                                            <strong>{{ subscription.user.full_name_or_email }}</strong>
+                                            {% if subscription.user.get_full_name %}
+                                                <small>{{ subscription.user.email }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge {{ subscription.status }}">
+                                            {{ subscription.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>${{ subscription.amount_paid }}</td>
+                                    <td>{{ subscription.start_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if subscription.end_date %}
+                                            {{ subscription.end_date|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="unlimited">Unlimited</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'challenges:admin_subscription_detail' subscription.id %}" class="btn btn-info">
+                                            <span class="material-icons">visibility</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if total_subscriptions > 10 %}
+                    <div class="card-footer">
+                        <a href="{% url 'challenges:admin_subscriptions_list' %}?plan={{ plan.id }}" class="btn btn-info">
+                            View All Subscriptions
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="admin-content-sidebar">
+            <!-- Quick Actions -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="material-icons">flash_on</span>
+                        Quick Actions
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="quick-actions">
+                        <a href="{% url 'challenges:admin_subscription_plan_edit' plan.id %}" class="btn btn-warning">
+                            <span class="material-icons">edit</span>
+                            Edit Plan
+                        </a>
+                        <a href="{% url 'challenges:admin_subscription_plan_create' %}" class="btn btn-primary">
+                            <span class="material-icons">add</span>
+                            Create New Plan
+                        </a>
+                        <a href="{% url 'challenges:admin_subscriptions_list' %}?plan={{ plan.id }}" class="btn btn-info">
+                            <span class="material-icons">people</span>
+                            View Subscribers
+                        </a>
+                        {% if total_subscriptions == 0 %}
+                        <a href="{% url 'challenges:admin_subscription_plan_confirm_delete' plan.id %}" class="btn btn-danger">
+                            <span class="material-icons">delete</span>
+                            Delete Plan
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan Statistics -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3>
+                        <span class="material-icons">analytics</span>
+                        Statistics
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="stats-list">
+                        <div class="stat-item">
+                            <label>Active Subscriptions:</label>
+                            <span>{{ active_subscriptions }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Pending Subscriptions:</label>
+                            <span>{{ pending_subscriptions }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Expired Subscriptions:</label>
+                            <span>{{ expired_subscriptions }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Total Revenue:</label>
+                            <span>${{ total_revenue }}</span>
+                        </div>
+                        {% if active_subscriptions > 0 %}
+                        <div class="stat-item">
+                            <label>Average Revenue per User:</label>
+                            <span>${{ average_revenue_per_user|floatformat:2 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

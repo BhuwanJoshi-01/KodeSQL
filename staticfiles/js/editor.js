@@ -1,7 +1,6 @@
 // SQL Editor JavaScript
 
 let monacoEditor = null;
-let currentSchema = {};
 
 // Initialize Monaco Editor
 function initSQLEditor() {
@@ -169,117 +168,82 @@ function createResultsTable(results, columns) {
     return tableContainer;
 }
 
-// Load Database Schema
-async function loadSchema() {
-    try {
-        const response = await apiRequest('/schemas/api/schema/');
-        currentSchema = response;
-        displaySchema(response);
-    } catch (error) {
-        console.error('Failed to load schema:', error);
-        const container = document.getElementById('schema-container');
-        container.innerHTML = `
-            <div class="empty-state">
-                <span class="material-icons">error</span>
-                <p>Failed to load schema</p>
-            </div>
-        `;
-    }
+// Clear Results
+function clearResults() {
+    const container = document.getElementById('results-container');
+    container.innerHTML = `
+        <div class="empty-state">
+            <span class="material-icons">play_arrow</span>
+            <p>Run a query to see results here!</p>
+        </div>
+    `;
 }
 
-// Display Database Schema
-function displaySchema(schema) {
-    const container = document.getElementById('schema-container');
-    
-    if (!schema.tables || Object.keys(schema.tables).length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <span class="material-icons">table_chart</span>
-                <p>No tables found. Create some tables to get started!</p>
-            </div>
-        `;
+// Export Results as CSV
+function exportAsCSV() {
+    const results = document.querySelector('.results-table');
+    if (!results) {
+        showMessage('No results to export', 'warning');
         return;
     }
-    
-    const schemaTree = document.createElement('div');
-    schemaTree.className = 'schema-tree';
-    
-    Object.entries(schema.tables).forEach(([tableName, table]) => {
-        const tableElement = createSchemaTable(tableName, table);
-        schemaTree.appendChild(tableElement);
-    });
-    
-    container.innerHTML = '';
-    container.appendChild(schemaTree);
+
+    // Convert table to CSV
+    const rows = Array.from(results.querySelectorAll('tr'));
+    const csv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => `"${cell.textContent}"`).join(',');
+    }).join('\n');
+
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'query_results.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    closeModal('exportModal');
+    showMessage('Results exported as CSV', 'success');
 }
 
-// Create Schema Table Element
-function createSchemaTable(tableName, table) {
-    const tableDiv = document.createElement('div');
-    tableDiv.className = 'schema-table';
-    
-    const header = document.createElement('div');
-    header.className = 'schema-table-header';
-    header.onclick = () => toggleSchemaTable(tableDiv);
-    
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'schema-table-name';
-    nameDiv.innerHTML = `
-        <span class="material-icons">table_chart</span>
-        ${tableName}
-    `;
-    
-    const toggle = document.createElement('span');
-    toggle.className = 'material-icons schema-table-toggle';
-    toggle.textContent = 'expand_more';
-    
-    header.appendChild(nameDiv);
-    header.appendChild(toggle);
-    
-    const columnsDiv = document.createElement('div');
-    columnsDiv.className = 'schema-columns';
-    
-    table.columns.forEach(column => {
-        const columnDiv = document.createElement('div');
-        columnDiv.className = 'schema-column';
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'schema-column-name';
-        nameSpan.textContent = column.name;
-        
-        const typeSpan = document.createElement('span');
-        typeSpan.className = 'schema-column-type';
-        typeSpan.textContent = `${column.type} ${column.constraints || ''}`.trim();
-        
-        columnDiv.appendChild(nameSpan);
-        columnDiv.appendChild(typeSpan);
-        columnsDiv.appendChild(columnDiv);
-    });
-    
-    tableDiv.appendChild(header);
-    tableDiv.appendChild(columnsDiv);
-    
-    return tableDiv;
-}
-
-// Toggle Schema Table Expansion
-function toggleSchemaTable(tableElement) {
-    tableElement.classList.toggle('expanded');
-}
-
-// Refresh Schema
-async function refreshSchema() {
-    const refreshBtn = document.querySelector('.schema-actions button[onclick="refreshSchema()"]');
-    setLoading(refreshBtn, true);
-    
-    try {
-        await loadSchema();
-        showMessage('Schema refreshed successfully', 'success');
-    } catch (error) {
-        showMessage('Failed to refresh schema', 'error');
-    } finally {
-        setLoading(refreshBtn, false);
+// Export Results as JSON
+function exportAsJSON() {
+    const results = document.querySelector('.results-table');
+    if (!results) {
+        showMessage('No results to export', 'warning');
+        return;
     }
+
+    // Convert table to JSON
+    const headers = Array.from(results.querySelectorAll('thead th')).map(th => th.textContent);
+    const rows = Array.from(results.querySelectorAll('tbody tr'));
+
+    const data = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        const obj = {};
+        headers.forEach((header, index) => {
+            obj[header] = cells[index] ? cells[index].textContent : '';
+        });
+        return obj;
+    });
+
+    // Download JSON
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'query_results.json';
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    closeModal('exportModal');
+    showMessage('Results exported as JSON', 'success');
+}
+
+// Export Results
+function exportResults() {
+    openModal('exportModal');
 }
 
 // Clear Results
@@ -581,58 +545,39 @@ if (window.user && window.user.is_authenticated) {
     window.deleteSavedQuery = deleteSavedQuery;
 }
 
-// Schema Templates
-async function openSchemaTemplates() {
-    try {
-        const response = await apiRequest('/schemas/api/templates/');
-        displaySchemaTemplates(response.templates || []);
-        openModal('schemaTemplatesModal');
-    } catch (error) {
-        showMessage('Failed to load schema templates', 'error');
+// Export Functions
+function clearResults() {
+    const resultsContainer = document.getElementById('results-container');
+    if (resultsContainer) {
+        resultsContainer.innerHTML = `
+            <div class="empty-state">
+                <span class="material-icons">play_arrow</span>
+                <p>Run a query to see results here!</p>
+            </div>
+        `;
+        resultsContainer.className = 'results-empty';
     }
 }
 
-function displaySchemaTemplates(templates) {
-    const container = document.getElementById('schema-templates-list');
-    
-    if (templates.length === 0) {
-        container.innerHTML = '<p class="text-center">No schema templates available</p>';
-        return;
-    }
-    
-    container.innerHTML = templates.map(template => `
-        <div class="card" style="margin-bottom: 1rem;">
-            <div class="card-header">
-                <h4 class="card-title">${template.name}</h4>
-                <p class="card-subtitle">${template.description}</p>
-            </div>
-            <div class="card-actions">
-                <button class="btn btn-primary" onclick="loadSchemaTemplate(${template.id})">
-                    Load Template
-                </button>
-            </div>
-        </div>
-    `).join('');
+function exportResults() {
+    openModal('exportModal');
 }
 
-async function loadSchemaTemplate(templateId) {
-    try {
-        await apiRequest(`/schemas/api/load-template/${templateId}/`, {
-            method: 'POST'
-        });
-        
-        showMessage('Schema template loaded successfully', 'success');
-        closeModal('schemaTemplatesModal');
-        await loadSchema(); // Refresh schema display
-    } catch (error) {
-        showMessage('Failed to load schema template', 'error');
-    }
+function exportAsCSV() {
+    // Implementation for CSV export
+    showMessage('CSV export functionality coming soon!', 'info');
+    closeModal('exportModal');
+}
+
+function exportAsJSON() {
+    // Implementation for JSON export
+    showMessage('JSON export functionality coming soon!', 'info');
+    closeModal('exportModal');
 }
 
 // Make functions global
 window.executeQuery = executeQuery;
-window.refreshSchema = refreshSchema;
 window.clearResults = clearResults;
 window.exportResults = exportResults;
-window.openSchemaTemplates = openSchemaTemplates;
-window.loadSchemaTemplate = loadSchemaTemplate;
+window.exportAsCSV = exportAsCSV;
+window.exportAsJSON = exportAsJSON;

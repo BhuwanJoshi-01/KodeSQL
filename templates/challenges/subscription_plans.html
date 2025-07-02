@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="subscription-container">
+    <div class="subscription-header">
+        <div class="breadcrumb">
+            <a href="{% url 'challenges:challenges_list' %}"
+                <span class="material-icons">arrow_back</span>
+                Back to Challenges
+            </a>
+        </div>
+        
+        <div class="header-content">
+            <h1>
+                <span class="material-icons">workspace_premium</span>
+                Challenge Subscription Plans
+            </h1>
+            <p>Unlock premium SQL challenges and accelerate your learning</p>
+        </div>
+    </div>
+
+    <!-- Pending Subscriptions Alert -->
+    {% if pending_subscriptions %}
+    <div class="pending-subscriptions-alert">
+        <h2>
+            <span class="material-icons">hourglass_empty</span>
+            Pending Payments
+        </h2>
+        <p>You have pending payments that need to be completed or cancelled:</p>
+
+        {% for pending in pending_subscriptions %}
+        <div class="pending-subscription-item">
+            <div class="pending-info">
+                <h3>{{ pending.plan.name }}</h3>
+                <p>Amount: ${{ pending.amount_paid }}</p>
+                <p>Expires: {{ pending.pending_expires_at|date:"M d, Y g:i A" }}</p>
+            </div>
+            <div class="pending-actions">
+                <a href="{% url 'challenges:subscription_checkout' pending.plan.id %}" class="btn btn-primary">
+                    Complete Payment
+                </a>
+                <form method="post" action="{% url 'challenges:cancel_pending_subscription' pending.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to cancel this pending payment?')">
+                        Cancel
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="plans-container">
+        {% for plan in subscription_plans %}
+            <div class="plan-card {% if plan.is_recommended %}recommended{% endif %}">
+                {% if plan.is_recommended %}
+                    <div class="recommended-badge">
+                        <span class="material-icons">star</span>
+                        Recommended
+                    </div>
+                {% endif %}
+                
+                <div class="plan-header">
+                    <h3>{{ plan.name }}</h3>
+                    <div class="plan-duration">{{ plan.get_duration_display }}</div>
+                </div>
+                
+                <div class="plan-pricing">
+                    {% if plan.has_discount %}
+                        <div class="original-price">${{ plan.original_price }}</div>
+                        <div class="discount-badge">{{ plan.discount_percentage }}% OFF</div>
+                    {% endif %}
+                    <div class="current-price">
+                        ${{ plan.effective_price }}
+                        {% if plan.duration != 'unlimited' %}
+                            <span class="price-period">/ {{ plan.get_duration_display|lower }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="plan-description">
+                    {{ plan.description }}
+                </div>
+                
+                <div class="plan-features">
+                    <h4>What's included:</h4>
+                    <ul>
+                        {% for feature in plan.features %}
+                            <li>
+                                <span class="material-icons">check_circle</span>
+                                {{ feature }}
+                            </li>
+                        {% empty %}
+                            <li>
+                                <span class="material-icons">check_circle</span>
+                                Access to all premium challenges
+                            </li>
+                            <li>
+                                <span class="material-icons">check_circle</span>
+                                Detailed solutions and explanations
+                            </li>
+                            <li>
+                                <span class="material-icons">check_circle</span>
+                                Progress tracking and analytics
+                            </li>
+                            {% if plan.duration == 'unlimited' %}
+                            <li>
+                                <span class="material-icons">check_circle</span>
+                                Lifetime access
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="plan-action">
+                    <a href="{% url 'challenges:subscription_checkout' plan.id %}" class="btn btn-primary"
+                        Choose {{ plan.name }}
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="no-plans">
+                <span class="material-icons">info</span>
+                <h3>No subscription plans available</h3>
+                <p>Please check back later for subscription options.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div class="subscription-benefits">
+        <h2>Why Subscribe to Premium Challenges?</h2>
+        <div class="benefits-grid">
+            <div class="benefit-item">
+                <span class="material-icons">psychology</span>
+                <h3>Advanced Challenges</h3>
+                <p>Access complex SQL problems from top tech companies</p>
+            </div>
+            <div class="benefit-item">
+                <span class="material-icons">lightbulb</span>
+                <h3>Detailed Solutions</h3>
+                <p>Learn from comprehensive explanations and multiple approaches</p>
+            </div>
+            <div class="benefit-item">
+                <span class="material-icons">trending_up</span>
+                <h3>Track Progress</h3>
+                <p>Monitor your improvement with detailed analytics</p>
+            </div>
+            <div class="benefit-item">
+                <span class="material-icons">business</span>
+                <h3>Company-Specific</h3>
+                <p>Practice with real interview questions from major companies</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.subscription-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.pending-subscriptions-alert {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+}
+
+.pending-subscriptions-alert h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #92400e;
+    margin-bottom: 1rem;
+}
+
+.pending-subscription-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pending-subscription-item:last-child {
+    margin-bottom: 0;
+}
+
+.pending-info h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.pending-info p {
+    margin: 0.25rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.pending-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.pending-actions form {
+    margin: 0;
+}
+
+.subscription-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.breadcrumb {
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.header-content h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.header-content p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.plans-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.plan-card {
+    background: var(--card-background);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.plan-card.recommended {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+}
+
+.recommended-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.plan-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.plan-duration {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.plan-pricing {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.original-price {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.discount-badge {
+    background: #ef4444;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-left: 0.5rem;
+}
+
+.current-price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.price-period {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: normal;
+}
+
+.plan-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.plan-features h4 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.plan-features .material-icons {
+    color: var(--success-color);
+    font-size: 1.2rem;
+}
+
+.plan-action {
+    margin-top: auto;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.no-plans {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.no-plans .material-icons {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.subscription-benefits {
+    text-align: center;
+}
+
+.subscription-benefits h2 {
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.benefit-item {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.benefit-item .material-icons {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.benefit-item h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.benefit-item p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .subscription-container {
+        padding: 1rem;
+    }
+    
+    .plans-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .current-price {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}

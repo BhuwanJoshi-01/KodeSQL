@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Master - Coding Problems</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #6366f1;
+        }
+
+        .logo::before {
+            content: "⚡";
+            margin-right: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover, .nav a.active {
+            color: #6366f1;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Left Column - Questions */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Premium Banner */
+        .premium-banner {
+            background: linear-gradient(135deg, #ea580c, #dc2626);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .premium-banner::before {
+            content: "🔒";
+            font-size: 1.2rem;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+            color: #374151;
+            width: 100%;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: #ea580c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Questions Table */
+        .questions-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .table-header {
+            background: #6366f1;
+            color: white;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 120px 80px;
+            gap: 1rem;
+            font-weight: 600;
+        }
+
+        .question-row {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 120px 80px;
+            gap: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            align-items: center;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .question-row:hover {
+            background: #f9fafb;
+        }
+
+        .question-row:last-child {
+            border-bottom: none;
+        }
+
+        .question-title {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .company {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .difficulty {
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .difficulty.easy {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .difficulty.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .difficulty.hard {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .status.completed {
+            color: #10b981;
+        }
+
+        .status.failed {
+            color: #ef4444;
+        }
+
+        .status.pending {
+            color: #f59e0b;
+        }
+
+        /* Right Column */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-title {
+            color: #6366f1;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label {
+            font-weight: 500;
+            color: #374151;
+            min-width: 80px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+            flex: 1;
+            margin: 0 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ea580c;
+            transition: width 0.3s ease;
+        }
+
+        .progress-stats {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .leaderboard-title {
+            color: #6366f1;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #6366f1;
+            margin-right: 0.5rem;
+        }
+
+        .leaderboard-name {
+            color: #374151;
+        }
+
+        .leaderboard-points {
+            color: #6366f1;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .right-column {
+                order: -1;
+            }
+
+            .filters-row {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+
+            .search-section {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .table-header, .question-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .nav {
+                display: none;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .filters-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Empty state */
+        .no-results {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+        }
+
+        .no-results h3 {
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">SQL Master</div>
+        <nav class="nav">
+            <a href="#">Courses</a>
+            <a href="#" class="active">Coding Problems</a>
+            <a href="#">Practice</a>
+        </nav>
+        <div class="user-info">
+            <span class="user-name">Keshav Rao ▼</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Column - Questions -->
+        <div class="left-column">
+            <!-- Premium Banner -->
+            <div class="premium-banner">
+                Buy Premium Problems
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <select id="difficulty">
+                            <option value="">Difficulty</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="extreme">Extreme Hard</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="tags">
+                            <option value="">Select Tags</option>
+                            <option value="joins">Joins</option>
+                            <option value="aggregation">Aggregation</option>
+                            <option value="subqueries">Subqueries</option>
+                            <option value="window-functions">Window Functions</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="company">
+                            <option value="">Select Company</option>
+                            <option value="amazon">Amazon</option>
+                            <option value="google">Google</option>
+                            <option value="microsoft">Microsoft</option>
+                            <option value="netflix">Netflix</option>
+                            <option value="deloitte">Deloitte</option>
+                            <option value="tcs">TCS</option>
+                            <option value="infosys">Infosys</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="status">
+                            <option value="">Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="free">
+                            <option value="">Free</option>
+                            <option value="free">Free Only</option>
+                            <option value="premium">Premium Only</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="search-section">
+                    <input type="text" class="search-input" placeholder="Search" id="searchInput">
+                    <button class="btn btn-primary" onclick="searchQuestions()">Search</button>
+                    <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+                </div>
+            </div>
+
+            <!-- Questions Table -->
+            <div class="questions-section">
+                <div class="table-header">
+                    <div>Question Title</div>
+                    <div>Companies</div>
+                    <div>Difficulty</div>
+                    <div>Status</div>
+                </div>
+                
+                <div id="questionsContainer">
+                    <div class="question-row" data-difficulty="easy" data-company="tcs" data-status="completed">
+                        <div class="question-title">71 - Department Average Salary</div>
+                        <div class="company">TCS</div>
+                        <div class="difficulty easy">Easy</div>
+                        <div class="status completed">✓</div>
+                    </div>
+                    
+                    <div class="question-row" data-difficulty="easy" data-company="infosys" data-status="completed">
+                        <div class="question-title">72 - Product Sales</div>
+                        <div class="company">Infosys</div>
+                        <div class="difficulty easy">Easy</div>
+                        <div class="status completed">✓</div>
+                    </div>
+                    
+                    <div class="question-row" data-difficulty="easy" data-company="deloitte" data-status="completed">
+                        <div class="question-title">73 - Category Product Count</div>
+                        <div class="company">Deloitte</div>
+                        <div class="difficulty easy">Easy</div>
+                        <div class="status completed">✓</div>
+                    </div>
+                    
+                    <div class="question-row" data-difficulty="hard" data-company="amazon" data-status="failed">
+                        <div class="question-title">76 - Amazon Notifications</div>
+                        <div class="company">Amazon</div>
+                        <div class="difficulty hard">Hard</div>
+                        <div class="status failed">✗</div>
+                    </div>
+                    
+                    <div class="question-row" data-difficulty="easy" data-company="deloitte" data-status="completed">
+                        <div class="question-title">103 - Employee Mentor</div>
+                        <div class="company">Deloitte</div>
+                        <div class="difficulty easy">Easy</div>
+                        <div class="status completed">✓</div>
+                    </div>
+                    
+                    <div class="question-row" data-difficulty="hard" data-company="tredence" data-status="pending">
+                        <div class="question-title">118 - User Session Activity</div>
+                        <div class="company">Tredence</div>
+                        <div class="difficulty hard">Hard</div>
+                        <div class="status pending">⋯</div>
+                    </div>
+                    
+                    <div class="question-row" data-difficulty="hard" data-company="tiger-analytics" data-status="pending">
+                        <div class="question-title">125 - Project Budget</div>
+                        <div class="company">Tiger Analytics</div>
+                        <div class="difficulty hard">Hard</div>
+                        <div class="status pending">⋯</div>
+                    </div>
+
+                    <div class="question-row" data-difficulty="medium" data-company="google" data-status="completed">
+                        <div class="question-title">89 - Revenue Analysis</div>
+                        <div class="company">Google</div>
+                        <div class="difficulty medium">Medium</div>
+                        <div class="status completed">✓</div>
+                    </div>
+
+                    <div class="question-row" data-difficulty="medium" data-company="microsoft" data-status="failed">
+                        <div class="question-title">92 - User Engagement Metrics</div>
+                        <div class="company">Microsoft</div>
+                        <div class="difficulty medium">Medium</div>
+                        <div class="status failed">✗</div>
+                    </div>
+
+                    <div class="question-row" data-difficulty="easy" data-company="netflix" data-status="completed">
+                        <div class="question-title">45 - Content Recommendations</div>
+                        <div class="company">Netflix</div>
+                        <div class="difficulty easy">Easy</div>
+                        <div class="status completed">✓</div>
+                    </div>
+                </div>
+
+                <!-- No Results Message -->
+                <div class="no-results" id="noResults" style="display: none;">
+                    <h3>No questions match your filters</h3>
+                    <p>Try adjusting your search criteria or clearing filters</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Progress & Leaderboard -->
+        <div class="right-column">
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <h3 class="progress-title">Your Progress</h3>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Total</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 52%"></div>
+                    </div>
+                    <span class="progress-stats">81/155</span>
+                </div>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Easy</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                    <span class="progress-stats">17/17</span>
+                </div>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Medium</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 82%"></div>
+                    </div>
+                    <span class="progress-stats">59/72</span>
+                </div>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Hard</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 9%"></div>
+                    </div>
+                    <span class="progress-stats">5/58</span>
+                </div>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Extreme Hard</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="progress-stats">0/8</span>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="leaderboard">
+                <h3 class="leaderboard-title">Leaderboard (Rolling 100 Days)</h3>
+                
+                <div class="leaderboard-item">
+                    <div>
+                        <span class="leaderboard-rank">1 -</span>
+                        <span class="leaderboard-name">ADARSHA</span>
+                    </div>
+                    <div class="leaderboard-points">6050 Points</div>
+                </div>
+                
+                <div class="leaderboard-item">
+                    <div>
+                        <span class="leaderboard-rank">2 -</span>
+                        <span class="leaderboard-name">Surya</span>
+                    </div>
+                    <div class="leaderboard-points">4390 Points</div>
+                </div>
+                
+                <div class="leaderboard-item">
+                    <div>
+                        <span class="leaderboard-rank">3 -</span>
+                        <span class="leaderboard-name">Priyam Johri</span>
+                    </div>
+                    <div class="leaderboard-points">4140 Points</div>
+                </div>
+
+                <div class="leaderboard-item">
+                    <div>
+                        <span class="leaderboard-rank">4 -</span>
+                        <span class="leaderboard-name">Keshav Rao</span>
+                    </div>
+                    <div class="leaderboard-points">3890 Points</div>
+                </div>
+
+                <div class="leaderboard-item">
+                    <div>
+                        <span class="leaderboard-rank">5 -</span>
+                        <span class="leaderboard-name">Arjun Singh</span>
+                    </div>
+                    <div class="leaderboard-points">3650 Points</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Filter functionality
+        function searchQuestions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const difficulty = document.getElementById('difficulty').value;
+            const company = document.getElementById('company').value;
+            const status = document.getElementById('status').value;
+            
+            const questions = document.querySelectorAll('.question-row');
+            let visibleCount = 0;
+            
+            questions.forEach(question => {
+                const title = question.querySelector('.question-title').textContent.toLowerCase();
+                const questionDifficulty = question.dataset.difficulty;
+                const questionCompany = question.dataset.company;
+                const questionStatus = question.dataset.status;
+                
+                const matchesSearch = title.includes(searchTerm);
+                const matchesDifficulty = !difficulty || questionDifficulty === difficulty;
+                const matchesCompany = !company || questionCompany === company;
+                const matchesStatus = !status || questionStatus === status;
+                
+                if (matchesSearch && matchesDifficulty && matchesCompany && matchesStatus) {
+                    question.style.display = 'grid';
+                    visibleCount++;
+                } else {
+                    question.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            const noResults = document.getElementById('noResults');
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('difficulty').value = '';
+            document.getElementById('tags').value = '';
+            document.getElementById('company').value = '';
+            document.getElementById('status').value = '';
+            document.getElementById('free').value = '';
+            
+            const questions = document.querySelectorAll('.question-row');
+            questions.forEach(question => {
+                question.style.display = 'grid';
+            });
+
+            document.getElementById('noResults').style.display = 'none';
+        }
+
+        // Add event listeners for real-time filtering
+        document.getElementById('difficulty').addEventListener('change', searchQuestions);
+        document.getElementById('company').addEventListener('change', searchQuestions);
+        document.getElementById('status').addEventListener('change', searchQuestions);
+        document.getElementById('searchInput').addEventListener('input', searchQuestions);
+
+        // Add click handlers for question rows
+        document.querySelectorAll('.question-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const title = row.querySelector('.question-title').textContent;
+                console.log('Clicked on:', title);
+                // Here you could navigate to the question detail page
+            });
+        });
+    </script>
+</body>
+</html>

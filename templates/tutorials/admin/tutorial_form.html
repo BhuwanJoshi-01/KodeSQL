@@ -1,11 +1,14 @@
 {% extends "admin_base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-{{ super() }}
+{{ block.super }}
 {{ form.media.css }}
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
 <style>
+/* Additional form-specific styles */
 .formset-form {
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -80,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {% if is_edit %}Edit Tutorial{% else %}Create Tutorial{% endif %}
     </h1>
     <div class="admin-actions">
-        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+        <a href="{% url 'tutorials:admin_tutorials_list' %}"
             <span class="material-icons">arrow_back</span>
             Back to List
         </a>
@@ -88,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <form method="post" enctype="multipart/form-data" class="admin-form">
-    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    {% csrf_token %}
     
     <div class="admin-card">
         <h3>Tutorial Information</h3>
@@ -171,10 +174,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
     
-    {% if not is_edit %}
-        <div class="admin-card">
-            <h3>Lessons</h3>
+    <div class="admin-card">
+        <h3>Lessons</h3>
+        {% if is_edit %}
+            <p class="help-text">Edit existing lessons or add new ones to your tutorial.</p>
+        {% else %}
             <p class="help-text">Add lessons to your tutorial. You can also add lessons later.</p>
+        {% endif %}
             
             <div id="lesson-formset">
                 {{ formset.management_form }}
@@ -183,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="formset-header">
                             <h4>Lesson {{ forloop.counter }}</h4>
                             {% if lesson_form.instance.pk %}
-                                <button type="button" class="admin-btn danger delete-form-btn">
+                                <button type="button" class="btn btn-danger delete-form-btn">
                                     <span class="material-icons">delete</span>
                                     Delete
                                 </button>
@@ -210,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% endfor %}
             </div>
             
-            <button type="button" id="add-lesson-form" class="admin-btn secondary add-form-btn">
+            <button type="button" id="add-lesson-form" class="btn btn-secondary add-form-btn">
                 <span class="material-icons">add</span>
                 Add Another Lesson
             </button>
@@ -220,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="formset-form">
                 <div class="formset-header">
                     <h4>New Lesson</h4>
-                    <button type="button" class="admin-btn danger delete-form-btn">
+                    <button type="button" class="btn btn-danger delete-form-btn">
                         <span class="material-icons">delete</span>
                         Delete
                     </button>
@@ -228,14 +234,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 {{ formset.empty_form }}
             </div>
         </div>
-    {% endif %}
+    </div>
     
     <div class="admin-actions" style="margin-top: 2rem;">
-        <button type="submit" class="admin-btn">
+        <button type="submit" class="btn btn-primary">
             <span class="material-icons">save</span>
             {% if is_edit %}Update Tutorial{% else %}Create Tutorial{% endif %}
         </button>
-        <a href="{{ url('tutorials:admin_tutorials_list') }}" class="admin-btn secondary">
+        <a href="{% url 'tutorials:admin_tutorials_list' %}"
             <span class="material-icons">cancel</span>
             Cancel
         </a>

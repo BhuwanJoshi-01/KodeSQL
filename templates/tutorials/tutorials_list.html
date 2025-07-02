@@ -17,15 +17,22 @@
             <div class="tutorials-grid">
                 {% for tutorial in tutorials %}
                     <div class="tutorial-card card">
-                        <div class="tutorial-header">
-                            <div class="tutorial-icon">
-                                <span class="material-icons">{{ tutorial.icon }}</span>
+                        {% if tutorial.thumbnail %}
+                            <div class="tutorial-thumbnail">
+                                <img src="{{ tutorial.thumbnail.url }}" alt="{{ tutorial.title }}" class="tutorial-thumbnail-img">
                             </div>
+                        {% endif %}
+                        <div class="tutorial-header{% if tutorial.thumbnail %} has-thumbnail{% endif %}">
+                            {% if not tutorial.thumbnail %}
+                                <div class="tutorial-icon">
+                                    <span class="material-icons">{{ tutorial.icon }}</span>
+                                </div>
+                            {% endif %}
                             <div class="tutorial-info">
                                 <h3>{{ tutorial.title }}</h3>
                                 <div class="tutorial-meta">
                                     <span class="difficulty difficulty-{{ tutorial.difficulty }}">
-                                        {{ tutorial.get_difficulty_display() }}
+                                        {{ tutorial.get_difficulty_display }}
                                     </span>
                                     <span class="lesson-count">
                                         {{ tutorial.total_lessons }} lesson{{ tutorial.total_lessons|pluralize }}
@@ -35,17 +42,17 @@
                         </div>
 
                         <div class="tutorial-description">
-                            <p>{{ tutorial.description }}</p>
+                            <div>{{ tutorial.description|truncatechars:150|safe }}</div>
                         </div>
 
-                        {% if user.is_authenticated and tutorial.id in user_progress %}
+                        {% if user.is_authenticated and tutorial.progress_data %}
                             <div class="progress-section">
                                 <div class="progress-bar">
-                                    <div class="progress-fill" style="width: {{ user_progress[tutorial.id].progress_percentage }}%"></div>
+                                    <div class="progress-fill" style="width: {{ tutorial.progress_data.progress_percentage }}%"></div>
                                 </div>
                                 <div class="progress-text">
-                                    {{ user_progress[tutorial.id].progress_percentage }}% Complete
-                                    {% if user_progress[tutorial.id].is_completed %}
+                                    {{ tutorial.progress_data.progress_percentage }}% Complete
+                                    {% if tutorial.progress_data.is_completed %}
                                         <span class="material-icons completed">check_circle</span>
                                     {% endif %}
                                 </div>
@@ -53,9 +60,9 @@
                         {% endif %}
 
                         <div class="tutorial-actions">
-                            <a href="{{ url('tutorials:tutorial_detail', tutorial.id) }}" class="btn btn-primary">
-                                {% if user.is_authenticated and tutorial.id in user_progress %}
-                                    {% if user_progress[tutorial.id].is_completed %}
+                            <a href="{% url 'tutorials:tutorial_detail' tutorial.id %}" class="btn btn-primary">
+                                {% if user.is_authenticated and tutorial.progress_data %}
+                                    {% if tutorial.progress_data.is_completed %}
                                         <span class="material-icons">replay</span>
                                         Review
                                     {% else %}
@@ -79,7 +86,7 @@
                     <p style="color: var(--text-secondary); margin-bottom: 2rem;">
                         Tutorials are being created. Check back soon!
                     </p>
-                    <a href="{{ url('core:home') }}" class="btn btn-primary">
+                    <a href="{% url 'core:home' %}" class="btn btn-primary">
                         <span class="material-icons">code</span>
                         Practice in SQL Editor
                     </a>
@@ -100,11 +107,29 @@
 .tutorial-card {
     padding: 1.5rem;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
 }
 
 .tutorial-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.tutorial-thumbnail {
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    height: 200px;
+    overflow: hidden;
+}
+
+.tutorial-thumbnail-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.tutorial-card:hover .tutorial-thumbnail-img {
+    transform: scale(1.05);
 }
 
 .tutorial-header {
@@ -124,6 +149,11 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+}
+
+/* Adjust header when thumbnail is present */
+.tutorial-header.has-thumbnail {
+    gap: 0;
 }
 
 .tutorial-info h3 {

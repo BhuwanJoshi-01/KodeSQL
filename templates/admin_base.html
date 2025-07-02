@@ -1,6 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-forms.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-button-fixes.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-universal.css' %}">
 <style>
 /* Admin-specific styles */
 .admin-container {
@@ -77,6 +81,8 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    z-index: 1;
+    pointer-events: auto;
 }
 
 .admin-btn::before {
@@ -100,6 +106,22 @@
 
 .admin-btn:hover::before {
     opacity: 1;
+}
+
+.admin-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure buttons are clickable */
+.admin-actions {
+    position: relative;
+    z-index: 10;
+}
+
+.admin-actions .admin-btn {
+    position: relative;
+    z-index: 11;
 }
 
 .admin-btn.secondary {
@@ -139,6 +161,9 @@
     background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%) !important;
     border: none !important;
     box-shadow: var(--shadow-md);
+    color: white !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .admin-actions:not(.admin-header .admin-actions) .admin-btn.secondary,
@@ -170,6 +195,97 @@
 .admin-form .admin-btn.warning {
     background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
     color: #212529 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Additional button visibility fixes */
+.admin-btn, .btn {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure table action buttons are visible */
+.admin-table .admin-btn,
+.admin-table .btn {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+    min-width: auto !important;
+}
+
+/* Fix for buttons that might be using btn class instead of admin-btn */
+.btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+
+.btn.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+}
+
+.btn.btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+    color: #212529 !important;
+}
+
+.btn.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.btn.btn-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+}
+
+.btn.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.btn.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1d4ed8 100%) !important;
+}
+
+/* Fix for btn-secondary class without btn prefix */
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
 }
 
 .admin-card {
@@ -507,4 +623,46 @@
     {% block admin_content %}
     {% endblock %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/admin-forms.js' %}"></script>
+<script>
+// Debug script for admin buttons
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin page loaded');
+
+    // Add click event listeners to all admin buttons for debugging
+    const adminButtons = document.querySelectorAll('.admin-btn');
+    console.log(`Found ${adminButtons.length} admin buttons`);
+
+    adminButtons.forEach((button, index) => {
+        const href = button.getAttribute('href');
+        const text = button.textContent.trim();
+        console.log(`Button ${index}: "${text}" -> "${href}"`);
+
+        // Add click handler for debugging
+        button.addEventListener('click', function(e) {
+            console.log(`Clicked button: "${text}" -> "${href}"`);
+
+            // Check if href is valid
+            if (!href || href === '#' || href === '') {
+                console.error(`Invalid href for button: "${text}"`);
+                e.preventDefault();
+                alert(`Error: Invalid link for "${text}". Please check the console for details.`);
+                return false;
+            }
+
+            // For delete buttons, add confirmation
+            if (text.toLowerCase().includes('delete')) {
+                if (!confirm(`Are you sure you want to ${text.toLowerCase()}?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

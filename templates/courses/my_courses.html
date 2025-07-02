@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}My Courses - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
@@ -21,9 +22,9 @@
                 <div class="filter-dropdown">
                     <button class="filter-btn">Filter <i class="fas fa-chevron-down"></i></button>
                     <div class="filter-menu">
-                        <label><input type="checkbox" value="in-progress" {{ 'checked' if 'in-progress' in status_filter or not status_filter else '' }}> In Progress</label>
-                        <label><input type="checkbox" value="completed" {{ 'checked' if 'completed' in status_filter or not status_filter else '' }}> Completed</label>
-                        <label><input type="checkbox" value="not-started" {{ 'checked' if 'not-started' in status_filter or not status_filter else '' }}> Not Started</label>
+                        <label><input type="checkbox" value="in-progress" {% if 'in-progress' in status_filter or not status_filter %}checked{% else %}{% endif %}> In Progress</label>
+                        <label><input type="checkbox" value="completed" {% if 'completed' in status_filter or not status_filter %}checked{% else %}{% endif %}> Completed</label>
+                        <label><input type="checkbox" value="not-started" {% if 'not-started' in status_filter or not status_filter %}checked{% else %}{% endif %}> Not Started</label>
                     </div>
                 </div>
             </div>
@@ -96,10 +97,10 @@
                         <div class="course-meta">
                             <span><i class="fas fa-clock"></i> <span class="course-duration">{{ enrollment.course.duration_hours }}h</span></span>
                             <span><i class="fas fa-layer-group"></i> <span class="course-modules">{{ enrollment.course.module_count }}</span> modules</span>
-                            <span><i class="fas fa-graduation-cap"></i> <span class="course-level">{{ enrollment.course.get_difficulty_display() }}</span></span>
+                            <span><i class="fas fa-graduation-cap"></i> <span class="course-level">{{ enrollment.course.get_difficulty_display }}</span></span>
                         </div>
 
-                        {% set active_subscription = enrollment.subscriptions.filter(status='active').first() %}
+                        
                         {% if active_subscription %}
                         <div class="subscription-info">
                             <div class="subscription-plan">
@@ -124,14 +125,14 @@
                         <div class="course-actions">
                             {% if enrollment.is_completed %}
                                 {% if enrollment.certificate_issued %}
-                                    <a href="{{ url('courses:certificate_view', certificate_id=enrollment.certificate.certificate_id) }}" class="btn-primary continue-btn">View Certificate</a>
+                                    <a href="{% url 'courses:certificate_view' enrollment.certificate.certificate_id %}" class="btn btn-primary"View Certificate</a>
                                 {% else %}
-                                    <a href="{{ url('courses:course_detail', slug=enrollment.course.slug) }}" class="btn-primary continue-btn">Review Course</a>
+                                    <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary"Review Course</a>
                                 {% endif %}
                             {% else %}
-                                <a href="{{ url('courses:course_detail', slug=enrollment.course.slug) }}" class="btn-primary continue-btn">Continue Learning</a>
+                                <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary"Continue Learning</a>
                             {% endif %}
-                            <a href="{{ url('courses:course_detail', slug=enrollment.course.slug) }}" class="btn-secondary details-btn">View Details</a>
+                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary"View Details</a>
                         </div>
                     </div>
                 </div>
@@ -141,7 +142,7 @@
                     <i class="fas fa-book"></i>
                     <h3>No courses found</h3>
                     <p>You haven't enrolled in any courses yet.</p>
-                    <a href="{{ url('courses:courses_list') }}" class="btn-primary">Browse Courses</a>
+                    <a href="{% url 'courses:courses_list' %}" class="btn btn-primary"Browse Courses</a>
                 </div>
             {% endif %}
         </div>
@@ -157,7 +158,7 @@
             <!-- Recommended courses will be loaded here dynamically -->
         </div>
         <div class="explore-action">
-            <a href="{{ url('courses:courses_list') }}" class="btn-primary">Browse All Courses</a>
+            <a href="{% url 'courses:courses_list' %}" class="btn btn-primary"Browse All Courses</a>
         </div>
     </div>
 </section>
@@ -254,7 +255,7 @@ function initializeFilterDropdown() {
 
 async function loadRecommendedCourses() {
     try {
-        const response = await fetch('{{ url("courses:api_courses_list") }}');
+        const response = await fetch('{% url 'courses:api_courses_list' %}');
         const data = await response.json();
         
         const container = document.getElementById('recommendedCourses');

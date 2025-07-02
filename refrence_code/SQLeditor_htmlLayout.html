@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Master - Interactive Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px 25px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e7ff;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .logo::before {
+            content: "⚡";
+            font-size: 28px;
+        }
+
+        .nav-items {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: #4f46e5;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .main-layout {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .left-panel {
+            width: 45%;
+            background: rgba(255, 255, 255, 0.98);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e7ff;
+            min-width: 300px;
+            max-width: 60%;
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .resizer {
+            width: 6px;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            cursor: col-resize;
+            position: relative;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .resizer:hover {
+            opacity: 1;
+        }
+
+        .resizer::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 40px;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 10px;
+        }
+
+        .question-section {
+            padding: 25px;
+            border-bottom: 1px solid #e0e7ff;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .question-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .question-content {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .table-schema {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .table-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .editor-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e0e7ff;
+            background: #f8fafc;
+        }
+
+        .editor-title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .database-selector {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+            background: #1e293b;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 20px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #1e293b;
+            color: #e2e8f0;
+            resize: none;
+            outline: none;
+        }
+
+        .code-editor::placeholder {
+            color: #64748b;
+        }
+
+        .output-section {
+            height: 40%;
+            border-top: 1px solid #e0e7ff;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            min-height: 200px;
+            max-height: 60%;
+        }
+
+        .output-header {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid #e0e7ff;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #4f46e5;
+            border-bottom-color: #4f46e5;
+            background: white;
+        }
+
+        .tab:hover:not(.active) {
+            color: #1e293b;
+            background: #f1f5f9;
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-panel {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-table th {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .result-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        .result-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .hints-content {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .hint-item {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            margin: 10px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .expected-output {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .status-bar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .vertical-resizer {
+            height: 6px;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            cursor: row-resize;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+            position: relative;
+        }
+
+        .vertical-resizer:hover {
+            opacity: 1;
+        }
+
+        .placeholder-content {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 40px;
+        }
+
+        .placeholder-content .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                width: 100%;
+                max-width: none;
+                height: 50%;
+            }
+            
+            .resizer {
+                display: none;
+            }
+            
+            .vertical-resizer {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            
+            .nav-items {
+                display: none;
+            }
+            
+            .question-section {
+                padding: 15px;
+            }
+            
+            .editor-header {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">SQL Master</div>
+            <nav class="nav-items">
+                <a href="#" class="nav-item">Courses</a>
+                <a href="#" class="nav-item">Coding Problems</a>
+                <a href="#" class="nav-item">Practice</a>
+            </nav>
+            <div class="user-menu">
+                <button class="btn btn-secondary">Back</button>
+                <button class="btn btn-primary">Next</button>
+                <div style="color: #64748b;">Keshav Rao ▼</div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="left-panel" id="leftPanel">
+                <div class="question-section">
+                    <div class="question-header">
+                        <div>
+                            <h2 class="question-title">1 - Return Orders Customer Feedback</h2>
+                            <span class="difficulty-badge">Medium - 20 Points</span>
+                        </div>
+                    </div>
+                    
+                    <div class="question-content">
+                        <p>Namastekart, an e-commerce company, has observed a notable surge in return orders recently. They suspect that a specific group of customers may be responsible for a significant portion of these returns. To address this issue, their initial goal is to identify customers who have returned more than 50% of their orders. This way, they can proactively reach out to these customers to gather feedback.</p>
+                        
+                        <p><strong>Write an SQL to find list of customers along with their return percent (Round to 2 decimal places), display the output in ascending order of customer name.</strong></p>
+                    </div>
+
+                    <div class="table-schema">
+                        <div class="table-title">Table: orders (primary key : order_id)</div>
+                        <pre>+---------------+-------------+
+| COLUMN_NAME   | DATA_TYPE   |
++---------------+-------------+
+| customer_name | varchar(10) |
+| order_date    | date        |
+| order_id      | int         |
+| sales         | int         |
++---------------+-------------+</pre>
+                    </div>
+
+                    <div class="table-schema">
+                        <div class="table-title">Table: returns (primary key : order_id)</div>
+                        <pre>+-------------+-------------+
+| COLUMN_NAME | DATA_TYPE   |
++-------------+-------------+
+| order_id    | int         |
+| return_date | date        |
++-------------+-------------+</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="resizer" id="resizer"></div>
+
+            <div class="right-panel">
+                <div class="editor-section">
+                    <div class="editor-header">
+                        <div class="editor-title">SQL Editor</div>
+                        <div class="editor-actions">
+                            <select class="database-selector">
+                                <option>MySQL</option>
+                                <option>PostgreSQL</option>
+                                <option>SQLite</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+                            <button class="btn btn-primary" onclick="runQuery()">
+                                <span id="runText">Run Code</span>
+                                <div class="loading-spinner" id="loadingSpinner"></div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="editor-container">
+                        <textarea class="code-editor" id="codeEditor" placeholder="-- Write your SQL query here
+SELECT 
+    a.customer_name,
+    ROUND(COUNT(b.order_id) * 100.0 / COUNT(*), 2) as return_percent
+FROM orders as a
+LEFT JOIN returns b ON a.order_id = b.order_id  
+GROUP BY a.customer_name
+HAVING return_percent > 50
+ORDER BY a.customer_name;"></textarea>
+                    </div>
+                </div>
+
+                <div class="vertical-resizer" id="verticalResizer"></div>
+
+                <div class="output-section" id="outputSection">
+                    <div class="output-header">
+                        <div class="tab active" onclick="switchTab('output')">Output</div>
+                        <div class="tab" onclick="switchTab('hints')">Hints</div>
+                        <div class="tab" onclick="switchTab('expected')">Expected Output</div>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div class="tab-panel active" id="outputPanel">
+                            <div class="placeholder-content">
+                                <div class="icon">📊</div>
+                                <p>Run your SQL query to see results here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-panel" id="hintsPanel">
+                            <div class="hints-content">
+                                <h3 style="margin-bottom: 15px; color: #1e293b;">💡 Hints</h3>
+                                <div class="hint-item">
+                                    <strong>Hint 1:</strong> Use LEFT JOIN to connect orders with returns table to get all orders including those without returns.
+                                </div>
+                                <div class="hint-item">
+                                    <strong>Hint 2:</strong> Calculate return percentage using: (COUNT of returns / COUNT of total orders) * 100
+                                </div>
+                                <div class="hint-item">
+                                    <strong>Hint 3:</strong> Use HAVING clause to filter customers with return percentage > 50%
+                                </div>
+                                <div class="hint-item">
+                                    <strong>Hint 4:</strong> Don't forget to GROUP BY customer_name and ORDER BY customer_name
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-panel" id="expectedPanel">
+                            <div class="expected-output">
+                                <h3 style="margin-bottom: 15px; color: #1e293b;">📋 Expected Output</h3>
+                                <table class="result-table">
+                                    <thead>
+                                        <tr>
+                                            <th>customer_name</th>
+                                            <th>return_percent</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Alexa</td>
+                                            <td>75.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ankit</td>
+                                            <td>100.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Ready</span>
+                </div>
+                <div id="executionTime" style="display: none;">
+                    ⚡ Executed in <span id="timeValue">0ms</span>
+                </div>
+                <div id="rowCount" style="display: none;">
+                    📊 <span id="rowValue">0</span> rows returned
+                </div>
+            </div>
+            <div>MySQL Database Connected</div>
+        </div>
+    </div>
+
+    <script>
+        // Resizer functionality
+        let isResizing = false;
+        let isVerticalResizing = false;
+
+        const resizer = document.getElementById('resizer');
+        const leftPanel = document.getElementById('leftPanel');
+        const verticalResizer = document.getElementById('verticalResizer');
+        const outputSection = document.getElementById('outputSection');
+
+        // Horizontal resizer
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.addEventListener('mousemove', handleHorizontalResize);
+            document.addEventListener('mouseup', stopResize);
+        });
+
+        // Vertical resizer
+        verticalResizer.addEventListener('mousedown', (e) => {
+            isVerticalResizing = true;
+            document.addEventListener('mousemove', handleVerticalResize);
+            document.addEventListener('mouseup', stopVerticalResize);
+        });
+
+        function handleHorizontalResize(e) {
+            if (!isResizing) return;
+            
+            const containerRect = document.querySelector('.main-layout').getBoundingClientRect();
+            const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            
+            if (newWidth > 20 && newWidth < 70) {
+                leftPanel.style.width = newWidth + '%';
+            }
+        }
+
+        function handleVerticalResize(e) {
+            if (!isVerticalResizing) return;
+            
+            const rightPanelRect = document.querySelector('.right-panel').getBoundingClientRect();
+            const newHeight = ((e.clientY - rightPanelRect.top) / rightPanelRect.height) * 100;
+            
+            if (newHeight > 30 && newHeight < 80) {
+                outputSection.style.height = (100 - newHeight) + '%';
+            }
+        }
+
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', handleHorizontalResize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+
+        function stopVerticalResize() {
+            isVerticalResizing = false;
+            document.removeEventListener('mousemove', handleVerticalResize);
+            document.removeEventListener('mouseup', stopVerticalResize);
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Remove active class from all tabs and panels
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding panel
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Panel').classList.add('active');
+        }
+
+        // Query execution
+        function runQuery() {
+            const query = document.getElementById('codeEditor').value.trim();
+            
+            if (!query) {
+                alert('Please enter a SQL query');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('runText').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'inline-block';
+            
+            // Switch to output tab
+            switchTab('output');
+            document.querySelector('.tab').click();
+
+            // Simulate query execution
+            setTimeout(() => {
+                executeQuery(query);
+                
+                // Hide loading state
+                document.getElementById('runText').style.display = 'inline';
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }, 1500);
+        }
+
+        function executeQuery(query) {
+            const outputPanel = document.getElementById('outputPanel');
+            const executionTime = Math.floor(Math.random() * 300) + 50;
+            
+            // Sample result for the specific query
+            const sampleResult = [
+                { customer_name: 'Alexa', return_percent: 75.00 },
+                { customer_name: 'Ankit', return_percent: 100.00 },
+                { customer_name: 'Priya', return_percent: 66.67 }
+            ];
+
+            // Create results table
+            let tableHTML = `
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>customer_name</th>
+                            <th>return_percent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sampleResult.forEach(row => {
+                tableHTML += `
+                    <tr>
+                        <td>${row.customer_name}</td>
+                        <td>${row.return_percent}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            outputPanel.innerHTML = tableHTML;
+
+            // Update status bar
+            document.getElementById('executionTime').style.display = 'block';
+            document.getElementById('timeValue').textContent = executionTime + 'ms';
+            document.getElementById('rowCount').style.display = 'block';
+            document.getElementById('rowValue').textContent = sampleResult.length;
+        }
+
+        function clearEditor() {
+            document.getElementById('codeEditor').value = '';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                runQuery();
+            }
+        });
+
+        // Initialize with sample query
+        document.addEventListener('DOMContentLoaded', function() {
+            const sampleQuery = `SELECT 
+    a.customer_name,
+    ROUND(COUNT(b.order_id) * 100.0 / COUNT(*), 2) as return_percent
+FROM orders as a
+LEFT JOIN returns b ON a.order_id = b.order_id  
+GROUP BY a.customer_name
+HAVING return_percent > 50
+ORDER BY a.customer_name;`;
+            
+            document.getElementById('codeEditor').value = sampleQuery;
+        });
+    </script>
+</body>
+</html>

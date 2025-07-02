@@ -1,0 +1,195 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Manage Challenge Subscription Plans - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">card_membership</span>
+                Manage Challenge Subscription Plans
+            </h1>
+            <div class="admin-actions">
+                <a href="{% url 'challenges:admin_subscription_plan_create' %}" class="btn btn-primary">
+                    <span class="material-icons">add</span>
+                    Create Subscription Plan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <!-- Statistics Cards -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">card_membership</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_plans }}</h3>
+                <p>Total Plans</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">check_circle</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ active_plans }}</h3>
+                <p>Active Plans</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <span class="material-icons">people</span>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_subscriptions }}</h3>
+                <p>Active Subscriptions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-filters">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="search" value="{{ search }}" placeholder="Search plans..." class="form-control">
+            </div>
+            <div class="filter-group">
+                <select name="duration" class="form-control">
+                    <option value="">All Durations</option>
+                    {% for value, label in duration_choices %}
+                        <option value="{{ value }}" {% if duration_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="is_active" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="true" {% if is_active_filter == 'true' %}selected{% endif %}>Active</option>
+                    <option value="false" {% if is_active_filter == 'false' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-secondary">
+                    <span class="material-icons">search</span>
+                    Filter
+                </button>
+                <a href="{% url 'challenges:admin_subscription_plans_list' %}" class="btn btn-secondary">
+                    <span class="material-icons">clear</span>
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Plans List -->
+    <div class="admin-content-section">
+        {% if plans %}
+            <div class="plans-grid">
+                {% for plan in plans %}
+                    <div class="plan-card {% if not plan.is_active %}inactive{% endif %}">
+                        <div class="plan-header">
+                            <div class="plan-title">
+                                <h3>
+                                    <a href="{% url 'challenges:admin_subscription_plan_detail' plan.id %}">{{ plan.name }}</a>
+                                    {% if plan.is_recommended %}
+                                        <span class="badge badge-recommended">Recommended</span>
+                                    {% endif %}
+                                </h3>
+                                <div class="plan-meta">
+                                    <span class="plan-duration">{{ plan.get_duration_display }}</span>
+                                </div>
+                            </div>
+                            <div class="plan-status">
+                                {% if plan.is_active %}
+                                    <span class="status-badge active">Active</span>
+                                {% else %}
+                                    <span class="status-badge inactive">Inactive</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="plan-content">
+                            <div class="plan-pricing">
+                                <div class="price">
+                                    <span class="current-price">${{ plan.price }}</span>
+                                    {% if plan.original_price and plan.original_price > plan.price %}
+                                        <span class="original-price">${{ plan.original_price }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="plan-description">
+                                <p>{{ plan.description|truncatechars:100 }}{% if plan.description|length > 100 %}...{% endif %}</p>
+                            </div>
+                            
+                            <div class="plan-stats">
+                                <div class="stat">
+                                    <span class="material-icons">people</span>
+                                    <span>{{ plan.subscription_count }} subscribers</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="plan-actions">
+                            <a href="{% url 'challenges:admin_subscription_plan_detail' plan.id %}" class="btn btn-secondary">
+                                <span class="material-icons">visibility</span>
+                                View
+                            </a>
+                            <a href="{% url 'challenges:admin_subscription_plan_edit' plan.id %}" class="btn btn-warning">
+                                <span class="material-icons">edit</span>
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if plans.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <div class="pagination">
+                        {% if plans.has_previous %}
+                            <a href="?page={{ plans.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if duration_filter %}&duration={{ duration_filter }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}" class="page-link">
+                                <span class="material-icons">chevron_left</span>
+                            </a>
+                        {% endif %}
+
+                        <span class="page-info">
+                            Page {{ plans.number }} of {{ plans.paginator.num_pages }}
+                        </span>
+
+                        {% if plans.has_next %}
+                            <a href="?page={{ plans.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if duration_filter %}&duration={{ duration_filter }}{% endif %}{% if is_active_filter %}&is_active={{ is_active_filter }}{% endif %}" class="page-link">
+                                <span class="material-icons">chevron_right</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <span class="material-icons">card_membership</span>
+                </div>
+                <h3>No subscription plans found</h3>
+                <p>{% if search or duration_filter or is_active_filter %}Try adjusting your filters or{% endif %} create your first subscription plan to get started.</p>
+                <a href="{% url 'challenges:admin_subscription_plan_create' %}" class="btn btn-primary">
+                    <span class="material-icons">add</span>
+                    Create Subscription Plan
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
