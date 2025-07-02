@@ -8,7 +8,7 @@
         <!-- Challenge Header -->
         <div class="challenge-header">
             <div class="breadcrumb">
-                <a href="{{ url('challenges:challenges_list') }}">
+                <a href="{% url 'challenges:challenges_list' %}"
                     <span class="material-icons">arrow_back</span>
                     Back to Challenges
                 </a>
@@ -22,7 +22,7 @@
                     <h1>{{ challenge.title }}</h1>
                     <div class="challenge-meta">
                         <span class="difficulty difficulty-{{ challenge.difficulty }}">
-                            {{ challenge.get_difficulty_display() }}
+                            {{ challenge.get_difficulty_display }}
                         </span>
                         {% if challenge.is_premium %}
                             <span class="subscription-badge premium">
@@ -141,13 +141,13 @@
                                 </div>
                                 <div class="stat">
                                     <span class="stat-label">Completed At</span>
-                                    <span class="stat-value">{{ user_progress.completed_at|date("M d, Y") }}</span>
+                                    <span class="stat-value">{{ user_progress.completed_at|date:"M d, Y" }}</span>
                                 </div>
                             {% endif %}
                         </div>
                     {% else %}
                         <p class="login-prompt">
-                            <a href="{{ url('users:login') }}">Login</a> to track your progress
+                            <a href="{% url 'users:login' %}" class="btn btn-primary"Login</a> to track your progress
                         </p>
                     {% endif %}
                 </div>
@@ -158,11 +158,11 @@
                         Need Help?
                     </h3>
                     <div class="help-links">
-                        <a href="{{ url('core:home') }}" class="help-link">
+                        <a href="{% url 'core:home' %}"
                             <span class="material-icons">code</span>
                             Practice in SQL Editor
                         </a>
-                        <a href="{{ url('tutorials:tutorials_list') }}" class="help-link">
+                        <a href="{% url 'tutorials:tutorials_list' %}"
                             <span class="material-icons">school</span>
                             Learn with Tutorials
                         </a>
@@ -596,11 +596,11 @@ function runQuery() {
     runBtn.disabled = true;
     runBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Running...';
 
-    fetch('{{ url("editor:execute_query") }}', {
+    fetch('{% url 'editor:execute_query' %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': '{% csrf_token %}'
         },
         body: 'query=' + encodeURIComponent(currentQuery)
     })
@@ -635,11 +635,11 @@ function submitSolution() {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Submitting...';
 
-    fetch('{{ url("challenges:submit_challenge", challenge.id) }}', {
+    fetch('{% url 'challenges:submit_challenge' challenge.id %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': '{% csrf_token %}'
         },
         body: 'query=' + encodeURIComponent(currentQuery)
     })
@@ -680,7 +680,7 @@ function displayResults(data) {
             html += '<div class="table-container"><table class="results-table">';
 
             // Headers
-            const headers = Object.keys(data.data[0]);
+            const headers = Object.keys(data.data|first);
             html += '<thead><tr>';
             headers.forEach(header => {
                 html += `<th>${header}</th>`;

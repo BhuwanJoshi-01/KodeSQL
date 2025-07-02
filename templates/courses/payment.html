@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Payment - {{ course.title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
 <style>
 .payment-container {
     max-width: 600px;
@@ -333,7 +334,7 @@
                 <div class="course-details">
                     <div class="detail-item">
                         <span class="detail-label">Instructor:</span>
-                        <span class="detail-value">{{ course.instructor.first_name }} {{ course.instructor.last_name or course.instructor.email }}</span>
+                        <span class="detail-value">{{ course.instructor.first_name }} {% if course.instructor.last_name %}course.instructor.last_name{% else %}course.instructor.email {% endif %}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Duration:</span>
@@ -341,7 +342,7 @@
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Difficulty:</span>
-                        <span class="detail-value">{{ course.get_difficulty_display() }}</span>
+                        <span class="detail-value">{{ course.get_difficulty_display }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Modules:</span>
@@ -491,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const { error } = await stripe.confirmPayment({
             elements,
             confirmParams: {
-                return_url: window.location.origin + "{{ url('courses:payment_success') }}",
+                return_url: window.location.origin + "{% url 'courses:payment_success' %}",
             },
         });
 
@@ -524,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
         switch (paymentIntent.status) {
             case "succeeded":
                 // Redirect to success page with payment intent ID
-                window.location.href = '{{ url("courses:payment_success") }}?payment_intent=' + paymentIntent.id;
+                window.location.href = '{% url 'courses:payment_success' %}?payment_intent=' + paymentIntent.id;
                 break;
             case "processing":
                 showMessage("Your payment is processing.");

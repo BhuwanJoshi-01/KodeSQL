@@ -12,7 +12,7 @@
                 {% for tutorial in tutorials %}
                     <div class="tutorial-card card">
                         <h3>{{ tutorial.title }}</h3>
-                        <div>{{ tutorial.description|truncate(150)|safe }}</div>
+                        <div>{{ tutorial.description|truncatechars:150|safe }}</div>
                         <p>Difficulty: {{ tutorial.difficulty }}</p>
                         <p>Lessons: {{ tutorial.total_lessons }}</p>
                         <a href="/tutorials/{{ tutorial.id }}/" class="btn btn-primary">

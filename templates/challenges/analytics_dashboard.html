@@ -6,7 +6,7 @@
 <div class="analytics-container">
     <div class="analytics-header">
         <div class="breadcrumb">
-            <a href="{{ url('challenges:challenges_list') }}">
+            <a href="{% url 'challenges:challenges_list' %}"
                 <span class="material-icons">arrow_back</span>
                 Back to Challenges
             </a>
@@ -126,7 +126,7 @@
                     <div class="activity-content">
                         <div class="activity-title">{{ progress.challenge.title }}</div>
                         <div class="activity-meta">
-                            <span class="difficulty {{ progress.challenge.difficulty }}">{{ progress.challenge.get_difficulty_display() }}</span>
+                            <span class="difficulty {{ progress.challenge.difficulty }}">{{ progress.challenge.get_difficulty_display }}</span>
                             <span class="company">{{ progress.challenge.company }}</span>
                             <span class="date">{{ progress.completed_at|date:"M d, Y" }}</span>
                         </div>

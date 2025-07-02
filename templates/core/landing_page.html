@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <h1>Master SQL with Interactive Learning</h1>
+        <p>Learn SQL through hands-on practice, real-world projects, and expert-crafted courses. Join thousands of learners mastering database skills.</p>
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'core:home' %}" class="btn btn-primary">Start Coding</a>
+        {% else %}
+            <a href="{% url 'users:register' %}" class="btn btn-primary">Start Learning for Free</a>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="container">
+        <div class="section-header">
+            <h2>Why Choose SQL Master?</h2>
+            <p>Everything you need to become proficient in SQL</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="material-icons">code</span>
+                </div>
+                <h3>Interactive Learning</h3>
+                <p>Practice SQL directly in your browser with our interactive editor. Get instant feedback and learn by doing.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="material-icons">school</span>
+                </div>
+                <h3>Comprehensive Courses</h3>
+                <p>From basics to advanced topics, our structured courses cover everything you need to know about SQL.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="material-icons">quiz</span>
+                </div>
+                <h3>Real-world Problems</h3>
+                <p>Practice with problems inspired by real business scenarios. Build practical skills that employers value.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Courses Section -->
+<section class="courses">
+    <div class="container">
+        <div class="section-header">
+            <h2>Featured Courses</h2>
+            <p>Start your journey with our most popular courses</p>
+        </div>
+        <div class="courses-grid">
+            {% for course in featured_courses %}
+            <a href="{% url 'courses:course_detail' course.slug %}" class="course-card">
+                <div class="course-image">
+                    {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" loading="lazy">
+                    {% else %}
+                        <div class="course-placeholder">
+                            <span class="material-icons">video_library</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="course-content">
+                    <span class="course-tag">{{ course.difficulty|title }}</span>
+                    <h3 class="course-title">{{ course.title }}</h3>
+                    <p class="course-desc">
+                        {% if course.short_description|length > 100 %}
+                            {{ course.short_description|truncatechars:100 }}...
+                        {% else %}
+                            {{ course.short_description }}
+                        {% endif %}
+                    </p>
+                    <div class="course-meta">
+                        {% if course.avg_rating %}
+                            <span>{{ course.avg_rating|floatformat:1 }} ★★★★★</span>
+                        {% else %}
+                            <span>New Course</span>
+                        {% endif %}
+                        <span>{{ course.enrollment_count }} student{{ course.enrollment_count|pluralize }}</span>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <div class="no-courses">
+                <span class="material-icons">school</span>
+                <p>Courses coming soon!</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="courses-cta">
+            <a href="{% url 'courses:courses_list' %}" class="btn btn-primary">View All Courses</a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta">
+    <div class="container">
+        <h2>Ready to Start Your SQL Journey?</h2>
+        <p>Join our community of learners and master SQL with hands-on practice and expert guidance.</p>
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'core:home' %}" class="btn btn-primary">Start Coding Now</a>
+        {% else %}
+            <a href="{% url 'users:register' %}" class="btn btn-primary">Create Free Account</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Add animation on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, observerOptions);
+
+    // Observe feature cards and course cards
+    document.querySelectorAll('.feature-card, .course-card').forEach(card => {
+        observer.observe(card);
+    });
+</script>
+{% endblock %}

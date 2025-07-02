@@ -8,9 +8,9 @@
         <!-- Lesson Header -->
         <div class="lesson-header">
             <div class="breadcrumb">
-                <a href="{{ url('tutorials:tutorials_list') }}">Tutorials</a>
+                <a href="{% url 'tutorials:tutorials_list' %}" class="btn btn-primary">Tutorials</a>
                 <span class="separator">/</span>
-                <a href="{{ url('tutorials:tutorial_detail', tutorial.id) }}">{{ tutorial.title }}</a>
+                <a href="{% url 'tutorials:tutorial_detail' tutorial.id %}" class="btn btn-primary">{{ tutorial.title }}</a>
                 <span class="separator">/</span>
                 <span class="current">{{ lesson.title }}</span>
             </div>
@@ -63,7 +63,7 @@
                         {% endif %}
 
                         <div class="try-it-section">
-                            <a href="{{ url('core:home') }}?query={{ lesson.example_query|urlencode }}" class="btn btn-primary" target="_blank">
+                            <a href="{% url 'core:home' %}?query={{ lesson.example_query|urlencode }}" class="btn btn-primary" target="_blank">
                                 <span class="material-icons">play_arrow</span>
                                 Try in SQL Editor
                             </a>
@@ -91,7 +91,7 @@
                         {% endif %}
                     {% else %}
                         <p class="login-prompt">
-                            <a href="{{ url('users:login') }}">Login</a> to track your progress
+                            <a href="{% url 'users:login' %}" class="btn btn-primary">Login</a> to track your progress
                         </p>
                     {% endif %}
                 </div>
@@ -100,7 +100,7 @@
                     <h3>Navigation</h3>
 
                     {% if prev_lesson %}
-                        <a href="{{ url('tutorials:lesson_detail', tutorial.id, prev_lesson.id) }}" class="nav-btn prev-btn">
+                        <a href="{% url 'tutorials:lesson_detail' " class="btn btn-primary"nav-btn prev-btn">
                             <span class="material-icons">arrow_back</span>
                             <div class="nav-info">
                                 <span class="nav-label">Previous</span>
@@ -110,7 +110,7 @@
                     {% endif %}
 
                     {% if next_lesson %}
-                        <a href="{{ url('tutorials:lesson_detail', tutorial.id, next_lesson.id) }}" class="nav-btn next-btn">
+                        <a href="{% url 'tutorials:lesson_detail' tutorial.id next_lesson.id %}" class="nav-btn next-btn">
                             <div class="nav-info">
                                 <span class="nav-label">Next</span>
                                 <span class="nav-title">{{ next_lesson.title }}</span>
@@ -118,7 +118,7 @@
                             <span class="material-icons">arrow_forward</span>
                         </a>
                     {% else %}
-                        <a href="{{ url('tutorials:tutorial_detail', tutorial.id) }}" class="nav-btn complete-btn">
+                        <a href="{% url 'tutorials:tutorial_detail' tutorial.id %}" class="nav-btn complete-btn">
                             <div class="nav-info">
                                 <span class="nav-label">Finish</span>
                                 <span class="nav-title">Back to Tutorial</span>
@@ -450,11 +450,11 @@ function completeLesson() {
     btn.disabled = true;
     btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Completing...';
 
-    fetch('{{ url("tutorials:complete_lesson") }}', {
+    fetch('{% url 'tutorials:complete_lesson' %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': '{% csrf_token %}'
         },
         body: 'lesson_id={{ lesson.id }}'
     })

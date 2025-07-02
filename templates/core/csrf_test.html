@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Token Test - SQL Playground</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .debug-info {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 2rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 CSRF Token Test</h1>
+        <p>This page helps debug CSRF token issues in Django forms.</p>
+        
+        <h2>Test Form (With CSRF Protection)</h2>
+        <form method="post" id="csrf-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="test_field">Test Field:</label>
+                <input type="text" id="test_field" name="test_field" value="Hello World" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="3">This is a test message to verify CSRF token functionality.</textarea>
+            </div>
+            <button type="submit">Submit with CSRF</button>
+        </form>
+        
+        <h2>Test Form (Without CSRF Protection)</h2>
+        <form action="/csrf-test/" method="post" id="no-csrf-form">
+            <div class="form-group">
+                <label for="test_field2">Test Field:</label>
+                <input type="text" id="test_field2" name="test_field" value="No CSRF Test" required>
+            </div>
+            <button type="submit">Submit without CSRF</button>
+        </form>
+        
+        <div class="debug-info">
+            <h3>🔍 Debug Information</h3>
+            <div id="debug-output">
+                <p><strong>CSRF Token:</strong> <span id="csrf-token-value">Loading...</span></p>
+                <p><strong>Token Length:</strong> <span id="csrf-token-length">Loading...</span></p>
+                <p><strong>Cookie Present:</strong> <span id="csrf-cookie-present">Loading...</span></p>
+            </div>
+        </div>
+        
+        <div id="result-container"></div>
+    </div>
+
+    <script>
+        // Debug CSRF token
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            const debugOutput = document.getElementById('debug-output');
+            
+            if (csrfToken) {
+                document.getElementById('csrf-token-value').textContent = csrfToken.value;
+                document.getElementById('csrf-token-length').textContent = csrfToken.value.length + ' characters';
+                console.log('✅ CSRF Token found:', csrfToken.value);
+                console.log('✅ Token length:', csrfToken.value.length);
+            } else {
+                document.getElementById('csrf-token-value').textContent = 'NOT FOUND';
+                document.getElementById('csrf-token-length').textContent = 'N/A';
+                console.error('❌ CSRF Token not found!');
+            }
+            
+            // Check for CSRF cookie
+            const csrfCookie = document.cookie.split(';').find(cookie => cookie.trim().startsWith('csrftoken='));
+            document.getElementById('csrf-cookie-present').textContent = csrfCookie ? 'Yes' : 'No';
+            
+            if (csrfCookie) {
+                console.log('✅ CSRF Cookie found:', csrfCookie);
+            } else {
+                console.log('⚠️  CSRF Cookie not found');
+            }
+            
+            // Handle form submissions
+            document.getElementById('csrf-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm(this, 'with CSRF protection');
+            });
+            
+            document.getElementById('no-csrf-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitForm(this, 'without CSRF protection');
+            });
+        });
+        
+        function submitForm(form, description) {
+            const formData = new FormData(form);
+            const resultContainer = document.getElementById('result-container');
+            
+            fetch(form.action || window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultContainer.innerHTML = `
+                    <div class="success">
+                        <h3>✅ Success - Form submitted ${description}</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                resultContainer.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error - Form submission failed ${description}</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                console.error('Form submission error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

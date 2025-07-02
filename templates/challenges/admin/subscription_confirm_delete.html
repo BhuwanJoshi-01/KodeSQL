@@ -1,0 +1,220 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}{% if subscription.status == 'active' %}Cancel{% else %}Delete{% endif %} Subscription - {{ subscription.user.email }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">{% if subscription.status == 'active' %}cancel{% else %}delete{% endif %}</span>
+                {% if subscription.status == 'active' %}Cancel{% else %}Delete{% endif %} Challenge Subscription
+            </h1>
+            <div class="admin-actions">
+                <a href="{% url 'challenges:admin_subscription_detail' subscription.id %}" class="btn btn-secondary">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Subscription
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <div class="admin-content-grid">
+        <div class="admin-content-main">
+        <div class="admin-card danger">
+            <div class="card-header">
+                <h3>
+                    <span class="material-icons">warning</span>
+                    Confirm {% if subscription.status == 'active' %}Cancellation{% else %}Deletion{% endif %}
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="warning-message">
+                    {% if subscription.status == 'active' %}
+                        <p><strong>Are you sure you want to cancel this subscription?</strong></p>
+                        <p>This action will:</p>
+                        <ul>
+                            <li>Set the subscription status to "Cancelled"</li>
+                            <li>Immediately revoke the user's access to premium challenges</li>
+                            <li>Keep the subscription record for historical purposes</li>
+                        </ul>
+                        <p class="note"><strong>Note:</strong> This action can be reversed by editing the subscription and changing the status back to "Active".</p>
+                    {% else %}
+                        <p><strong>Are you sure you want to permanently delete this subscription?</strong></p>
+                        <p>This action will:</p>
+                        <ul>
+                            <li>Permanently remove the subscription record from the database</li>
+                            <li>Remove all associated payment and tracking information</li>
+                            <li>This action cannot be undone</li>
+                        </ul>
+                        <p class="note"><strong>Warning:</strong> This action is irreversible. Consider cancelling instead of deleting if you want to preserve the record.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Subscription Details -->
+                <div class="subscription-summary">
+                    <h4>Subscription Details</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>User:</label>
+                            <div class="user-info">
+                                <strong>{{ subscription.user.full_name_or_email }}</strong>
+                                <small>{{ subscription.user.email }}</small>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Plan:</label>
+                            <div class="plan-info">
+                                <strong>{{ subscription.plan.name }}</strong>
+                                <small>{{ subscription.plan.get_duration_display }} - ${{ subscription.plan.price }}</small>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Current Status:</label>
+                            <span class="status-badge status-{{ subscription.status }}">
+                                {{ subscription.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Amount Paid:</label>
+                            <span class="amount">${{ subscription.amount_paid }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Start Date:</label>
+                            <span>{{ subscription.start_date|date:'%b"d,"Y"I:%M"p'"}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>End Date:</label>
+                            <span>
+                                {% if subscription.end_date"}
+                                    {{ subscription.end_date|date:"M d, Y g:i A" }}
+                                {% else"}
+                                    <span class="text-muted">Unlimited</span>
+                                {% endif"}
+                            </span>
+                        </div>
+                        {% if subscription.payment_reference"}
+                        <div class="detail-item">
+                            <label>Payment Reference:</label>
+                            <span>{{ subscription.payment_reference }}</span>
+                        </div>
+                        {% endif"}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions danger-actions">
+                    {% if subscription.status == 'active'"}
+                        <form method="post" action="{% url 'challenges:admin_subscription_cancel' subscription.id"}" style="display: inline;">
+                            {% csrf_token"}
+                            <button type="submit" class="btn-warning" onclick="return confirm('Are you sure you want to cancel this subscription?')">
+                                <span class="material-icons">cancel</span>
+                                Cancel Subscription
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'challenges:admin_subscription_delete' subscription.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to permanently delete this subscription? This action cannot be undone.')">
+                                <span class="material-icons">delete</span>
+                                Delete Permanently
+                            </button>
+                        </form>
+                    {% endif %}
+                    
+                    <a href="{% url 'challenges:admin_subscription_detail' subscription.id %}" class="btn btn-secondary">
+                        <span class="material-icons">cancel</span>
+                        Keep Subscription
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="admin-content-sidebar">
+        <!-- Alternative Actions -->
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <span class="material-icons">lightbulb</span>
+                    Alternative Actions
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="alternative-actions">
+                    {% if subscription.status == 'active' %}
+                        <p><strong>Instead of cancelling, you could:</strong></p>
+                        <ul>
+                            <li>
+                                <a href="{% url 'challenges:admin_subscription_edit' subscription.id %}" class="btn btn-primary"
+                                    Edit the subscription
+                                </a> to change the end date or status
+                            </li>
+                            <li>Extend the subscription by updating the end date</li>
+                            <li>Change the plan to a different subscription tier</li>
+                        </ul>
+                    {% else %}
+                        <p><strong>Instead of deleting, you could:</strong></p>
+                        <ul>
+                            <li>
+                                <a href="{% url 'challenges:admin_subscription_edit' subscription.id %}" class="btn btn-primary" to reactivate it
+                            </li>
+                            <li>Keep the record for historical tracking</li>
+                            <li>Change the status to "Cancelled" instead</li>
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Impact Information -->
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <span class="material-icons">info</span>
+                    Impact Information
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="impact-info">
+                    {% if subscription.status == 'active' %}
+                        <div class="impact-item">
+                            <span class="material-icons">lock</span>
+                            <span>User will lose access to premium challenges immediately</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="material-icons">history</span>
+                            <span>Subscription record will be preserved</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="material-icons">undo</span>
+                            <span>Action can be reversed by editing the subscription</span>
+                        </div>
+                    {% else %}
+                        <div class="impact-item">
+                            <span class="material-icons">delete_forever</span>
+                            <span>All subscription data will be permanently lost</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="material-icons">payment</span>
+                            <span>Payment history will be removed</span>
+                        </div>
+                        <div class="impact-item">
+                            <span class="material-icons">warning</span>
+                            <span>This action cannot be undone</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

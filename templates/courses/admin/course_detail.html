@@ -1,30 +1,33 @@
 {% extends 'admin_base.html' %}
+{% load static %}
 
 {% block title %}{{ course.title }} - Admin{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
 {% endblock %}
 
 {% block admin_content %}
 <div class="admin-header">
-    <div class="tile-wrap">
-        <div class="admin-header-content">
-            <h1>{{ course.title }}</h1>
-            <div class="admin-actions">
-                <a href="{{ url('courses:admin_courses_list') }}" class="btn-secondary">
-                    <span class="material-icons">arrow_back</span>
-                    Back to Courses
-                </a>
-                <a href="{{ url('courses:admin_course_edit', course.slug) }}" class="btn-primary">
-                    <span class="material-icons">edit</span>
-                    Edit Course
-                </a>
-                <a href="{{ url('courses:course_detail', course.slug) }}" class="btn-secondary" target="_blank">
-                    <span class="material-icons">open_in_new</span>
-                    Preview
-                </a>
-            </div>
+    <div class="admin-header-content">
+        <h1>
+            <span class="material-icons">video_library</span>
+            {{ course.title }}
+        </h1>
+        <div class="admin-actions">
+            <a href="{% url 'courses:admin_courses_list' %}" class="btn btn-secondary">
+                <span class="material-icons">arrow_back</span>
+                Back to Courses
+            </a>
+            <a href="{% url 'courses:admin_course_edit' course.slug %}" class="btn btn-warning">
+                <span class="material-icons">edit</span>
+                Edit Course
+            </a>
+            <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-info" target="_blank">
+                <span class="material-icons">open_in_new</span>
+                Preview
+            </a>
         </div>
     </div>
 </div>
@@ -81,17 +84,17 @@
                 <div class="info-grid">
                     <div class="info-item">
                         <label>Status:</label>
-                        <span class="status-badge {{ course.status }}">{{ course.get_status_display() }}</span>
+                        <span class="status-badge {{ course.status }}">{{ course.get_status_display }}</span>
                     </div>
 
                     <div class="info-item">
                         <label>Type:</label>
-                        <span class="course-type {{ course.course_type }}">{{ course.get_course_type_display() }}</span>
+                        <span class="course-type {{ course.course_type }}">{{ course.get_course_type_display }}</span>
                     </div>
 
                     <div class="info-item">
                         <label>Difficulty:</label>
-                        <span class="difficulty {{ course.difficulty }}">{{ course.get_difficulty_display() }}</span>
+                        <span class="difficulty {{ course.difficulty }}">{{ course.get_difficulty_display }}</span>
                     </div>
                     
                     <div class="info-item">
@@ -115,7 +118,7 @@
                     
                     <div class="info-item">
                         <label>Category:</label>
-                        <span>{{ course.category|default("Not set") }}</span>
+                        <span>{{ course.category|default:"Not set" }}</span>
                     </div>
                     
                     <div class="info-item">
@@ -130,12 +133,12 @@
                     
                     <div class="info-item">
                         <label>Created:</label>
-                        <span>{{ course.created_at|date("M d, Y H:i") }}</span>
+                        <span>{{ course.created_at|date:"M d, Y H:i" }}</span>
                     </div>
                     
                     <div class="info-item">
                         <label>Last Updated:</label>
-                        <span>{{ course.updated_at|date("M d, Y H:i") }}</span>
+                        <span>{{ course.updated_at|date:"M d, Y H:i" }}</span>
                     </div>
                 </div>
             </div>
@@ -154,7 +157,7 @@
                         {% for module in course.modules.all %}
                         <div class="module-overview">
                             <div class="module-header">
-                                <h4>{{ loop.index }}. {{ module.title }}</h4>
+                                <h4>{{ forloop.counter }}. {{ module.title }}</h4>
                                 <span class="lesson-count">{{ module.lesson_count }} lesson{{ module.lesson_count }}</span>
                             </div>
                             
@@ -163,7 +166,7 @@
                                 {% for lesson in module.lessons.all %}
                                 <div class="lesson-overview">
                                     <span class="lesson-title">{{ lesson.title }}</span>
-                                    <span class="lesson-type">{{ lesson.get_lesson_type_display() }}</span>
+                                    <span class="lesson-type">{{ lesson.get_lesson_type_display }}</span>
                                     {% if lesson.duration_minutes %}
                                     <span class="lesson-duration">{{ lesson.duration_minutes }}m</span>
                                     {% endif %}
@@ -178,7 +181,7 @@
                     <div class="no-content">
                         <span class="material-icons">library_books</span>
                         <p>No modules created yet. Start by adding course content.</p>
-                        <a href="{{ url('courses:admin_course_edit', course.slug) }}" class="btn-primary">Add Content</a>
+                        <a href="{% url 'courses:admin_course_edit' " class="btn btn-primary"btn-primary">Add Content</a>
                     </div>
                     {% endif %}
                 </div>
@@ -205,7 +208,7 @@
                                 <td>{{ enrollment.user.email }}</td>
                                 <td>
                                     <span class="status-badge {{ enrollment.status }}">
-                                        {{ enrollment.get_status_display() }}
+                                        {{ enrollment.get_status_display }}
                                     </span>
                                 </td>
                                 <td>
@@ -216,7 +219,7 @@
                                         <span>{{ enrollment.progress_percentage }}%</span>
                                     </div>
                                 </td>
-                                <td>{{ enrollment.enrolled_at|date("M d, Y") }}</td>
+                                <td>{{ enrollment.enrolled_at|date:"M d, Y" }}</td>
                                 <td>${{ enrollment.amount_paid }}</td>
                             </tr>
                             {% endfor %}

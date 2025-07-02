@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSRF Test</title>
+</head>
+<body>
+    <h1>CSRF Token Test</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="test_field" value="test">
+        <button type="submit">Submit</button>
+    </form>
+    
+    <script>
+    // Log CSRF token for debugging
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfToken) {
+        console.log('CSRF Token found:', csrfToken.value);
+        console.log('Token length:', csrfToken.value.length);
+    } else {
+        console.error('CSRF Token not found!');
+    }
+    </script>
+</body>
+</html>

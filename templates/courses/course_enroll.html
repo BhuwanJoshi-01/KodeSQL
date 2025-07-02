@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Enroll in {{ course.title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -12,9 +13,9 @@
         <div class="enrollment-page">
             <div class="enrollment-header">
                 <div class="breadcrumb">
-                    <a href="{{ url('courses:courses_list') }}">Courses</a>
+                    <a href="{% url 'courses:courses_list' %}" class="btn btn-primary">Courses</a>
                     <span>/</span>
-                    <a href="{{ url('courses:course_detail', slug=course.slug) }}">{{ course.title }}</a>
+                    <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary">{{ course.title }}</a>
                     <span>/</span>
                     <span>Enroll</span>
                 </div>
@@ -39,7 +40,7 @@
                         <div class="course-details">
                             <div class="detail-item">
                                 <i class="fas fa-signal"></i>
-                                <span>{{ course.get_difficulty_display() }}</span>
+                                <span>{{ course.get_difficulty_display }}</span>
                             </div>
                             <div class="detail-item">
                                 <i class="fas fa-clock"></i>
@@ -74,7 +75,7 @@
                                         <span class="original-price">${{ course.price }}</span>
                                         <span class="discount-price">${{ course.discount_price }}</span>
                                     </div>
-                                    <span class="savings">Save ${{ "%.2f"|format(course.price - course.discount_price) }}</span>
+                                    <span class="savings">Save ${{ "%.2f"|{{ course.price - course.discount_price|floatformat:1 }}</span>
                                 {% else %}
                                     <span class="price-value">${{ course.price }}</span>
                                 {% endif %}
@@ -86,14 +87,14 @@
                         <div class="enrollment-status">
                             <div class="status-message">
                                 <i class="fas fa-info-circle"></i>
-                                <p>You are already enrolled in this course with status: <strong>{{ existing_enrollment.get_status_display() }}</strong></p>
+                                <p>You are already enrolled in this course with status: <strong>{{ existing_enrollment.get_status_display }}</strong></p>
                             </div>
 
                             {% if existing_enrollment.status == 'pending' %}
                                 <p>Please complete your payment to access the course content.</p>
-                                <a href="{{ url('courses:course_detail', slug=course.slug) }}" class="btn-primary">Complete Payment</a>
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-primary">Complete Payment</a>
                             {% elif existing_enrollment.status in ['active', 'completed'] %}
-                                <a href="{{ url('courses:course_detail', slug=course.slug) }}" class="btn-primary">Continue Learning</a>
+                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn-primary">Continue Learning</a>
                             {% endif %}
                         </div>
                     {% else %}
@@ -104,7 +105,7 @@
                                 <p>This course is completely free. Click below to start learning immediately!</p>
                                 
                                 <form method="post">
-                                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                    {% csrf_token %}
                                     <button type="submit" class="btn-primary btn-large">
                                         <i class="fas fa-play"></i>
                                         Start Learning Now
@@ -135,7 +136,7 @@
                                 </div>
                                 
                                 <form method="post">
-                                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                    {% csrf_token %}
                                     <button type="submit" class="btn-primary btn-large">
                                         <i class="fas fa-shopping-cart"></i>
                                         Enroll Now - ${{ course.effective_price }}

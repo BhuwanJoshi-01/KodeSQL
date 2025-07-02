@@ -2,11 +2,44 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.middleware.csrf import get_token
 from editor.models import QueryHistory, SavedQuery
 from challenges.models import UserChallengeProgress
 from tutorials.models import UserTutorialProgress
+
+
+def landing_page(request):
+    """
+    Landing page for new visitors.
+    """
+    from courses.models import Course
+    from django.db.models import Count, Avg, Q
+
+    # Get featured courses (limit to 3 for landing page)
+    featured_courses = Course.objects.filter(
+        status='published',
+        is_featured=True
+    ).select_related('instructor').annotate(
+        enrollment_count=Count('enrollments', filter=Q(enrollments__status__in=['active', 'completed'])),
+        avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True))
+    ).order_by('order')[:3]
+
+    # If no featured courses, get the latest published courses
+    if not featured_courses:
+        featured_courses = Course.objects.filter(
+            status='published'
+        ).select_related('instructor').annotate(
+            enrollment_count=Count('enrollments', filter=Q(enrollments__status__in=['active', 'completed'])),
+            avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True))
+        ).order_by('-created_at')[:3]
+
+    context = {
+        'page_title': 'SQL Master - Learn SQL the Right Way',
+        'featured_courses': featured_courses,
+    }
+    return render(request, 'core/landing_page.html', context)
 
 
 def home(request):
@@ -83,3 +116,40 @@ def contribute(request):
         'page_title': 'Contribute',
     }
     return render(request, 'core/contribute.html', context)
+
+
+def csrf_debug(request):
+    """Debug view to check CSRF token generation and validation"""
+    csrf_token = get_token(request)
+
+    context = {
+        'csrf_token': csrf_token,
+        'csrf_token_length': len(csrf_token),
+        'method': request.method,
+        'has_session': hasattr(request, 'session'),
+        'session_key': getattr(request.session, 'session_key', None) if hasattr(request, 'session') else None,
+        'cookies': dict(request.COOKIES),
+        'meta_csrf': request.META.get('CSRF_COOKIE', 'Not found'),
+    }
+
+    if request.method == 'POST':
+        context.update({
+            'post_data': dict(request.POST),
+            'csrf_token_from_post': request.POST.get('csrfmiddlewaretoken', 'Not found'),
+            'csrf_token_matches': request.POST.get('csrfmiddlewaretoken') == csrf_token,
+        })
+
+    return JsonResponse(context, indent=2)
+
+
+@csrf_exempt
+def csrf_test_form(request):
+    """Test form for CSRF debugging"""
+    if request.method == 'POST':
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Form submitted successfully without CSRF protection',
+            'csrf_token_received': request.POST.get('csrfmiddlewaretoken', 'Not found')
+        })
+
+    return render(request, 'core/csrf_test.html')

@@ -64,7 +64,7 @@
     </div>
     
     <div class="content">
-        <p>Hi {{ user.first_name or user.username }},</p>
+        <p>Hi {% if user.first_name %}user.first_name{% else %}user.username {% endif %},</p>
         
         <div class="warning-box">
             <strong>Your {{ plan.name }} subscription will expire on {{ subscription.end_date|date:"F d, Y" }}.</strong>

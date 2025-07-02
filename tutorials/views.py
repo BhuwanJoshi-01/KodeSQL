@@ -20,24 +20,27 @@ def tutorials_list(request):
         total_lessons=Count('lessons', filter=Q(lessons__is_active=True))
     )
 
-    # Get user progress if authenticated
-    user_progress = {}
+    # Get user progress if authenticated and attach to tutorials
     if request.user.is_authenticated:
         progress_data = UserTutorialProgress.objects.filter(
             user=request.user
         ).select_related('tutorial')
 
+        # Create a dictionary for quick lookup
+        progress_dict = {}
         for progress in progress_data:
-            user_progress[progress.tutorial.id] = {
-                'completed_lessons': list(progress.completed_lessons.values_list('id', flat=True)),
-                'is_completed': progress.is_completed,
-                'progress_percentage': progress.progress_percentage
-            }
+            progress_dict[progress.tutorial.id] = progress
+
+        # Attach progress to each tutorial using a different attribute name
+        for tutorial in tutorials:
+            if tutorial.id in progress_dict:
+                tutorial.progress_data = progress_dict[tutorial.id]
+            else:
+                tutorial.progress_data = None
 
     context = {
         'page_title': 'SQL Tutorials',
         'tutorials': tutorials,
-        'user_progress': user_progress,
     }
     return render(request, 'tutorials/tutorials_list.html', context)
 

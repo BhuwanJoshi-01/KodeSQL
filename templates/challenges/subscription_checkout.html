@@ -6,7 +6,7 @@
 <div class="checkout-container">
     <div class="checkout-header">
         <div class="breadcrumb">
-            <a href="{{ url('challenges:subscription_plans') }}">
+            <a href="{% url 'challenges:subscription_plans' %}">
                 <span class="material-icons">arrow_back</span>
                 Back to Plans
             </a>
@@ -81,22 +81,22 @@
                 </div>
 
                 <div class="form-actions">
-                    <form method="post" action="{{ url('challenges:create_stripe_checkout', subscription.id) }}" id="stripe-checkout-form">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <form method="post" action="{% url 'challenges:create_stripe_checkout' plan.id %}" id="stripe-checkout-form">
+                        {% csrf_token %}
                         <button type="submit" class="btn btn-primary btn-large">
                             <span class="material-icons">credit_card</span>
                             Pay with Stripe - ${{ plan.effective_price }}
                         </button>
                     </form>
 
-                    <a href="{{ url('challenges:subscription_plans') }}" class="btn btn-secondary">
+                    <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-secondary">
                         Choose Different Plan
                     </a>
 
                     {% if subscription.pending_expires_at %}
                     <div class="expiration-notice">
                         <span class="material-icons">schedule</span>
-                        This payment link expires on {{ subscription.pending_expires_at|date("M d, Y g:i A") }}
+                        This payment link expires on {{ subscription.pending_expires_at|date:"M d, Y g:i A" }}
                     </div>
                     {% endif %}
                 </div>

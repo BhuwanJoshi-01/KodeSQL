@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Choose Your Plan - {{ course.title }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ static('css/courses.css') }}">
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
 <style>
 .subscription-container {
     max-width: 1200px;
@@ -287,7 +288,7 @@
 <div class="main-content">
     <div class="tile-wrap">
         <div class="subscription-container">
-            <a href="{{ url('courses:course_detail', slug=course.slug) }}" class="back-link">
+            <a href="{% url 'courses:course_detail' course.slug %}" class="back-link">
                 <i class="fas fa-arrow-left"></i>
                 Back to Course
             </a>
@@ -307,25 +308,25 @@
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-signal"></i>
-                        <span>{{ course.get_difficulty_display() }}</span>
+                        <span>{{ course.get_difficulty_display }}</span>
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-users"></i>
-                        <span>{{ course.enrollments.count() }} students</span>
+                        <span>{{ course.enrollments.count }} students</span>
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-play-circle"></i>
-                        <span>{{ course.modules.count() }} modules</span>
+                        <span>{{ course.modules.count }} modules</span>
                     </div>
                 </div>
             </div>
             
             <div class="plans-grid">
                 {% for plan in subscription_plans %}
-                <div class="plan-card {{ 'recommended' if plan.is_recommended else '' }}">
+                <div class="plan-card {% if plan.is_recommended %}recommended{% else %}{% endif %}">
                     <div class="plan-header">
                         <div class="plan-name">{{ plan.name }}</div>
-                        <div class="plan-duration">{{ plan.get_duration_display() }}</div>
+                        <div class="plan-duration">{{ plan.get_duration_display }}</div>
                     </div>
 
                     <div class="plan-pricing">
@@ -353,7 +354,7 @@
                         {% else %}
                             <li>
                                 <i class="fas fa-check"></i>
-                                <span>Full course access for {{ plan.get_duration_display()|lower }}</span>
+                                <span>Full course access for {{ plan.get_duration_display|lower }}</span>
                             </li>
                             <li>
                                 <i class="fas fa-check"></i>
@@ -376,7 +377,7 @@
                         {% endif %}
                     </ul>
 
-                    <a href="{{ url('courses:subscription_checkout', course_slug=course.slug, plan_id=plan.id) }}" class="plan-button">
+                    <a href="{% url 'courses:subscription_checkout' course.slug plan.id %}" class="plan-button">
                         Select This Plan
                     </a>
                 </div>

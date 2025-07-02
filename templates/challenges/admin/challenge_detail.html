@@ -1,22 +1,30 @@
 {% extends "admin_base.html" %}
+{% load static %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+{% endblock %}
+
 {% block admin_content %}
 <div class="admin-header">
-    <h1 class="admin-title">
-        <span class="material-icons">quiz</span>
-        {{ challenge.title }}
-    </h1>
-    <div class="admin-actions">
-        <a href="{{ url('challenges:admin_challenge_edit', challenge_id=challenge.id) }}" class="admin-btn">
-            <span class="material-icons">edit</span>
-            Edit Challenge
-        </a>
-        <a href="{{ url('challenges:admin_challenges_list') }}" class="admin-btn secondary">
-            <span class="material-icons">arrow_back</span>
-            Back to List
-        </a>
+    <div class="admin-header-content">
+        <h1>
+            <span class="material-icons">quiz</span>
+            {{ challenge.title }}
+        </h1>
+        <div class="admin-actions">
+            <a href="{% url 'challenges:admin_challenge_edit' challenge.id %}" class="btn btn-warning">
+                <span class="material-icons">edit</span>
+                Edit Challenge
+            </a>
+            <a href="{% url 'challenges:admin_challenges_list' %}" class="btn btn-secondary">
+                <span class="material-icons">arrow_back</span>
+                Back to List
+            </a>
+        </div>
     </div>
 </div>
 
@@ -69,7 +77,7 @@
                 <div>
                     <strong>Difficulty:</strong>
                     <span class="status-badge difficulty-{{ challenge.difficulty }}">
-                        {{ challenge.get_difficulty_display() }}
+                        {{ challenge.get_difficulty_display }}
                     </span>
                 </div>
                 <div>
@@ -85,7 +93,7 @@
                     <div>
                         <strong>Sample Data:</strong>
                         <div style="margin-top: 0.5rem;">
-                            <a href="{{ challenge.sample_data.url }}" class="admin-btn info" style="padding: 0.5rem; font-size: 0.8rem;" download>
+                            <a href="{{ challenge.sample_data.url }}" class="btn btn-info" style="padding: 0.5rem; font-size: 0.8rem;" download>
                                 <span class="material-icons" style="font-size: 16px;">download</span>
                                 {{ challenge.sample_data.name }}
                             </a>
@@ -111,7 +119,7 @@
         <strong>Expected Result:</strong>
         <div style="margin-top: 0.5rem; background: #f8f9fa; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace; max-height: 300px; overflow-y: auto; border-left: 4px solid #28a745;">
             {% if challenge.expected_result %}
-                {{ challenge.expected_result|pprint if challenge.expected_result else "No expected result defined" }}
+                {% if challenge.expected_result %}{{ challenge.expected_result|pprint }}{% else %}No expected result defined{% endif %}
             {% else %}
                 No expected result defined
             {% endif %}
@@ -137,7 +145,7 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                         <span>Failed:</span>
-                        <strong style="color: #dc3545;">{{ stats.total_attempts - stats.completed_attempts }}</strong>
+                        <strong style="color: #dc3545;">{{ stats.failed_attempts }}</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; border-top: 1px solid #dee2e6; padding-top: 0.5rem; margin-top: 0.5rem;">
                         <span>Success Rate:</span>
@@ -186,8 +194,8 @@
     <h3>Challenge Metadata</h3>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
         <div>
-            <p><strong>Created:</strong> {{ challenge.created_at.strftime('%B %d, %Y \a\t %I:%M %p') }}</p>
-            <p><strong>Last Updated:</strong> {{ challenge.updated_at.strftime('%B %d, %Y \a\t %I:%M %p') }}</p>
+            <p><strong>Created:</strong> {{ challenge.created_at|date:"F d, Y \a\t g:i A" }}</p>
+            <p><strong>Last Updated:</strong> {{ challenge.updated_at|date:"F d, Y \a\t g:i A" }}</p>
         </div>
         <div>
             <p><strong>Challenge ID:</strong> {{ challenge.id }}</p>
@@ -197,15 +205,15 @@
 </div>
 
 <div class="admin-actions" style="margin-top: 2rem;">
-    <a href="{{ url('challenges:admin_challenge_edit', challenge_id=challenge.id) }}" class="admin-btn">
+    <a href="{% url 'challenges:admin_challenge_edit' challenge.id %}" class="btn btn-warning">
         <span class="material-icons">edit</span>
         Edit Challenge
     </a>
-    <a href="{{ url('challenges:challenge_detail', challenge_id=challenge.id) }}" class="admin-btn info" target="_blank">
+    <a href="{% url 'challenges:challenge_detail' challenge.id %}" class="btn btn-info">
         <span class="material-icons">launch</span>
         View Public Page
     </a>
-    <a href="{{ url('challenges:admin_challenge_delete', challenge_id=challenge.id) }}" class="admin-btn danger">
+    <a href="{% url 'challenges:admin_challenge_delete' challenge.id %}" class="btn btn-danger">
         <span class="material-icons">delete</span>
         Delete Challenge
     </a>

@@ -11,7 +11,7 @@
             <!-- Premium Banner -->
             {% if not has_active_subscription %}
             <div class="premium-banner">
-                <a href="{{ url('challenges:subscription_plans') }}" style="color: white; text-decoration: none;">
+                <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary">
                     🔒 Unlock Premium Challenges - Subscribe Now
                 </a>
             </div>
@@ -93,19 +93,19 @@
                              data-difficulty="{{ challenge.difficulty }}"
                              data-company="{{ challenge.company|lower }}"
                              data-subscription="{{ challenge.subscription_type }}"
-                             data-status="{% if user.is_authenticated and challenge.id in user_progress %}{% if user_progress[challenge.id].is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}"
-                             onclick="window.location.href='{{ url('challenges:challenge_detail', challenge.id) }}'">
+                             data-status="{% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}"
+                             onclick="window.location.href='{% url 'challenges:challenge_detail' challenge.id %}'">
                             <div class="challenge-title">
                                 {{ challenge.title }}
                                 {% if challenge.is_premium %}
                                     <span class="premium-icon">🔒</span>
                                 {% endif %}
                             </div>
-                            <div class="company">{{ challenge.company or "General" }}</div>
-                            <div class="difficulty {{ challenge.difficulty }}">{{ challenge.get_difficulty_display() }}</div>
-                            <div class="status {% if user.is_authenticated and challenge.id in user_progress %}{% if user_progress[challenge.id].is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}">
-                                {% if user.is_authenticated and challenge.id in user_progress %}
-                                    {% if user_progress[challenge.id].is_completed %}
+                            <div class="company">{{ challenge.company|default:"General" }}</div>
+                            <div class="difficulty {{ challenge.difficulty }}">{{ challenge.get_difficulty_display }}</div>
+                            <div class="status {% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}">
+                                {% if user.is_authenticated and challenge.progress_data %}
+                                    {% if challenge.progress_data.is_completed %}
                                         ✓
                                     {% else %}
                                         ⋯
@@ -115,7 +115,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                    {% else %}
+                    {% empty %}
                         <div class="no-results">
                             <h3>No challenges available</h3>
                             <p>Check back soon for new challenges!</p>
@@ -140,7 +140,7 @@
                 <div class="progress-item">
                     <span class="progress-label">Total</span>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {% if progress_stats.total.total > 0 %}{{ progress_stats.total.completed|widthratio(progress_stats.total.total, 100) }}{% else %}0{% endif %}%"></div>
+                        <div class="progress-fill" style="width: {{ progress_stats.total.percentage }}%"></div>
                     </div>
                     <span class="progress-stats">{{ progress_stats.total.completed }}/{{ progress_stats.total.total }}</span>
                 </div>
@@ -148,7 +148,7 @@
                 <div class="progress-item">
                     <span class="progress-label">Easy</span>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {% if progress_stats.easy.total > 0 %}{{ progress_stats.easy.completed|widthratio(progress_stats.easy.total, 100) }}{% else %}0{% endif %}%"></div>
+                        <div class="progress-fill" style="width: {{ progress_stats.easy.percentage }}%"></div>
                     </div>
                     <span class="progress-stats">{{ progress_stats.easy.completed }}/{{ progress_stats.easy.total }}</span>
                 </div>
@@ -156,7 +156,7 @@
                 <div class="progress-item">
                     <span class="progress-label">Medium</span>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {% if progress_stats.medium.total > 0 %}{{ progress_stats.medium.completed|widthratio(progress_stats.medium.total, 100) }}{% else %}0{% endif %}%"></div>
+                        <div class="progress-fill" style="width: {{ progress_stats.medium.percentage }}%"></div>
                     </div>
                     <span class="progress-stats">{{ progress_stats.medium.completed }}/{{ progress_stats.medium.total }}</span>
                 </div>
@@ -164,7 +164,7 @@
                 <div class="progress-item">
                     <span class="progress-label">Hard</span>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {% if progress_stats.hard.total > 0 %}{{ progress_stats.hard.completed|widthratio(progress_stats.hard.total, 100) }}{% else %}0{% endif %}%"></div>
+                        <div class="progress-fill" style="width: {{ progress_stats.hard.percentage }}%"></div>
                     </div>
                     <span class="progress-stats">{{ progress_stats.hard.completed }}/{{ progress_stats.hard.total }}</span>
                 </div>
@@ -172,7 +172,7 @@
                 <div class="progress-item">
                     <span class="progress-label">Extreme</span>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: {% if progress_stats.extreme.total > 0 %}{{ progress_stats.extreme.completed|widthratio(progress_stats.extreme.total, 100) }}{% else %}0{% endif %}%"></div>
+                        <div class="progress-fill" style="width: {{ progress_stats.extreme.percentage }}%"></div>
                     </div>
                     <span class="progress-stats">{{ progress_stats.extreme.completed }}/{{ progress_stats.extreme.total }}</span>
                 </div>
@@ -184,7 +184,7 @@
                 <h3 class="analytics-title">Your Analytics</h3>
                 <div class="analytics-preview">
                     <p>Track your detailed progress and performance</p>
-                    <a href="{{ url('challenges:analytics_dashboard') }}" class="btn btn-primary btn-small">View Analytics</a>
+                    <a href="{% url 'challenges:analytics_dashboard' %}" class="btn btn-primary"View Analytics</a>
                 </div>
             </div>
             {% endif %}
@@ -204,7 +204,7 @@
                 {% else %}
                     <div class="subscription-inactive">
                         <p>No active subscription</p>
-                        <a href="{{ url('challenges:subscription_plans') }}" class="btn btn-primary btn-small">Subscribe Now</a>
+                        <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary"Subscribe Now</a>
                     </div>
                 {% endif %}
             </div>

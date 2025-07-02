@@ -7,7 +7,7 @@
 <div class="auth-subtitle">Sign in to your SQL Playground account</div>
 
 <form method="post" class="auth-form" id="login-form">
-    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    {% csrf_token %}
     
     <div class="form-group">
         <label class="form-label" for="id_email">Email Address</label>
@@ -21,7 +21,7 @@
     
     <div class="form-group">
         <div style="text-align: right; margin-bottom: 1rem;">
-            <a href="{{ url('users:forgot_password') }}" class="auth-link">Forgot your password?</a>
+            <a href="{% url 'users:forgot_password' %}" class="auth-link">Forgot your password?</a>
         </div>
     </div>
     
@@ -32,7 +32,7 @@
 {% endblock %}
 
 {% block auth_footer %}
-<p>Don't have an account? <a href="{{ url('users:register') }}" class="auth-link">Sign up here</a></p>
+<p>Don't have an account? <a href="{% url 'users:register' %}" class="auth-link">Sign up here</a></p>
 {% endblock %}
 
 {% block extra_js %}

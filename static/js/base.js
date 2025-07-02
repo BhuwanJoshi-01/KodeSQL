@@ -2,8 +2,14 @@
 
 // Theme Management
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        setTheme(savedTheme);
+    } else {
+        // Default to dark theme or detect system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'dark'); // Default to dark theme
+    }
 }
 
 function setTheme(theme) {
@@ -248,6 +254,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Newsletter Form Handler
+function handleNewsletterSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const emailInput = form.querySelector('.newsletter-input');
+    const submitBtn = form.querySelector('.newsletter-btn');
+    const email = emailInput.value.trim();
+
+    if (!email) {
+        showMessage('Please enter a valid email address', 'error');
+        return;
+    }
+
+    // Disable form during submission
+    emailInput.disabled = true;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span>';
+
+    // Simulate API call (replace with actual implementation)
+    setTimeout(() => {
+        // Reset form
+        emailInput.disabled = false;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-icons">send</span>';
+        emailInput.value = '';
+
+        // Show success message
+        showMessage('Thank you for subscribing! You\'ll receive our latest updates.', 'success');
+    }, 1500);
+}
+
+// Make newsletter function globally available
+window.handleNewsletterSubmit = handleNewsletterSubmit;
+
 // Export functions for use in other scripts
 window.sqlPlayground = {
     toggleTheme,
@@ -258,5 +299,6 @@ window.sqlPlayground = {
     validateForm,
     openModal,
     closeModal,
-    getCsrfToken
+    getCsrfToken,
+    handleNewsletterSubmit
 };

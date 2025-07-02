@@ -1,0 +1,273 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}{% if subscription %}Edit Subscription{% else %}Create Subscription{% endif %} - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/courses.css' %}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="tile-wrap">
+        <div class="admin-header-content">
+            <h1>
+                <span class="material-icons">card_membership</span>
+                {% if subscription %}Edit User Challenge Subscription{% else %}Create User Challenge Subscription{% endif %}
+            </h1>
+            <div class="admin-actions">
+                <a href="{% url 'challenges:admin_subscriptions_list' %}" class="btn btn-secondary">
+                    <span class="material-icons">arrow_back</span>
+                    Back to List
+                </a>
+                {% if subscription %}
+                <a href="{% url 'challenges:admin_subscription_detail' subscription.id %}" class="btn btn-info">
+                    <span class="material-icons">visibility</span>
+                    View Subscription
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tile-wrap">
+    <div class="admin-content-grid">
+        <div class="admin-content-main">
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <span class="material-icons">edit</span>
+                    Subscription Details
+                </h3>
+            </div>
+            <div class="card-content">
+                <form method="post" class="admin-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-section">
+                        <h4>User & Plan Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.user.id_for_label }}">{{ form.user.label }}</label>
+                                {{ form.user }}
+                                {% if form.user.help_text %}
+                                <small class="form-help">{{ form.user.help_text }}</small>
+                                {% endif %}
+                                {% if form.user.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.user.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.plan.id_for_label }}">{{ form.plan.label }}</label>
+                                {{ form.plan }}
+                                {% if form.plan.help_text %}
+                                <small class="form-help">{{ form.plan.help_text }}</small>
+                                {% endif %}
+                                {% if form.plan.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.plan.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Subscription Status & Dates</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.status.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.start_date.id_for_label }}">{{ form.start_date.label }}</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.start_date.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.end_date.id_for_label }}">{{ form.end_date.label }}</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.help_text %}
+                                <small class="form-help">{{ form.end_date.help_text }}</small>
+                                {% endif %}
+                                {% if form.end_date.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.end_date.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Payment Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.amount_paid.id_for_label }}">{{ form.amount_paid.label }}</label>
+                                {{ form.amount_paid }}
+                                {% if form.amount_paid.help_text %}
+                                <small class="form-help">{{ form.amount_paid.help_text }}</small>
+                                {% endif %}
+                                {% if form.amount_paid.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.amount_paid.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.payment_reference.id_for_label }}">{{ form.payment_reference.label }}</label>
+                                {{ form.payment_reference }}
+                                {% if form.payment_reference.help_text %}
+                                <small class="form-help">{{ form.payment_reference.help_text }}</small>
+                                {% endif %}
+                                {% if form.payment_reference.errors %}
+                                <div class="form-errors">
+                                    {% for error in form.payment_reference.errors %}
+                                    <span class="error">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <span class="material-icons">save</span>
+                            {% if subscription %}Update Subscription{% else %}Create Subscription{% endif %}
+                        </button>
+                        <a href="{% if subscription %}{% url 'challenges:admin_subscription_detail' subscription.id %}{% else %}{% url 'challenges:admin_subscriptions_list' %}{% endif %}" class="btn-secondary">
+                            <span class="material-icons">cancel</span>
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="admin-content-sidebar">
+        <!-- Help Information -->
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <span class="material-icons">help</span>
+                    Help & Tips
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="help-content">
+                    <h5>Creating User Subscriptions</h5>
+                    <ul>
+                        <li>This assigns a subscription plan to a specific user</li>
+                        <li>Select the user who will receive the subscription</li>
+                        <li>Choose an active subscription plan</li>
+                        <li>Set the status (usually 'active' for immediate access)</li>
+                        <li>Start date defaults to now if not specified</li>
+                        <li>End date is auto-calculated for non-unlimited plans</li>
+                    </ul>
+
+                    <h5>Managing Subscription Plans</h5>
+                    <ul>
+                        <li>To create or edit subscription plans, use the <a href="{% url 'challenges:admin_subscription_plans_list' %}" class="btn btn-primary"Subscription Plans</a> section</li>
+                        <li>Plans define pricing, duration, and features</li>
+                        <li>This page only assigns existing plans to users</li>
+                    </ul>
+                    
+                    <h5>Status Options</h5>
+                    <ul>
+                        <li><strong>Active:</strong> User has full access to premium challenges</li>
+                        <li><strong>Pending:</strong> Waiting for payment confirmation</li>
+                        <li><strong>Expired:</strong> Subscription has ended</li>
+                        <li><strong>Cancelled:</strong> Subscription was cancelled</li>
+                    </ul>
+                    
+                    <h5>Payment Information</h5>
+                    <ul>
+                        <li>Amount paid should match the plan price</li>
+                        <li>Payment reference is optional but helpful for tracking</li>
+                        <li>Use this for manual subscriptions or payment adjustments</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if subscription %}
+        <!-- Current Subscription Info -->
+        <div class="admin-card">
+            <div class="card-header">
+                <h3>
+                    <span class="material-icons">info</span>
+                    Current Subscription
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="current-info">
+                    <div class="info-item">
+                        <label>User:</label>
+                        <span>{{ subscription.user.email }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Plan:</label>
+                        <span>{{ subscription.plan.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status:</label>
+                        <span class="status-badge status-{{ subscription.status }}">
+                            {{ subscription.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Created:</label>
+                        <span>{{ subscription.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-fill end date when plan changes
+    const planSelect = document.getElementById('{{ form.plan.id_for_label }}');
+    const startDateInput = document.getElementById('{{ form.start_date.id_for_label }}');
+    const endDateInput = document.getElementById('{{ form.end_date.id_for_label }}');
+    
+    if (planSelect && startDateInput && endDateInput) {
+        planSelect.addEventListener('change', function() {
+            // This would require AJAX to get plan duration and calculate end date
+            // For now, we'll leave it as a manual process
+        });
+    }
+});
+</script>
+{% endblock %}
