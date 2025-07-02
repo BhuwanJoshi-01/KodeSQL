@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/course-button-fixes.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
@@ -94,7 +95,7 @@
                         </div>
                         
                         <div class="course-actions">
-                            <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary"
+                            <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary">
                                 {% if course.is_free %}
                                     Start Learning
                                 {% else %}
@@ -102,7 +103,7 @@
                                 {% endif %}
                             </a>
                             {% if course.allow_preview %}
-                            <a href="{% url 'courses:course_detail' course.slug %}#preview %}"
+                            <a href="{% url 'courses:course_detail' course.slug %}#preview" class="btn btn-secondary">
                                 <i class="fas fa-play"></i> Preview
                             </a>
                             {% endif %}

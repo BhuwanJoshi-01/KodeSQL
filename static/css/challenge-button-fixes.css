@@ -1,0 +1,249 @@
+/* Challenge Page Button Fixes */
+/* This file specifically fixes button styling issues on challenge pages */
+
+/* Reset any problematic admin overrides for challenge pages */
+.challenges-container .btn,
+.challenge-content-section .btn,
+.challenge-sidebar .btn,
+.challenges-section .btn {
+    /* Ensure proper button display */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    
+    /* Proper sizing and spacing */
+    padding: 0.75rem 1.5rem !important;
+    margin: 0.25rem !important;
+    
+    /* Typography */
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    line-height: 1.4 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    
+    /* Visual styling */
+    border-radius: 6px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    
+    /* Ensure text is visible */
+    overflow: visible !important;
+    text-overflow: visible !important;
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    
+    /* Positioning */
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Primary button styling */
+.challenges-container .btn-primary,
+.challenge-content-section .btn-primary,
+.challenge-sidebar .btn-primary,
+.challenges-section .btn-primary {
+    background: var(--warning-color) !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.challenges-container .btn-primary:hover,
+.challenge-content-section .btn-primary:hover,
+.challenge-sidebar .btn-primary:hover,
+.challenges-section .btn-primary:hover {
+    background: var(--warning-hover) !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Secondary button styling */
+.challenges-container .btn-secondary,
+.challenge-content-section .btn-secondary,
+.challenge-sidebar .btn-secondary,
+.challenges-section .btn-secondary {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.challenges-container .btn-secondary:hover,
+.challenge-content-section .btn-secondary:hover,
+.challenge-sidebar .btn-secondary:hover,
+.challenges-section .btn-secondary:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Success button styling */
+.challenges-container .btn-success,
+.challenge-content-section .btn-success,
+.challenge-sidebar .btn-success,
+.challenges-section .btn-success {
+    background: var(--success-color) !important;
+    color: white !important;
+}
+
+.challenges-container .btn-success:hover,
+.challenge-content-section .btn-success:hover,
+.challenge-sidebar .btn-success:hover,
+.challenges-section .btn-success:hover {
+    background: var(--success-hover) !important;
+    color: white !important;
+}
+
+/* Icon styling within buttons */
+.challenges-container .btn .material-icons,
+.challenge-content-section .btn .material-icons,
+.challenge-sidebar .btn .material-icons,
+.challenges-section .btn .material-icons {
+    font-size: 1.1rem !important;
+    margin-right: 0.5rem !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+}
+
+/* Disabled button states */
+.challenges-container .btn:disabled,
+.challenges-container .btn[disabled],
+.challenge-content-section .btn:disabled,
+.challenge-content-section .btn[disabled],
+.challenge-sidebar .btn:disabled,
+.challenge-sidebar .btn[disabled],
+.challenges-section .btn:disabled,
+.challenges-section .btn[disabled] {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    background: var(--bg-tertiary) !important;
+    color: var(--text-tertiary) !important;
+}
+
+/* Premium banner button */
+.premium-banner .btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.premium-banner .btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Search and filter buttons */
+.search-section .btn {
+    min-width: 100px !important;
+}
+
+/* Editor action buttons */
+.editor-actions .btn {
+    min-width: 120px !important;
+    font-weight: 600 !important;
+}
+
+/* Analytics and subscription buttons */
+.analytics-section .btn,
+.subscription-section .btn {
+    width: 100% !important;
+    justify-content: center !important;
+}
+
+/* Button groups */
+.btn-group .btn {
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+.btn-group .btn:first-child {
+    border-radius: 6px 0 0 6px !important;
+}
+
+.btn-group .btn:last-child {
+    border-radius: 0 6px 6px 0 !important;
+}
+
+.btn-group .btn:only-child {
+    border-radius: 6px !important;
+}
+
+/* Small button variant */
+.btn-small,
+.btn.btn-sm {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+}
+
+/* Large button variant */
+.btn-large,
+.btn.btn-lg {
+    padding: 1rem 2rem !important;
+    font-size: 1rem !important;
+}
+
+/* Fix for any inline styles that might interfere */
+.challenges-container .btn[style],
+.challenge-content-section .btn[style],
+.challenge-sidebar .btn[style],
+.challenges-section .btn[style] {
+    /* Override any problematic inline styles */
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .challenges-container .btn,
+    .challenge-content-section .btn,
+    .challenge-sidebar .btn,
+    .challenges-section .btn {
+        padding: 0.6rem 1.2rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    .challenges-container .btn .material-icons,
+    .challenge-content-section .btn .material-icons,
+    .challenge-sidebar .btn .material-icons,
+    .challenges-section .btn .material-icons {
+        font-size: 1rem !important;
+        margin-right: 0.4rem !important;
+    }
+    
+    .search-section {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+    
+    .search-section .btn {
+        width: 100% !important;
+    }
+}
+
+/* Ensure buttons are always visible and clickable */
+.challenges-container .btn,
+.challenge-content-section .btn,
+.challenge-sidebar .btn,
+.challenges-section .btn {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Fix for any z-index issues */
+.challenges-container,
+.challenge-content-section,
+.challenge-sidebar,
+.challenges-section {
+    position: relative !important;
+    z-index: 0 !important;
+}

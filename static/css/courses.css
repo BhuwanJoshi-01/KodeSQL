@@ -303,39 +303,122 @@
     flex-wrap: wrap;
 }
 
-/* Buttons */
-.btn-primary, .btn-secondary {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-align: center;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-    display: inline-block;
+/* Buttons - Enhanced with better visibility */
+.btn, .btn-primary, .btn-secondary {
+    /* Reset any problematic overrides */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+
+    /* Proper sizing and spacing */
+    padding: 0.75rem 1.5rem !important;
+    margin: 0.25rem !important;
+
+    /* Typography */
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+
+    /* Layout and positioning */
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+
+    /* Ensure visibility */
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+
+    /* Reset problematic properties */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    min-width: auto !important;
+    width: auto !important;
+    height: auto !important;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    flex: 1;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    color: white !important;
 }
 
 .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3) !important;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)) !important;
 }
 
 .btn-secondary {
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    background-color: transparent;
+    border: 1px solid var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    background-color: transparent !important;
 }
 
 .btn-secondary:hover {
-    background-color: rgba(var(--primary-rgb), 0.1);
+    background-color: rgba(var(--primary-rgb), 0.1) !important;
+    color: var(--primary-color) !important;
+}
+
+/* Tab Buttons - Ensure visibility */
+.tab-btn, .course-tabs button {
+    /* Ensure tab buttons are visible */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+
+    /* Proper sizing */
+    padding: 0.75rem 1.5rem !important;
+    margin: 0.25rem !important;
+
+    /* Typography */
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+
+    /* Styling */
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+
+    /* Ensure visibility */
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    /* Reset problematic properties */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    min-width: auto !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.tab-btn.active, .course-tabs button.active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+}
+
+.tab-btn:hover, .course-tabs button:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
 }
 
 /* No Courses State */
@@ -1095,12 +1178,44 @@
     gap: 0.5rem;
 }
 
+.course-actions .btn,
 .course-actions .btn-primary,
 .course-actions .btn-secondary {
-    flex: 1;
-    text-align: center;
-    padding: 0.6rem 1rem;
-    font-size: 0.85rem;
+    /* Ensure course action buttons are visible */
+    flex: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+
+    /* Proper sizing */
+    padding: 0.75rem 1rem !important;
+    margin: 0.25rem !important;
+
+    /* Typography */
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+
+    /* Ensure visibility */
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    /* Layout */
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+
+    /* Reset problematic properties */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    min-width: auto !important;
+    height: auto !important;
 }
 
 /* Pagination */
@@ -1270,14 +1385,51 @@
 }
 
 .enrollment-actions {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
 }
 
+.enrollment-actions .btn,
 .enrollment-actions .btn-primary,
-.enrollment-actions .btn-secondary {
-    width: 100%;
-    margin-bottom: 0.75rem;
-    justify-content: center;
+.enrollment-actions .btn-secondary,
+.enrollment-actions button {
+    /* Ensure enrollment buttons are fully visible */
+    width: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+
+    /* Proper sizing */
+    padding: 1rem 1.5rem !important;
+    margin: 0 !important;
+
+    /* Typography */
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+
+    /* Ensure visibility */
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+
+    /* Layout */
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+
+    /* Reset problematic properties */
+    text-indent: 0 !important;
+    letter-spacing: normal !important;
+    min-width: auto !important;
+    height: auto !important;
 }
 
 .progress-info {

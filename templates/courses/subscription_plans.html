@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/course-button-fixes.css' %}">
 <style>
 .subscription-container {
     max-width: 1200px;
@@ -304,7 +305,7 @@
                 <div class="course-meta">
                     <div class="meta-item">
                         <i class="fas fa-clock"></i>
-                        <span>{{ course.duration_hours|default(12) }} hours</span>
+                        <span>{{ course.duration_hours|default:"12" }} hours</span>
                     </div>
                     <div class="meta-item">
                         <i class="fas fa-signal"></i>

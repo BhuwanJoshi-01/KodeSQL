@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/course-button-fixes.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
@@ -125,14 +126,14 @@
                         <div class="course-actions">
                             {% if enrollment.is_completed %}
                                 {% if enrollment.certificate_issued %}
-                                    <a href="{% url 'courses:certificate_view' enrollment.certificate.certificate_id %}" class="btn btn-primary"View Certificate</a>
+                                    <a href="{% url 'courses:certificate_view' enrollment.certificate.certificate_id %}" class="btn btn-primary">View Certificate</a>
                                 {% else %}
-                                    <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary"Review Course</a>
+                                    <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary">Review Course</a>
                                 {% endif %}
                             {% else %}
-                                <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary"Continue Learning</a>
+                                <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary">Continue Learning</a>
                             {% endif %}
-                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary"View Details</a>
+                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary">View Details</a>
                         </div>
                     </div>
                 </div>
@@ -158,7 +159,7 @@
             <!-- Recommended courses will be loaded here dynamically -->
         </div>
         <div class="explore-action">
-            <a href="{% url 'courses:courses_list' %}" class="btn btn-primary"Browse All Courses</a>
+            <a href="{% url 'courses:courses_list' %}" class="btn btn-primary">Browse All Courses</a>
         </div>
     </div>
 </section>

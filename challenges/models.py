@@ -32,6 +32,12 @@ class Challenge(models.Model):
     sample_data = models.FileField(upload_to='challenges/sample_data/', blank=True, null=True,
                                    help_text="Upload CSV or SQL file with sample data")
 
+    # Database schema information
+    database_schema = models.JSONField(default=dict, blank=True,
+                                     help_text="Database schema information for this challenge")
+    initialization_sql = models.TextField(blank=True,
+                                        help_text="SQL commands to initialize the challenge database")
+
     # Subscription and categorization fields
     subscription_type = models.CharField(max_length=10, choices=SUBSCRIPTION_TYPE_CHOICES, default='free')
     company = models.CharField(max_length=100, blank=True, help_text="Company associated with this challenge")
@@ -75,6 +81,111 @@ class Challenge(models.Model):
     def is_premium(self):
         """Check if this is a premium challenge"""
         return self.subscription_type == 'paid'
+
+    def get_challenge_database_path(self, user):
+        """Get the path to the challenge-specific database for a user"""
+        from django.conf import settings
+        import os
+
+        # Create challenge-specific database path
+        db_dir = os.path.join(settings.MEDIA_ROOT, 'challenge_databases', str(user.id))
+        os.makedirs(db_dir, exist_ok=True)
+        return os.path.join(db_dir, f'challenge_{self.id}.db')
+
+    def initialize_challenge_database(self, user):
+        """Initialize the challenge database with sample data"""
+        import sqlite3
+        import os
+        import csv
+        import json
+
+        db_path = self.get_challenge_database_path(user)
+
+        # Remove existing database to start fresh
+        if os.path.exists(db_path):
+            os.remove(db_path)
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        try:
+            # Execute initialization SQL if provided
+            if self.initialization_sql:
+                # Split by semicolon and execute each statement
+                statements = [stmt.strip() for stmt in self.initialization_sql.split(';') if stmt.strip()]
+                for statement in statements:
+                    cursor.execute(statement)
+
+            # Load sample data if provided
+            if self.sample_data:
+                self._load_sample_data(cursor, self.sample_data.path)
+
+            conn.commit()
+            return True
+
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    def _load_sample_data(self, cursor, file_path):
+        """Load sample data from CSV or SQL file"""
+        import csv
+        import os
+
+        if not os.path.exists(file_path):
+            return
+
+        file_extension = os.path.splitext(file_path)[1].lower()
+
+        if file_extension == '.sql':
+            # Execute SQL file
+            with open(file_path, 'r', encoding='utf-8') as f:
+                sql_content = f.read()
+                statements = [stmt.strip() for stmt in sql_content.split(';') if stmt.strip()]
+                for statement in statements:
+                    cursor.execute(statement)
+
+        elif file_extension == '.csv':
+            # Load CSV data (requires table name to be specified in database_schema)
+            if 'tables' in self.database_schema:
+                for table_name, table_info in self.database_schema['tables'].items():
+                    if table_info.get('data_file') == os.path.basename(file_path):
+                        self._load_csv_to_table(cursor, file_path, table_name, table_info)
+
+    def _load_csv_to_table(self, cursor, csv_path, table_name, table_info):
+        """Load CSV data into a specific table"""
+        import csv
+
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+
+            # Get column names and types from table_info
+            columns = table_info.get('columns', [])
+            if not columns:
+                # Infer from CSV headers
+                columns = list(reader.fieldnames)
+
+            # Create table if it doesn't exist
+            if columns:
+                column_defs = []
+                for col in columns:
+                    if isinstance(col, dict):
+                        col_name = col['name']
+                        col_type = col.get('type', 'TEXT')
+                        column_defs.append(f"{col_name} {col_type}")
+                    else:
+                        column_defs.append(f"{col} TEXT")
+
+                create_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(column_defs)})"
+                cursor.execute(create_sql)
+
+                # Insert data
+                for row in reader:
+                    placeholders = ', '.join(['?' for _ in row])
+                    insert_sql = f"INSERT INTO {table_name} VALUES ({placeholders})"
+                    cursor.execute(insert_sql, list(row.values()))
 
 
 class UserChallengeProgress(models.Model):

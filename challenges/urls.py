@@ -11,6 +11,7 @@ urlpatterns = [
     # Public views
     path('', views.challenges_list, name='challenges_list'),
     path('<int:challenge_id>/', views.challenge_detail, name='challenge_detail'),
+    path('api/execute/<int:challenge_id>/', views.execute_challenge_query, name='execute_challenge_query'),
     path('api/submit/<int:challenge_id>/', views.submit_challenge, name='submit_challenge'),
 
     # Subscription views
