@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-sections {
+    display: grid;
+    gap: 2rem;
+}
+
+.form-section {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.form-section h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.file-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-primary);
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.file-upload-area.dragover {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.1);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.upload-text {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.file-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-secondary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.breadcrumb {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'courses:admin_courses_list' %}">Courses</a> /
+        <a href="{% url 'courses:admin_course_detail' course.slug %}">{{ course.title }}</a> /
+        <span>{{ module.title }}</span> /
+        {% if action == 'create' %}
+            Add Lesson
+        {% else %}
+            Edit Lesson
+        {% endif %}
+    </nav>
+
+    <div class="form-container">
+        <div class="form-header">
+            <h1>
+                {% if action == 'create' %}
+                    Add New Lesson
+                {% else %}
+                    Edit Lesson
+                {% endif %}
+            </h1>
+            <p>
+                {% if action == 'create' %}
+                    Create a new lesson in <strong>{{ module.title }}</strong>
+                {% else %}
+                    Editing lesson in <strong>{{ module.title }}</strong>
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="lesson-form">
+            {% csrf_token %}
+            
+            <div class="form-sections">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">info</span>
+                        Basic Information
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger">{{ form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.lesson_type.id_for_label }}">{{ form.lesson_type.label }}</label>
+                            {{ form.lesson_type }}
+                            {% if form.lesson_type.errors %}
+                                <div class="text-danger">{{ form.lesson_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.duration_minutes.id_for_label }}">{{ form.duration_minutes.label }}</label>
+                            {{ form.duration_minutes }}
+                            {% if form.duration_minutes.errors %}
+                                <div class="text-danger">{{ form.duration_minutes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                            {{ form.order }}
+                            {% if form.order.errors %}
+                                <div class="text-danger">{{ form.order.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <div style="display: flex; gap: 2rem; margin-top: 2rem;">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                                </div>
+                                <div class="form-check">
+                                    {{ form.is_preview }}
+                                    <label for="{{ form.is_preview.id_for_label }}">{{ form.is_preview.label }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">article</span>
+                        Lesson Content
+                    </h3>
+                    
+                    <div class="form-group full-width">
+                        <label for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                            <div class="text-danger">{{ form.content.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Video Content -->
+                <div class="form-section">
+                    <h3>
+                        <span class="material-icons">videocam</span>
+                        Video Content
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.video_file.id_for_label }}">{{ form.video_file.label }}</label>
+                        <div class="file-upload-area" id="video-upload-area">
+                            <div class="upload-icon">🎥</div>
+                            <div class="upload-text">
+                                <strong>Click to upload video</strong> or drag and drop<br>
+                                <small>MP4, WebM, AVI, MOV (max 500MB)</small>
+                            </div>
+                            {{ form.video_file }}
+                        </div>
+                        {% if form.video_file.errors %}
+                            <div class="text-danger">{{ form.video_file.errors.0 }}</div>
+                        {% endif %}
+                        <div id="video-progress" class="progress-bar" style="display: none;">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.video_duration.id_for_label }}">{{ form.video_duration.label }}</label>
+                            {{ form.video_duration }}
+                            {% if form.video_duration.errors %}
+                                <div class="text-danger">{{ form.video_duration.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.video_thumbnail.id_for_label }}">{{ form.video_thumbnail.label }}</label>
+                            {{ form.video_thumbnail }}
+                            {% if form.video_thumbnail.errors %}
+                                <div class="text-danger">{{ form.video_thumbnail.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SQL Content (for interactive lessons) -->
+                <div class="form-section" id="sql-section" style="display: none;">
+                    <h3>
+                        <span class="material-icons">code</span>
+                        SQL Content
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.example_query.id_for_label }}">{{ form.example_query.label }}</label>
+                        {{ form.example_query }}
+                        {% if form.example_query.errors %}
+                            <div class="text-danger">{{ form.example_query.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.expected_output.id_for_label }}">{{ form.expected_output.label }}</label>
+                        {{ form.expected_output }}
+                        {% if form.expected_output.errors %}
+                            <div class="text-danger">{{ form.expected_output.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.practice_query.id_for_label }}">{{ form.practice_query.label }}</label>
+                        {{ form.practice_query }}
+                        {% if form.practice_query.errors %}
+                            <div class="text-danger">{{ form.practice_query.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons">save</span>
+                    {% if action == 'create' %}Create Lesson{% else %}Update Lesson{% endif %}
+                </button>
+                
+                <button type="submit" name="save_and_add_resources" class="btn btn-secondary">
+                    <span class="material-icons">attach_file</span>
+                    Save & Add Resources
+                </button>
+                
+                {% if action == 'edit' %}
+                <a href="{% url 'courses:admin_lesson_resources' course.slug lesson.id %}" class="btn btn-outline">
+                    <span class="material-icons">folder</span>
+                    Manage Resources
+                </a>
+                {% endif %}
+                
+                <a href="{% url 'courses:admin_course_detail' course.slug %}" class="btn btn-outline">
+                    <span class="material-icons">cancel</span>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide SQL section based on lesson type
+    const lessonTypeSelect = document.querySelector('#id_lesson_type');
+    const sqlSection = document.querySelector('#sql-section');
+    
+    function toggleSqlSection() {
+        if (lessonTypeSelect.value === 'interactive') {
+            sqlSection.style.display = 'block';
+        } else {
+            sqlSection.style.display = 'none';
+        }
+    }
+    
+    lessonTypeSelect.addEventListener('change', toggleSqlSection);
+    toggleSqlSection(); // Initial check
+    
+    // File upload handling
+    const videoUploadArea = document.querySelector('#video-upload-area');
+    const videoInput = document.querySelector('#id_video_file');
+    const progressBar = document.querySelector('#video-progress');
+    const progressFill = document.querySelector('.progress-fill');
+    
+    // Drag and drop
+    videoUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        videoUploadArea.classList.add('dragover');
+    });
+    
+    videoUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        videoUploadArea.classList.remove('dragover');
+    });
+    
+    videoUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        videoUploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            videoInput.files = files;
+            handleVideoFile(files[0]);
+        }
+    });
+    
+    videoInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleVideoFile(e.target.files[0]);
+        }
+    });
+    
+    function handleVideoFile(file) {
+        // Show file info
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+        fileInfo.innerHTML = `
+            <strong>Selected:</strong> ${file.name}<br>
+            <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+            <strong>Type:</strong> ${file.type}
+        `;
+        
+        // Remove existing file info
+        const existingInfo = videoUploadArea.querySelector('.file-info');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        
+        videoUploadArea.appendChild(fileInfo);
+    }
+    
+    // Form validation
+    const form = document.querySelector('#lesson-form');
+    form.addEventListener('submit', function(e) {
+        const title = document.querySelector('#id_title').value.trim();
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a lesson title.');
+            document.querySelector('#id_title').focus();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

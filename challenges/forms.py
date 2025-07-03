@@ -36,12 +36,37 @@ class ChallengeForm(forms.ModelForm):
         help_text="Expected query result as JSON array",
         label="Expected Result (JSON)"
     )
+
+    # Multi-engine support fields
+    supported_engines = forms.MultipleChoiceField(
+        choices=Challenge.DATABASE_ENGINE_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        }),
+        required=False,
+        help_text="Select which database engines this challenge supports",
+        label="Supported Database Engines"
+    )
+
+    # Simplified database schema fields - only show custom fields when needed
+    custom_database_schema_text = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'json-editor',
+            'rows': 8,
+            'placeholder': '{\n  "tables": {\n    "users": {\n      "columns": [\n        {"name": "id", "type": "INTEGER PRIMARY KEY"},\n        {"name": "name", "type": "TEXT"}\n      ]\n    }\n  }\n}'
+        }),
+        required=False,
+        help_text="Custom database schema information as JSON (only for custom schema type)",
+        label="Custom Database Schema (JSON)"
+    )
     
     class Meta:
         model = Challenge
         fields = [
             'title', 'description', 'difficulty', 'question', 'hint',
-            'expected_query', 'sample_data', 'is_active', 'order'
+            'expected_query', 'sample_data', 'subscription_type', 'company', 'tags',
+            'database_schema_type', 'custom_initialization_sql', 'custom_database_schema', 'supported_engines',
+            'is_active', 'order'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -60,6 +85,26 @@ class ChallengeForm(forms.ModelForm):
                 'class': 'form-control',
                 'accept': '.csv,.sql,.json'
             }),
+            'subscription_type': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'company': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Google, Amazon, Microsoft'
+            }),
+            'tags': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter tags separated by commas: joins, aggregation, subqueries'
+            }),
+            'database_schema_type': forms.Select(attrs={
+                'class': 'form-control',
+                'onchange': 'toggleCustomSchemaFields(this.value)'
+            }),
+            'custom_initialization_sql': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 10,
+                'placeholder': 'CREATE TABLE users (\n    id INTEGER PRIMARY KEY,\n    name TEXT,\n    email TEXT\n);'
+            }),
             'order': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': 0
@@ -71,12 +116,17 @@ class ChallengeForm(forms.ModelForm):
         help_texts = {
             'expected_query': 'The correct SQL solution for this challenge',
             'sample_data': 'Upload CSV or SQL file with sample data for testing',
+            'subscription_type': 'Whether this challenge is free or requires a paid subscription',
+            'company': 'Company associated with this challenge (optional)',
+            'tags': 'Comma-separated tags for categorization (e.g., joins, aggregation)',
+            'database_schema': 'JSON schema describing the database structure',
+            'initialization_sql': 'SQL commands to set up the challenge database',
             'order': 'Challenge order (lower numbers appear first)'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # If editing existing challenge, populate expected_result_text
         if self.instance and self.instance.pk and self.instance.expected_result:
             try:
@@ -85,6 +135,26 @@ class ChallengeForm(forms.ModelForm):
                 )
             except (TypeError, ValueError):
                 self.fields['expected_result_text'].initial = str(self.instance.expected_result)
+
+        # Populate supported_engines field
+        if self.instance and self.instance.pk:
+            self.fields['supported_engines'].initial = self.instance.get_supported_engines()
+
+            # Populate custom_database_schema_text for custom schema type
+            if self.instance.database_schema_type == 'custom' and self.instance.custom_database_schema:
+                try:
+                    self.fields['custom_database_schema_text'].initial = json.dumps(
+                        self.instance.custom_database_schema, indent=2
+                    )
+                except (TypeError, ValueError):
+                    self.fields['custom_database_schema_text'].initial = str(self.instance.custom_database_schema)
+
+            # Convert tags list to comma-separated string
+            if self.instance.tags and isinstance(self.instance.tags, list):
+                self.fields['tags'].initial = ', '.join(self.instance.tags)
+        else:
+            # Set default supported engines for new challenges
+            self.fields['supported_engines'].initial = ['sqlite']
 
     def clean_expected_result_text(self):
         """
@@ -108,18 +178,62 @@ class ChallengeForm(forms.ModelForm):
         except json.JSONDecodeError as e:
             raise forms.ValidationError(f"Invalid JSON format: {str(e)}")
 
+    def clean_custom_database_schema_text(self):
+        """
+        Validate and convert custom database schema text to JSON.
+        """
+        schema_text = self.cleaned_data.get('custom_database_schema_text', '')
+
+        if not schema_text.strip():
+            return {}
+
+        try:
+            schema = json.loads(schema_text)
+
+            # Ensure it's a dictionary
+            if not isinstance(schema, dict):
+                raise forms.ValidationError("Database schema must be a JSON object")
+
+            return schema
+
+        except json.JSONDecodeError as e:
+            raise forms.ValidationError(f"Invalid JSON format: {str(e)}")
+
+    def clean_tags(self):
+        """
+        Convert tags string to list.
+        """
+        tags_text = self.cleaned_data.get('tags', '')
+
+        if not tags_text.strip():
+            return []
+
+        # Split by commas and clean up
+        tags = [tag.strip() for tag in tags_text.split(',') if tag.strip()]
+        return tags
+
     def save(self, commit=True):
         """
-        Save the challenge with the expected result from the text field.
+        Save the challenge with data from the custom fields.
         """
         challenge = super().save(commit=False)
-        
+
         # Set expected_result from the cleaned text field
         challenge.expected_result = self.cleaned_data.get('expected_result_text', [])
-        
+
+        # Set custom database schema (only for custom schema type)
+        if challenge.database_schema_type == 'custom':
+            challenge.custom_database_schema = self.cleaned_data.get('custom_database_schema_text', {})
+
+        # Set supported_engines from the multi-select field
+        challenge.supported_engines = self.cleaned_data.get('supported_engines', ['sqlite', 'postgresql', 'mysql'])
+
+        # Set tags from the cleaned field
+        challenge.tags = self.cleaned_data.get('tags', [])
+
         if commit:
             challenge.save()
-        
+
         return challenge
 
 

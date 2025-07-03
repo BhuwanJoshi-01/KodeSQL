@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }} - Course Player{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/course-watch.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="{% url 'courses:course_detail' course.slug %}" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <span>Back to Course</span>
+        </div>
+        
+        <div class="course-progress">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-weight: 600;">Course Progress</span>
+                <span style="color: var(--primary-color); font-weight: 600;">{{ user_enrollment.completion_percentage }}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ user_enrollment.completion_percentage }}%"></div>
+            </div>
+            <small style="color: var(--text-secondary); margin-top: 0.75rem; display: block;">
+                {{ user_enrollment.completed_lessons.count }} of {{ course.total_lessons }} lessons completed
+            </small>
+        </div>
+        
+        <ul class="course-modules">
+            {% for module in course.modules.all %}
+            <li class="module-item {% if module == current_module %}module-active{% endif %}">
+                <div class="module-link" onclick="toggleModuleDropdown(this)">
+                    <div style="display: flex; align-items: center;">
+                        <span class="module-number">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <div>
+                            <div style="font-weight: 600;">{{ module.title }}</div>
+                            <small style="color: #718096;">{{ module.lesson_count }} lesson{{ module.lesson_count|pluralize }} • {{ module.total_duration }}min</small>
+                        </div>
+                    </div>
+                    <span class="dropdown-arrow">▼</span>
+                </div>
+                <div class="module-dropdown {% if module == current_module %}expanded{% endif %}">
+                    {% for lesson in module.lessons.all %}
+                    <div class="lesson-item {% if lesson == current_lesson %}lesson-active{% endif %}">
+                        <input type="checkbox" class="lesson-checkbox" 
+                               {% if lesson in completed_lessons %}checked{% endif %}
+                               onchange="toggleLessonComplete({{ lesson.id }})">
+                        <a href="{% url 'courses:course_watch_lesson' course.slug lesson.id %}" class="lesson-title">
+                            {{ lesson.title }}
+                        </a>
+                        <span class="lesson-duration">{{ lesson.formatted_duration }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="content-header">
+            <h1 class="course-title">{{ course.title }}</h1>
+            <p class="course-subtitle">{{ course.short_description }}</p>
+        </div>
+
+        {% if current_lesson %}
+        <div class="video-container">
+            {% if current_lesson.has_video %}
+                <video controls class="lesson-video" poster="{% if current_lesson.video_thumbnail %}{{ current_lesson.video_thumbnail.url }}{% endif %}">
+                    <source src="{{ current_lesson.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            {% else %}
+                <div class="video-placeholder">
+                    <div class="play-button"></div>
+                    <div class="video-title">{{ current_lesson.title }}</div>
+                    <p>No video available for this lesson</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="content-body">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('overview')">Overview</button>
+                <button class="tab" onclick="showTab('resources')">Resources</button>
+                <button class="tab" onclick="showTab('notes')">Notes</button>
+                <button class="tab" onclick="showTab('qa')">Q&A</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-panel active">
+                    <h2 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">{{ current_lesson.title }}</h2>
+                    <div class="lesson-content">
+                        {{ current_lesson.content|safe }}
+                    </div>
+                    
+                    {% if current_lesson.example_query %}
+                    <div class="sql-section">
+                        <h3>Example Query</h3>
+                        <pre><code>{{ current_lesson.example_query }}</code></pre>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_lesson.expected_output %}
+                    <div class="sql-section">
+                        <h3>Expected Output</h3>
+                        <pre><code>{{ current_lesson.expected_output }}</code></pre>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_lesson.practice_query %}
+                    <div class="sql-section">
+                        <h3>Practice Query</h3>
+                        <pre><code>{{ current_lesson.practice_query }}</code></pre>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Resources Tab -->
+                <div id="resources" class="tab-panel">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Lesson Resources</h3>
+                    {% if current_lesson.resources.all %}
+                        <div class="resources-list">
+                            {% for resource in current_lesson.resources.all %}
+                            <div class="resource-item">
+                                <div class="resource-icon">
+                                    {% if resource.resource_type == 'pdf' %}📄
+                                    {% elif resource.resource_type == 'doc' %}📝
+                                    {% elif resource.resource_type == 'ppt' %}📊
+                                    {% elif resource.resource_type == 'code' %}💻
+                                    {% elif resource.resource_type == 'dataset' %}📊
+                                    {% elif resource.resource_type == 'image' %}🖼️
+                                    {% else %}📎
+                                    {% endif %}
+                                </div>
+                                <div class="resource-info">
+                                    <h4>{{ resource.title }}</h4>
+                                    {% if resource.description %}
+                                        <p>{{ resource.description }}</p>
+                                    {% endif %}
+                                    <small>{{ resource.formatted_file_size }} • {{ resource.get_resource_type_display }}</small>
+                                </div>
+                                {% if resource.is_downloadable %}
+                                <a href="{% url 'courses:download_lesson_resource' resource.id %}" class="download-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                    </svg>
+                                    Download
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                            No resources available for this lesson.
+                        </p>
+                    {% endif %}
+                    
+                    {% if current_lesson.attachments %}
+                    <div class="legacy-attachments">
+                        <h4>Legacy Attachment</h4>
+                        <a href="{{ current_lesson.attachments.url }}" download class="download-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Download Attachment
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Notes Tab -->
+                <div id="notes" class="tab-panel">
+                    <div class="notes-section">
+                        <div class="notes-header">
+                            <h3>My Notes</h3>
+                            <button class="btn btn-primary" onclick="showAddNoteModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Add Note
+                            </button>
+                        </div>
+                        <div class="notes-list">
+                            <div class="note-card">
+                                <div class="note-timestamp">Today at 2:30 PM</div>
+                                <div class="note-content">
+                                    Remember to practice the SQL queries from this lesson.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q&A Tab -->
+                <div id="qa" class="tab-panel">
+                    <div class="qa-section">
+                        <div class="qa-header">
+                            <h3>Questions & Answers</h3>
+                        </div>
+                        <div class="qa-list">
+                            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                                Q&A functionality coming soon!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-lesson">
+            <h2>No lesson selected</h2>
+            <p>Please select a lesson from the sidebar to start learning.</p>
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<!-- Navigation Controls -->
+{% if current_lesson %}
+<div class="lesson-navigation">
+    {% if prev_lesson %}
+    <a href="{% url 'courses:course_watch_lesson' course.slug prev_lesson.id %}" class="nav-btn prev-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Previous Lesson
+    </a>
+    {% endif %}
+    
+    {% if next_lesson %}
+    <a href="{% url 'courses:course_watch_lesson' course.slug next_lesson.id %}" class="nav-btn next-btn">
+        Next Lesson
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/course-watch.js' %}"></script>
+{% endblock %}

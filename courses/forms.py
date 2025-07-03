@@ -1,7 +1,8 @@
 from django import forms
 from django.utils.text import slugify
 from django_ckeditor_5.widgets import CKEditor5Widget
-from .models import Course, CourseModule, CourseLesson, CourseReview, SubscriptionPlan
+from .models import Course, CourseModule, CourseLesson, LessonResource, CourseReview, SubscriptionPlan
+
 
 
 class CourseFilterForm(forms.Form):
@@ -161,48 +162,106 @@ class CourseForm(forms.ModelForm):
 
 class CourseModuleForm(forms.ModelForm):
     """
-    Form for creating and editing course modules.
+    Enhanced form for creating and editing course modules.
     """
     class Meta:
         model = CourseModule
         fields = ['title', 'description', 'order', 'is_active', 'is_preview']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter module title',
+                'required': True
+            }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
-                'rows': 3
+                'rows': 4,
+                'placeholder': 'Describe what students will learn in this module'
             }),
             'order': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'min': '0'
+                'min': '0',
+                'help_text': 'Order in which this module appears in the course'
             }),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_preview': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'data-toggle': 'tooltip',
+                'title': 'Make this module visible to students'
+            }),
+            'is_preview': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'data-toggle': 'tooltip',
+                'title': 'Allow non-enrolled users to preview this module'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        self.course = kwargs.pop('course', None)
+        super().__init__(*args, **kwargs)
+
+        # Auto-set order if creating new module
+        if not self.instance.pk and self.course:
+            from django.db import models
+            last_order = CourseModule.objects.filter(course=self.course).aggregate(
+                max_order=models.Max('order')
+            )['max_order'] or 0
+            self.fields['order'].initial = last_order + 1
+
+    def save(self, commit=True):
+        module = super().save(commit=False)
+        if self.course:
+            module.course = self.course
+        if commit:
+            module.save()
+        return module
 
 
 class CourseLessonForm(forms.ModelForm):
     """
-    Form for creating and editing course lessons.
+    Enhanced form for creating and editing course lessons.
     """
     class Meta:
         model = CourseLesson
         fields = [
-            'title', 'content', 'lesson_type', 'video_url', 'video_duration',
+            'title', 'content', 'lesson_type', 'video_file', 'video_duration', 'video_thumbnail',
             'attachments', 'example_query', 'expected_output', 'practice_query',
             'duration_minutes', 'order', 'is_active', 'is_preview'
         ]
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'content': CKEditor5Widget(config_name='tutorial'),
-            'lesson_type': forms.Select(attrs={'class': 'form-control'}),
-            'video_url': forms.URLInput(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter lesson title',
+                'required': True
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 10,
+                'placeholder': 'Enter lesson content here...'
+            }),
+            'lesson_type': forms.Select(attrs={
+                'class': 'form-control',
+                'help_text': 'Select the type of lesson content'
+            }),
+            'video_file': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'video/mp4,video/webm,video/avi,video/mov',
+                'help_text': 'Upload video file (MP4, WebM, AVI, MOV supported)'
+            }),
             'video_duration': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
-                'help_text': 'Duration in seconds'
+                'placeholder': 'Duration in seconds (optional)',
+                'help_text': 'Video duration in seconds (optional)'
             }),
-            'attachments': forms.FileInput(attrs={'class': 'form-control'}),
+            'video_thumbnail': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/jpeg,image/png,image/gif',
+                'help_text': 'Upload custom thumbnail (auto-generated if not provided)'
+            }),
+            'attachments': forms.FileInput(attrs={
+                'class': 'form-control',
+                'help_text': 'Legacy attachment field - use Resources section for new uploads'
+            }),
             'example_query': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
@@ -225,9 +284,277 @@ class CourseLessonForm(forms.ModelForm):
                 'class': 'form-control',
                 'min': '0'
             }),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_preview': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'data-toggle': 'tooltip',
+                'title': 'Make this lesson visible to students'
+            }),
+            'is_preview': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'data-toggle': 'tooltip',
+                'title': 'Allow non-enrolled users to preview this lesson'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        self.module = kwargs.pop('module', None)
+        super().__init__(*args, **kwargs)
+
+        # Make video_duration optional
+        self.fields['video_duration'].required = False
+
+        # Auto-set order if creating new lesson
+        if not self.instance.pk and self.module:
+            from django.db import models
+            last_order = CourseLesson.objects.filter(module=self.module).aggregate(
+                max_order=models.Max('order')
+            )['max_order'] or 0
+            self.fields['order'].initial = last_order + 1
+
+    def clean_video_file(self):
+        video_file = self.cleaned_data.get('video_file')
+        if video_file:
+            # Validate file size (max 500MB)
+            if video_file.size > 500 * 1024 * 1024:
+                raise forms.ValidationError('Video file size cannot exceed 500MB.')
+
+            # Validate file type
+            allowed_types = ['video/mp4', 'video/webm', 'video/avi', 'video/quicktime']
+            if hasattr(video_file, 'content_type') and video_file.content_type not in allowed_types:
+                raise forms.ValidationError('Please upload a valid video file (MP4, WebM, AVI, MOV).')
+
+        return video_file
+
+    def clean_video_thumbnail(self):
+        thumbnail = self.cleaned_data.get('video_thumbnail')
+        if thumbnail:
+            # Validate file size (max 5MB)
+            if thumbnail.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Thumbnail file size cannot exceed 5MB.')
+
+            # Validate file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif']
+            if hasattr(thumbnail, 'content_type') and thumbnail.content_type not in allowed_types:
+                raise forms.ValidationError('Please upload a valid image file (JPEG, PNG, GIF).')
+
+        return thumbnail
+
+    def save(self, commit=True):
+        lesson = super().save(commit=False)
+        if self.module:
+            lesson.module = self.module
+        if commit:
+            lesson.save()
+        return lesson
+
+
+class LessonResourceForm(forms.ModelForm):
+    """
+    Enhanced form for creating and editing lesson resources.
+    """
+    class Meta:
+        model = LessonResource
+        fields = [
+            'title', 'description', 'file', 'resource_type',
+            'is_downloadable', 'order'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter resource title',
+                'required': True
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describe this resource and how students should use it'
+            }),
+            'file': forms.FileInput(attrs={
+                'class': 'form-control',
+                'help_text': 'Upload PDF, document, code file, dataset, or image'
+            }),
+            'resource_type': forms.Select(attrs={
+                'class': 'form-control',
+                'help_text': 'Resource type (auto-detected based on file extension)'
+            }),
+            'is_downloadable': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'data-toggle': 'tooltip',
+                'title': 'Allow students to download this resource'
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'help_text': 'Order in which this resource appears'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.lesson = kwargs.pop('lesson', None)
+        super().__init__(*args, **kwargs)
+
+        # Auto-set order if creating new resource
+        if not self.instance.pk and self.lesson:
+            from django.db import models
+            last_order = LessonResource.objects.filter(lesson=self.lesson).aggregate(
+                max_order=models.Max('order')
+            )['max_order'] or 0
+            self.fields['order'].initial = last_order + 1
+
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            # Validate file size (max 100MB)
+            if file.size > 100 * 1024 * 1024:
+                raise forms.ValidationError('File size cannot exceed 100MB.')
+
+            # Validate file type based on extension
+            allowed_extensions = [
+                '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.md',
+                '.py', '.js', '.html', '.css', '.sql', '.java', '.cpp', '.c',
+                '.csv', '.xlsx', '.json', '.xml', '.zip', '.rar',
+                '.jpg', '.jpeg', '.png', '.gif', '.svg'
+            ]
+
+            file_extension = file.name.lower().split('.')[-1] if '.' in file.name else ''
+            if f'.{file_extension}' not in allowed_extensions:
+                raise forms.ValidationError(
+                    f'File type .{file_extension} is not supported. '
+                    f'Allowed types: {", ".join(allowed_extensions)}'
+                )
+
+        return file
+
+    def save(self, commit=True):
+        resource = super().save(commit=False)
+        if self.lesson:
+            resource.lesson = self.lesson
+        if commit:
+            resource.save()
+        return resource
+
+
+class BulkResourceUploadForm(forms.Form):
+    """
+    Simple form for bulk uploading multiple resources to a lesson.
+    The actual file handling is done in the template and view using request.FILES.getlist()
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.lesson = kwargs.pop('lesson', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, files_list):
+        """Save multiple files as lesson resources"""
+        if not self.lesson:
+            raise ValueError('Lesson must be provided to save resources')
+
+        if not files_list:
+            raise ValueError('No files provided')
+
+        resources = []
+
+        # Get starting order
+        from django.db import models
+        last_order = LessonResource.objects.filter(lesson=self.lesson).aggregate(
+            max_order=models.Max('order')
+        )['max_order'] or 0
+
+        for i, file in enumerate(files_list):
+            # Validate file size (max 100MB per file)
+            if file.size > 100 * 1024 * 1024:
+                raise forms.ValidationError(f'File {file.name} exceeds 100MB limit.')
+
+            # Validate file extension
+            allowed_extensions = [
+                '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.md',
+                '.py', '.js', '.html', '.css', '.sql', '.java', '.cpp', '.c',
+                '.csv', '.xlsx', '.json', '.xml', '.zip', '.rar',
+                '.jpg', '.jpeg', '.png', '.gif', '.svg'
+            ]
+
+            file_extension = file.name.lower().split('.')[-1] if '.' in file.name else ''
+            if f'.{file_extension}' not in allowed_extensions:
+                raise forms.ValidationError(
+                    f'File {file.name} has unsupported type .{file_extension}'
+                )
+
+            # Create resource title from filename
+            title = file.name.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ').title()
+
+            resource = LessonResource.objects.create(
+                lesson=self.lesson,
+                title=title,
+                file=file,
+                order=last_order + i + 1,
+                is_downloadable=True
+            )
+            resources.append(resource)
+
+        return resources
+
+
+class CourseStructureReorderForm(forms.Form):
+    """
+    Form for reordering course modules and lessons.
+    """
+    module_orders = forms.CharField(
+        widget=forms.HiddenInput(),
+        help_text='JSON data for module ordering'
+    )
+    lesson_orders = forms.CharField(
+        widget=forms.HiddenInput(),
+        help_text='JSON data for lesson ordering'
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.course = kwargs.pop('course', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_module_orders(self):
+        import json
+        try:
+            data = json.loads(self.cleaned_data['module_orders'])
+            if not isinstance(data, list):
+                raise forms.ValidationError('Invalid module order data')
+            return data
+        except (json.JSONDecodeError, KeyError):
+            raise forms.ValidationError('Invalid module order data')
+
+    def clean_lesson_orders(self):
+        import json
+        try:
+            data = json.loads(self.cleaned_data['lesson_orders'])
+            if not isinstance(data, dict):
+                raise forms.ValidationError('Invalid lesson order data')
+            return data
+        except (json.JSONDecodeError, KeyError):
+            raise forms.ValidationError('Invalid lesson order data')
+
+    def save(self):
+        if not self.course:
+            raise ValueError('Course must be provided to reorder structure')
+
+        module_orders = self.cleaned_data['module_orders']
+        lesson_orders = self.cleaned_data['lesson_orders']
+
+        # Update module orders
+        for order, module_id in enumerate(module_orders, 1):
+            CourseModule.objects.filter(
+                id=module_id,
+                course=self.course
+            ).update(order=order)
+
+        # Update lesson orders
+        for module_id, lesson_list in lesson_orders.items():
+            for order, lesson_id in enumerate(lesson_list, 1):
+                CourseLesson.objects.filter(
+                    id=lesson_id,
+                    module_id=module_id,
+                    module__course=self.course
+                ).update(order=order)
+
+        return True
 
 
 class CourseReviewForm(forms.ModelForm):

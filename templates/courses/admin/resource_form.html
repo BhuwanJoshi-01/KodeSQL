@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.form-check-input {
+    width: auto;
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.breadcrumb {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.form-actions .btn {
+    min-width: 150px;
+}
+
+.form-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-header h1 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.75rem;
+}
+
+.form-header p {
+    margin: 0.5rem 0 0 0;
+    color: var(--text-secondary);
+}
+
+.file-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.current-file {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.file-icon {
+    font-size: 2rem;
+}
+
+.file-details h4 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+}
+
+.file-details small {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'courses:admin_courses_list' %}">Courses</a> /
+        <a href="{% url 'courses:admin_course_detail' course.slug %}">{{ course.title }}</a> /
+        <span>{{ lesson.module.title }}</span> /
+        <a href="{% url 'courses:admin_lesson_resources' course.slug lesson.id %}">{{ lesson.title }}</a> /
+        {% if action == 'create' %}
+            Add Resource
+        {% else %}
+            Edit Resource
+        {% endif %}
+    </nav>
+
+    <div class="form-container">
+        <div class="form-header">
+            <h1>
+                {% if action == 'create' %}
+                    Add New Resource
+                {% else %}
+                    Edit Resource
+                {% endif %}
+            </h1>
+            <p>
+                {% if action == 'create' %}
+                    Add a new resource to <strong>{{ lesson.title }}</strong>
+                {% else %}
+                    Editing resource for <strong>{{ lesson.title }}</strong>
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.help_text %}
+                    <div class="help-text">{{ form.title.help_text }}</div>
+                {% endif %}
+                {% if form.title.errors %}
+                    <div class="text-danger">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.help_text %}
+                    <div class="help-text">{{ form.description.help_text }}</div>
+                {% endif %}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.file.id_for_label }}">{{ form.file.label }}</label>
+                
+                {% if action == 'edit' and resource.file %}
+                    <div class="current-file">
+                        <div class="file-icon">
+                            {% if resource.resource_type == 'pdf' %}📄
+                            {% elif resource.resource_type == 'doc' %}📝
+                            {% elif resource.resource_type == 'ppt' %}📊
+                            {% elif resource.resource_type == 'code' %}💻
+                            {% elif resource.resource_type == 'dataset' %}📊
+                            {% elif resource.resource_type == 'image' %}🖼️
+                            {% else %}📎
+                            {% endif %}
+                        </div>
+                        <div class="file-details">
+                            <h4>{{ resource.file.name|basename }}</h4>
+                            <small>{{ resource.formatted_file_size }} • {{ resource.get_resource_type_display }}</small>
+                        </div>
+                        <a href="{{ resource.file.url }}" target="_blank" class="btn btn-outline btn-sm">
+                            <span class="material-icons">visibility</span>
+                            Preview
+                        </a>
+                    </div>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">
+                        <small>Upload a new file to replace the current one, or leave empty to keep the current file.</small>
+                    </p>
+                {% endif %}
+                
+                {{ form.file }}
+                {% if form.file.help_text %}
+                    <div class="help-text">{{ form.file.help_text }}</div>
+                {% endif %}
+                {% if form.file.errors %}
+                    <div class="text-danger">{{ form.file.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.resource_type.id_for_label }}">{{ form.resource_type.label }}</label>
+                    {{ form.resource_type }}
+                    {% if form.resource_type.help_text %}
+                        <div class="help-text">{{ form.resource_type.help_text }}</div>
+                    {% endif %}
+                    {% if form.resource_type.errors %}
+                        <div class="text-danger">{{ form.resource_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                    {{ form.order }}
+                    {% if form.order.help_text %}
+                        <div class="help-text">{{ form.order.help_text }}</div>
+                    {% endif %}
+                    {% if form.order.errors %}
+                        <div class="text-danger">{{ form.order.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    {{ form.is_downloadable }}
+                    <label for="{{ form.is_downloadable.id_for_label }}">{{ form.is_downloadable.label }}</label>
+                </div>
+                {% if form.is_downloadable.help_text %}
+                    <div class="help-text">{{ form.is_downloadable.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons">save</span>
+                    {% if action == 'create' %}Create Resource{% else %}Update Resource{% endif %}
+                </button>
+                
+                <a href="{% url 'courses:admin_lesson_resources' course.slug lesson.id %}" class="btn btn-outline">
+                    <span class="material-icons">cancel</span>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus first input
+    const firstInput = document.querySelector('.form-control');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const title = document.querySelector('#id_title').value.trim();
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a resource title.');
+            document.querySelector('#id_title').focus();
+            return false;
+        }
+        
+        // Check if file is provided for new resources
+        {% if action == 'create' %}
+        const file = document.querySelector('#id_file').files[0];
+        if (!file) {
+            e.preventDefault();
+            alert('Please select a file to upload.');
+            document.querySelector('#id_file').focus();
+            return false;
+        }
+        {% endif %}
+    });
+    
+    // File input change handler
+    const fileInput = document.querySelector('#id_file');
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            
+            // Show file info
+            const existingInfo = document.querySelector('.file-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
+            const fileInfo = document.createElement('div');
+            fileInfo.className = 'file-info';
+            fileInfo.innerHTML = `
+                <strong>Selected:</strong> ${file.name}<br>
+                <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+                <strong>Type:</strong> ${file.type || 'Unknown'}
+            `;
+            
+            fileInput.parentNode.appendChild(fileInfo);
+        }
+    });
+});
+</script>
+{% endblock %}

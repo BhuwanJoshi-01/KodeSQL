@@ -6,7 +6,7 @@ from django.utils import timezone
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from .models import (
-    Course, CourseModule, CourseLesson, UserCourseEnrollment,
+    Course, CourseModule, CourseLesson, LessonResource, UserCourseEnrollment,
     CourseReview, CourseCertificate, CoursePayment, SubscriptionPlan, UserSubscription
 )
 
@@ -29,6 +29,13 @@ class CourseLessonInline(admin.TabularInline):
     model = CourseLesson
     extra = 0
     fields = ('title', 'lesson_type', 'duration_minutes', 'order', 'is_active', 'is_preview')
+    ordering = ('order',)
+
+
+class LessonResourceInline(admin.TabularInline):
+    model = LessonResource
+    extra = 0
+    fields = ('title', 'file', 'resource_type', 'is_downloadable', 'order')
     ordering = ('order',)
 
 
@@ -127,18 +134,28 @@ class CourseModuleAdmin(admin.ModelAdmin):
 
 @admin.register(CourseLesson)
 class CourseLessonAdmin(admin.ModelAdmin):
-    list_display = ('title', 'module', 'lesson_type', 'duration_minutes', 'order', 'is_active', 'is_preview')
+    list_display = ('title', 'module', 'lesson_type', 'has_video_display', 'resource_count_display', 'duration_minutes', 'order', 'is_active', 'is_preview')
     list_filter = ('lesson_type', 'is_active', 'is_preview', 'module__course')
     search_fields = ('title', 'content', 'module__title', 'module__course__title')
     readonly_fields = ('created_at', 'updated_at')
     ordering = ('module__course', 'module__order', 'order')
+    inlines = [LessonResourceInline]
 
     fieldsets = (
         ('Basic Information', {
             'fields': ('module', 'title', 'lesson_type', 'order')
         }),
         ('Content', {
-            'fields': ('content', 'video_url', 'video_duration', 'attachments')
+            'fields': ('content',)
+        }),
+        ('Video Content', {
+            'fields': ('video_url', 'video_file', 'video_duration', 'video_thumbnail'),
+            'classes': ('collapse',)
+        }),
+        ('Legacy Attachments', {
+            'fields': ('attachments',),
+            'classes': ('collapse',),
+            'description': 'Use the Resources section below for new file uploads'
         }),
         ('SQL Content', {
             'fields': ('example_query', 'expected_output', 'practice_query'),
@@ -153,6 +170,23 @@ class CourseLessonAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def has_video_display(self, obj):
+        if obj.has_video:
+            if obj.video_file:
+                return format_html('<span style="color: green;">✓ File</span>')
+            else:
+                return format_html('<span style="color: blue;">✓ URL</span>')
+        return format_html('<span style="color: gray;">✗ No video</span>')
+    has_video_display.short_description = 'Video'
+
+    def resource_count_display(self, obj):
+        count = obj.resources.count()
+        if count > 0:
+            url = reverse('admin:courses_lessonresource_changelist') + f'?lesson__id__exact={obj.id}'
+            return format_html('<a href="{}">{} resources</a>', url, count)
+        return '0 resources'
+    resource_count_display.short_description = 'Resources'
 
 
 @admin.register(UserCourseEnrollment)
@@ -378,6 +412,56 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
     def plan_name(self, obj):
         return obj.plan.name
     plan_name.short_description = 'Plan'
+
+    def time_remaining_display(self, obj):
+        if obj.status == 'active' and obj.end_date:
+            from django.utils import timezone
+            remaining = obj.end_date - timezone.now().date()
+            if remaining.days > 0:
+                return f"{remaining.days} days"
+            elif remaining.days == 0:
+                return "Expires today"
+            else:
+                return "Expired"
+        return "N/A"
+    time_remaining_display.short_description = 'Time Remaining'
+
+
+@admin.register(LessonResource)
+class LessonResourceAdmin(admin.ModelAdmin):
+    list_display = ('title', 'lesson', 'resource_type', 'formatted_file_size_display', 'download_count', 'is_downloadable', 'order')
+    list_filter = ('resource_type', 'is_downloadable', 'lesson__module__course')
+    search_fields = ('title', 'description', 'lesson__title', 'lesson__module__title', 'lesson__module__course__title')
+    readonly_fields = ('created_at', 'updated_at', 'file_size', 'download_count', 'file_extension_display')
+    ordering = ('lesson__module__course', 'lesson__module__order', 'lesson__order', 'order')
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('lesson', 'title', 'description', 'order')
+        }),
+        ('File Information', {
+            'fields': ('file', 'resource_type', 'file_extension_display', 'file_size', 'formatted_file_size_display')
+        }),
+        ('Settings', {
+            'fields': ('is_downloadable', 'download_count'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def formatted_file_size_display(self, obj):
+        return obj.formatted_file_size
+    formatted_file_size_display.short_description = 'File Size'
+
+    def file_extension_display(self, obj):
+        ext = obj.file_extension
+        if ext:
+            return format_html('<span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: monospace;">.{}</span>', ext)
+        return 'No extension'
+    file_extension_display.short_description = 'File Type'
 
     def time_remaining_display(self, obj):
         if obj.end_date is None:

@@ -1,0 +1,372 @@
+/* Admin Interface Styles */
+
+:root {
+    --admin-primary: #4f46e5;
+    --admin-secondary: #6b7280;
+    --admin-success: #10b981;
+    --admin-warning: #f59e0b;
+    --admin-danger: #ef4444;
+    --admin-bg-primary: var(--bg-primary);
+    --admin-bg-secondary: var(--bg-secondary);
+    --admin-text-primary: var(--text-primary);
+    --admin-text-secondary: var(--text-secondary);
+    --admin-border: var(--border-color);
+}
+
+/* Admin Layout */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--admin-text-primary);
+    margin: 0;
+}
+
+.admin-subtitle {
+    color: var(--admin-text-secondary);
+    margin: 0.5rem 0 0 0;
+}
+
+/* Admin Cards */
+.admin-card {
+    background: var(--admin-bg-primary);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--admin-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Admin Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: var(--admin-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3730a3;
+}
+
+.btn-secondary {
+    background: var(--admin-bg-secondary);
+    color: var(--admin-text-primary);
+    border: 1px solid var(--admin-border);
+}
+
+.btn-secondary:hover {
+    background: var(--admin-bg-primary);
+    border-color: var(--admin-primary);
+    color: var(--admin-primary);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--admin-text-primary);
+    border: 1px solid var(--admin-border);
+}
+
+.btn-outline:hover {
+    background: var(--admin-bg-secondary);
+    border-color: var(--admin-primary);
+    color: var(--admin-primary);
+}
+
+.btn-success {
+    background: var(--admin-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-warning {
+    background: var(--admin-warning);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-danger {
+    background: var(--admin-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+/* Icon Buttons */
+.btn-icon {
+    padding: 0.5rem;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-bg-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--admin-text-primary);
+    width: 36px;
+    height: 36px;
+}
+
+.btn-icon:hover {
+    background: var(--admin-primary);
+    color: white;
+    border-color: var(--admin-primary);
+    transform: translateY(-1px);
+}
+
+.btn-icon.delete:hover {
+    background: var(--admin-danger);
+    border-color: var(--admin-danger);
+}
+
+/* Admin Tables */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--admin-bg-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-table th {
+    background: var(--admin-bg-secondary);
+    font-weight: 600;
+    color: var(--admin-text-primary);
+}
+
+.admin-table tr:hover {
+    background: var(--admin-bg-secondary);
+}
+
+/* Admin Forms */
+.admin-form {
+    background: var(--admin-bg-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--admin-border);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--admin-text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--admin-border);
+    border-radius: 6px;
+    background: var(--admin-bg-primary);
+    color: var(--admin-text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-check-input {
+    width: auto;
+}
+
+/* Admin Messages */
+.admin-messages {
+    margin-bottom: 2rem;
+}
+
+.admin-message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-message.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--admin-success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.admin-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--admin-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.admin-message.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--admin-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Admin Stats */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.admin-stat-card {
+    background: var(--admin-bg-primary);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.admin-stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--admin-primary);
+    margin-bottom: 0.5rem;
+}
+
+.admin-stat-label {
+    color: var(--admin-text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-container {
+        padding: 1rem;
+    }
+    
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .admin-card {
+        padding: 1.5rem;
+    }
+    
+    .admin-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .admin-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .admin-table th {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .form-control {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}

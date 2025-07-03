@@ -669,8 +669,15 @@ body {
                 <div class="editor-header">
                     <div class="editor-title">SQL Editor</div>
                     <div class="editor-actions">
-                        <select class="database-selector">
-                            <option>SQLite</option>
+                        <select class="database-selector" id="databaseSelector" onchange="onDatabaseEngineChange()">
+                            {% for engine in challenge.get_supported_engines %}
+                                <option value="{{ engine }}">
+                                    {% if engine == 'sqlite' %}SQLite
+                                    {% elif engine == 'postgresql' %}PostgreSQL
+                                    {% elif engine == 'mysql' %}MySQL
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
                         </select>
                         <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
                         <button class="btn btn-primary" onclick="runQuery()">
@@ -770,6 +777,9 @@ body {
 let editor;
 let isResizing = false;
 let isVerticalResizing = false;
+let currentChallenge = {{ challenge.id }};
+let isSubmitting = false;
+let selectedEngine = 'sqlite'; // Default to SQLite
 
 // Initialize Monaco Editor
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs' } });
@@ -777,7 +787,7 @@ require(['vs/editor/editor.main'], function () {
     // Get theme from base template
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
     editor = monaco.editor.create(document.getElementById('challenge-editor'), {
-        value: '-- Write your SQL query here\n',
+        value: '',
         language: 'sql',
         theme: currentTheme === 'dark' ? 'vs-dark' : 'vs',
         automaticLayout: true,
@@ -867,6 +877,18 @@ function stopVerticalResize() {
     document.removeEventListener('mouseup', stopVerticalResize);
 }
 
+// Database engine selection
+function onDatabaseEngineChange() {
+    const selector = document.getElementById('databaseSelector');
+    selectedEngine = selector.value;
+
+    // Show notification about engine change
+    showMessage(`Switched to ${selectedEngine.toUpperCase()} database engine`, 'info');
+
+    // Clear previous results
+    clearOutput();
+}
+
 // Tab switching
 function switchTab(tabName) {
     // Remove active class from all tabs and panels
@@ -904,7 +926,10 @@ async function runQuery() {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: JSON.stringify({ query: query })
+            body: JSON.stringify({
+                query: query,
+                engine: selectedEngine
+            })
         });
 
         const data = await response.json();
@@ -976,8 +1001,55 @@ function updateStatusBar(executionTime, rowCount) {
 
 function clearEditor() {
     if (editor) {
-        editor.setValue('-- Write your SQL query here\n');
+        editor.setValue('');
     }
+}
+
+function clearOutput() {
+    const outputPanel = document.getElementById('outputPanel');
+    outputPanel.innerHTML = `
+        <div class="placeholder-content" style="text-align: center; color: #94a3b8; margin-top: 40px;">
+            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📊</div>
+            <p>Run your SQL query to see results here</p>
+        </div>
+    `;
+}
+
+function showMessage(message, type = 'info') {
+    // Create a simple notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        transition: all 0.3s ease;
+    `;
+
+    if (type === 'info') {
+        notification.style.background = '#3b82f6';
+    } else if (type === 'success') {
+        notification.style.background = '#10b981';
+    } else if (type === 'error') {
+        notification.style.background = '#ef4444';
+    } else if (type === 'warning') {
+        notification.style.background = '#f59e0b';
+    }
+
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 
 // Submit solution
@@ -1001,7 +1073,7 @@ document.getElementById('submit-solution-btn').addEventListener('click', async f
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: `query=${encodeURIComponent(query)}`
+            body: `query=${encodeURIComponent(query)}&engine=${encodeURIComponent(selectedEngine)}`
         });
 
         const data = await response.json();

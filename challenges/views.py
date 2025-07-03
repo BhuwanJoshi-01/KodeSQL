@@ -19,6 +19,7 @@ import time
 from .models import Challenge, UserChallengeProgress, ChallengeSubscriptionPlan, UserChallengeSubscription
 from users.models import UserDatabase
 from editor.views import execute_sql_query
+from .utils import execute_sql_query_multi_engine, DatabaseEngineManager
 from .forms import ChallengeForm, ChallengeFilterForm, UserChallengeSubscriptionForm, SubscriptionFilterForm, ChallengeSubscriptionPlanForm
 
 
@@ -157,12 +158,17 @@ def challenge_detail(request, challenge_id):
             except Exception as e:
                 messages.error(request, f'Error initializing challenge database: {str(e)}')
 
+    # Get database schema configuration from the simplified system
+    schema_config = challenge.get_database_schema_config()
+    database_schema = schema_config.get('schema', {})
+
     context = {
         'page_title': f'Challenge: {challenge.title}',
         'challenge': challenge,
         'user_progress': user_progress,
         'has_access': has_access,
-        'database_schema': challenge.database_schema,
+        'database_schema': database_schema,
+        'schema_config': schema_config,
     }
     return render(request, 'challenges/challenge_solve.html', context)
 
@@ -171,7 +177,7 @@ def challenge_detail(request, challenge_id):
 @login_required
 def execute_challenge_query(request, challenge_id):
     """
-    Execute a SQL query for a specific challenge.
+    Execute a SQL query for a specific challenge with multi-engine support.
     """
     challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
 
@@ -185,6 +191,7 @@ def execute_challenge_query(request, challenge_id):
     try:
         data = json.loads(request.body)
         user_query = data.get('query', '').strip()
+        engine = data.get('engine', 'sqlite')  # Get selected database engine
 
         if not user_query:
             return JsonResponse({
@@ -192,22 +199,36 @@ def execute_challenge_query(request, challenge_id):
                 'error': 'Query cannot be empty.'
             })
 
-        # Get challenge-specific database path
-        db_path = challenge.get_challenge_database_path(request.user)
+        # Validate that challenge supports the selected engine
+        if not challenge.supports_engine(engine):
+            return JsonResponse({
+                'success': False,
+                'error': f'This challenge does not support {engine.upper()} database engine.'
+            })
 
-        if not os.path.exists(db_path):
-            # Initialize database if it doesn't exist
-            try:
-                challenge.initialize_challenge_database(request.user)
-            except Exception as e:
-                return JsonResponse({
-                    'success': False,
-                    'error': f'Failed to initialize challenge database: {str(e)}'
-                })
+        # Initialize database for the selected engine
+        try:
+            challenge.initialize_challenge_database(request.user, engine)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Failed to initialize {engine} database: {str(e)}'
+            })
 
-        # Execute user query
+        # Execute user query with selected engine
         start_time = time.time()
-        result = execute_sql_query(db_path, user_query)
+
+        if engine == 'sqlite':
+            # Use existing SQLite logic
+            db_path = challenge.get_challenge_database_path(request.user, engine)
+            result = execute_sql_query(db_path, user_query)
+        else:
+            # Use multi-engine logic for PostgreSQL/MySQL
+            db_config = {
+                'database': f"challenge_{challenge.id}_user_{request.user.id}"
+            }
+            result = execute_sql_query_multi_engine(engine, db_config, user_query)
+
         execution_time = int((time.time() - start_time) * 1000)
 
         if not result['success']:
@@ -246,16 +267,24 @@ def execute_challenge_query(request, challenge_id):
 @require_http_methods(["POST"])
 def submit_challenge(request, challenge_id):
     """
-    Submit challenge solution with auto-evaluation.
+    Submit challenge solution with auto-evaluation and multi-engine support.
     """
     try:
         challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
         user_query = request.POST.get('query', '').strip()
+        engine = request.POST.get('engine', 'sqlite')  # Get selected database engine
 
         if not user_query:
             return JsonResponse({
                 'success': False,
                 'error': 'Query is required'
+            })
+
+        # Validate that challenge supports the selected engine
+        if not challenge.supports_engine(engine):
+            return JsonResponse({
+                'success': False,
+                'error': f'This challenge does not support {engine.upper()} database engine.'
             })
 
         # Get or create user progress
@@ -267,17 +296,26 @@ def submit_challenge(request, challenge_id):
         # Increment attempts
         user_progress.attempts += 1
 
-        # Get challenge-specific database path
-        db_path = challenge.get_challenge_database_path(request.user)
-
-        if not os.path.exists(db_path):
+        # Initialize database for the selected engine
+        try:
+            challenge.initialize_challenge_database(request.user, engine)
+        except Exception as e:
             return JsonResponse({
                 'success': False,
-                'error': 'Challenge database not found. Please refresh the page.'
+                'error': f'Failed to initialize {engine} database: {str(e)}'
             })
 
-        # Execute user query
-        result = execute_sql_query(db_path, user_query)
+        # Execute user query with selected engine
+        if engine == 'sqlite':
+            # Use existing SQLite logic
+            db_path = challenge.get_challenge_database_path(request.user, engine)
+            result = execute_sql_query(db_path, user_query)
+        else:
+            # Use multi-engine logic for PostgreSQL/MySQL
+            db_config = {
+                'database': f"challenge_{challenge.id}_user_{request.user.id}"
+            }
+            result = execute_sql_query_multi_engine(engine, db_config, user_query)
 
         if not result['success']:
             user_progress.save()

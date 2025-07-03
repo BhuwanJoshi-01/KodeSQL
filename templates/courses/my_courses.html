@@ -4,165 +4,244 @@
 {% block title %}My Courses - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/courses.css' %}">
-<link rel="stylesheet" href="{% static 'css/course-button-fixes.css' %}">
+<link rel="stylesheet" href="{% static 'css/my-courses-new.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="main-content">
-    <div class="tile-wrap">
-        <!-- Courses Header -->
-        <div class="courses-header">
-            <h2>My Courses</h2>
-            <div class="courses-actions">
-                <div class="search-bar">
+<main class="my-courses-container">
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">My Learning Journey</h1>
+            <p class="page-subtitle">Track your progress and continue your learning adventure</p>
+        </div>
+
+        <div class="header-actions">
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
                     <input type="text" id="courseSearch" placeholder="Search my courses..." value="{{ search_query }}">
-                    <button><i class="fas fa-search"></i></button>
                 </div>
-                <div class="filter-dropdown">
-                    <button class="filter-btn">Filter <i class="fas fa-chevron-down"></i></button>
-                    <div class="filter-menu">
-                        <label><input type="checkbox" value="in-progress" {% if 'in-progress' in status_filter or not status_filter %}checked{% else %}{% endif %}> In Progress</label>
-                        <label><input type="checkbox" value="completed" {% if 'completed' in status_filter or not status_filter %}checked{% else %}{% endif %}> Completed</label>
-                        <label><input type="checkbox" value="not-started" {% if 'not-started' in status_filter or not status_filter %}checked{% else %}{% endif %}> Not Started</label>
+            </div>
+
+            <div class="filter-container">
+                <button class="filter-btn" id="filterBtn">
+                    <i class="fas fa-filter"></i>
+                    <span>Filter</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="filter-dropdown" id="filterDropdown">
+                    <div class="filter-option">
+                        <label class="filter-label">
+                            <input type="checkbox" value="in-progress" {% if 'in-progress' in status_filter or not status_filter %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            <span class="filter-text">In Progress</span>
+                        </label>
+                    </div>
+                    <div class="filter-option">
+                        <label class="filter-label">
+                            <input type="checkbox" value="completed" {% if 'completed' in status_filter or not status_filter %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            <span class="filter-text">Completed</span>
+                        </label>
+                    </div>
+                    <div class="filter-option">
+                        <label class="filter-label">
+                            <input type="checkbox" value="not-started" {% if 'not-started' in status_filter or not status_filter %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            <span class="filter-text">Not Started</span>
+                        </label>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Course Statistics -->
-        <div class="courses-stats">
+    </section>
+    <!-- Statistics Section -->
+    <section class="stats-section">
+        <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">
+                <div class="stat-icon total">
                     <i class="fas fa-book-open"></i>
                 </div>
-                <div class="stat-info">
-                    <h3 id="totalCourses">{{ total_courses }}</h3>
-                    <p>Total Courses</p>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalCourses">{{ total_courses }}</div>
+                    <div class="stat-label">Total Courses</div>
+                    <div class="stat-description">Enrolled courses</div>
                 </div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-spinner"></i>
+                <div class="stat-icon progress">
+                    <i class="fas fa-play-circle"></i>
                 </div>
-                <div class="stat-info">
-                    <h3 id="inProgressCourses">{{ in_progress_courses }}</h3>
-                    <p>In Progress</p>
+                <div class="stat-content">
+                    <div class="stat-number" id="inProgressCourses">{{ in_progress_courses }}</div>
+                    <div class="stat-label">In Progress</div>
+                    <div class="stat-description">Currently learning</div>
                 </div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-icon">
+                <div class="stat-icon completed">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="stat-info">
-                    <h3 id="completedCourses">{{ completed_courses }}</h3>
-                    <p>Completed</p>
+                <div class="stat-content">
+                    <div class="stat-number" id="completedCourses">{{ completed_courses }}</div>
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-description">Finished courses</div>
                 </div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-icon">
+                <div class="stat-icon certificates">
                     <i class="fas fa-certificate"></i>
                 </div>
-                <div class="stat-info">
-                    <h3 id="certificatesEarned">{{ certificates_earned }}</h3>
-                    <p>Certificates</p>
+                <div class="stat-content">
+                    <div class="stat-number" id="certificatesEarned">{{ certificates_earned }}</div>
+                    <div class="stat-label">Certificates</div>
+                    <div class="stat-description">Earned certificates</div>
                 </div>
             </div>
         </div>
-        
-        <!-- Courses Container -->
-        <div class="courses-container" id="coursesContainer">
+    </section>
+    <!-- Courses Section -->
+    <section class="courses-section">
+        <div class="courses-grid" id="coursesContainer">
             {% if enrollments %}
                 {% for enrollment in enrollments %}
-                <div class="course-card {% if enrollment.is_completed %}completed{% elif enrollment.progress_percentage > 0 %}in-progress{% else %}not-started{% endif %}" 
-                     data-course-title="{{ enrollment.course.title|lower }}" 
+                <div class="course-card {% if enrollment.is_completed %}completed{% elif enrollment.progress_percentage > 0 %}in-progress{% else %}not-started{% endif %}"
+                     data-course-title="{{ enrollment.course.title|lower }}"
                      data-course-description="{{ enrollment.course.short_description|lower }}"
                      data-status="{% if enrollment.is_completed %}completed{% elif enrollment.progress_percentage > 0 %}in-progress{% else %}not-started{% endif %}">
-                    <div class="course-image">
-                        {% if enrollment.course.thumbnail %}
-                            <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}">
-                        {% else %}
-                            <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="{{ enrollment.course.title }}">
-                        {% endif %}
-                        <div class="course-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {{ enrollment.progress_percentage }}%"></div>
+
+                    <div class="course-banner {% if 'sql' in enrollment.course.title|lower %}sql{% elif 'power' in enrollment.course.title|lower %}powerbi{% elif 'python' in enrollment.course.title|lower %}python{% elif 'tableau' in enrollment.course.title|lower %}tableau{% elif 'bootcamp' in enrollment.course.title|lower %}bootcamp{% else %}sql{% endif %}">
+                        <div class="course-status-badge">
+                            {% if enrollment.is_completed %}
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed</span>
+                            {% elif enrollment.progress_percentage > 0 %}
+                                <i class="fas fa-play-circle"></i>
+                                <span>In Progress</span>
+                            {% else %}
+                                <i class="fas fa-clock"></i>
+                                <span>Not Started</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="course-icon">
+                            <i class="{% if 'sql' in enrollment.course.title|lower %}fas fa-database{% elif 'power' in enrollment.course.title|lower %}fas fa-chart-bar{% elif 'python' in enrollment.course.title|lower %}fab fa-python{% elif 'tableau' in enrollment.course.title|lower %}fas fa-chart-pie{% elif 'bootcamp' in enrollment.course.title|lower %}fas fa-chart-line{% else %}fas fa-database{% endif %}"></i>
+                        </div>
+
+                        <div class="progress-overlay">
+                            <div class="progress-circle">
+                                <svg class="progress-ring" width="60" height="60">
+                                    <circle class="progress-ring-circle" stroke="rgba(255,255,255,0.3)" stroke-width="4" fill="transparent" r="26" cx="30" cy="30"/>
+                                    <circle class="progress-ring-progress" stroke="white" stroke-width="4" fill="transparent" r="26" cx="30" cy="30"
+                                            data-progress="{{ enrollment.progress_percentage }}" style="stroke-dasharray: 163.36 163.36; stroke-dashoffset: 163.36;"/>
+                                </svg>
+                                <div class="progress-text">{{ enrollment.progress_percentage }}%</div>
                             </div>
-                            <span class="progress-text">{{ enrollment.progress_percentage }}% Complete</span>
                         </div>
                     </div>
+
                     <div class="course-content">
                         <h3 class="course-title">{{ enrollment.course.title }}</h3>
-                        <p class="course-description">{{ enrollment.course.short_description }}</p>
+                        <p class="course-description">{{ enrollment.course.short_description|truncatewords:15 }}</p>
+
                         <div class="course-meta">
-                            <span><i class="fas fa-clock"></i> <span class="course-duration">{{ enrollment.course.duration_hours }}h</span></span>
-                            <span><i class="fas fa-layer-group"></i> <span class="course-modules">{{ enrollment.course.module_count }}</span> modules</span>
-                            <span><i class="fas fa-graduation-cap"></i> <span class="course-level">{{ enrollment.course.get_difficulty_display }}</span></span>
-                        </div>
-
-                        
-                        {% if active_subscription %}
-                        <div class="subscription-info">
-                            <div class="subscription-plan">
-                                <i class="fas fa-crown"></i>
-                                <span>{{ active_subscription.plan.name }}</span>
-                                {% if active_subscription.is_expiring_soon %}
-                                    <span class="expiring-badge">Expiring Soon</span>
-                                {% endif %}
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ enrollment.course.duration_hours }}h</span>
                             </div>
-                            <div class="subscription-time">
-                                {% if active_subscription.end_date %}
-                                    <i class="fas fa-clock"></i>
-                                    <span>{{ active_subscription.time_remaining }} remaining</span>
-                                {% else %}
-                                    <i class="fas fa-infinity"></i>
-                                    <span>Unlimited Access</span>
-                                {% endif %}
+                            <div class="meta-item">
+                                <i class="fas fa-layer-group"></i>
+                                <span>{{ enrollment.course.module_count }} modules</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-signal"></i>
+                                <span>{{ enrollment.course.get_difficulty_display }}</span>
                             </div>
                         </div>
-                        {% endif %}
 
-                        <div class="course-actions">
-                            {% if enrollment.is_completed %}
-                                {% if enrollment.certificate_issued %}
-                                    <a href="{% url 'courses:certificate_view' enrollment.certificate.certificate_id %}" class="btn btn-primary">View Certificate</a>
-                                {% else %}
-                                    <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary">Review Course</a>
-                                {% endif %}
-                            {% else %}
-                                <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary">Continue Learning</a>
+                        <div class="enrollment-info">
+                            <div class="enrollment-date">
+                                <i class="fas fa-calendar"></i>
+                                <span>Enrolled {{ enrollment.enrolled_at|date:"M d, Y" }}</span>
+                            </div>
+                            {% if enrollment.last_accessed %}
+                            <div class="last-accessed">
+                                <i class="fas fa-eye"></i>
+                                <span>Last accessed {{ enrollment.last_accessed|timesince }} ago</span>
+                            </div>
                             {% endif %}
-                            <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn btn-primary">View Details</a>
+                        </div>
+
+                        <div class="course-footer">
+                            <div class="course-actions">
+                                {% if enrollment.is_completed %}
+                                    {% if enrollment.certificate_issued and enrollment.certificate and enrollment.certificate.certificate_id %}
+                                        <a href="{% url 'courses:certificate_view' enrollment.certificate.certificate_id %}" class="btn-primary">
+                                            <i class="fas fa-certificate"></i>
+                                            View Certificate
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn-primary">
+                                            <i class="fas fa-redo"></i>
+                                            Review Course
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn-primary">
+                                        <i class="fas fa-play"></i>
+                                        Continue Learning
+                                    </a>
+                                {% endif %}
+
+                                <a href="{% url 'courses:course_detail' enrollment.course.slug %}" class="btn-secondary">
+                                    <i class="fas fa-info-circle"></i>
+                                    View Details
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="no-courses" id="noCoursesMessage">
-                    <i class="fas fa-book"></i>
-                    <h3>No courses found</h3>
-                    <p>You haven't enrolled in any courses yet.</p>
-                    <a href="{% url 'courses:courses_list' %}" class="btn btn-primary"Browse Courses</a>
+                <div class="no-courses-state" id="noCoursesMessage">
+                    <div class="no-courses-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Start Your Learning Journey</h3>
+                    <p>You haven't enrolled in any courses yet. Explore our course catalog and begin learning today!</p>
+                    <a href="{% url 'courses:courses_list' %}" class="btn-primary">
+                        <i class="fas fa-search"></i>
+                        Browse Courses
+                    </a>
                 </div>
             {% endif %}
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- Explore More Courses Section -->
-<section class="explore-courses">
-    <div class="tile-wrap">
-        <h2>Explore More Courses</h2>
-        <p>Discover new courses to enhance your skills and knowledge</p>
+    <!-- Explore More Courses Section -->
+    <section class="explore-section">
+        <div class="explore-header">
+            <h2>Discover More Courses</h2>
+            <p>Expand your skills with our recommended courses tailored for you</p>
+        </div>
+
         <div class="recommended-courses" id="recommendedCourses">
             <!-- Recommended courses will be loaded here dynamically -->
         </div>
+
         <div class="explore-action">
-            <a href="{% url 'courses:courses_list' %}" class="btn btn-primary">Browse All Courses</a>
+            <a href="{% url 'courses:courses_list' %}" class="btn-primary">
+                <i class="fas fa-compass"></i>
+                Explore All Courses
+            </a>
         </div>
-    </div>
-</section>
+    </section>
+</main>
 {% endblock %}
 
 {% block extra_js %}
@@ -180,78 +259,186 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeCourseFiltering() {
     const searchInput = document.getElementById('courseSearch');
-    const filterCheckboxes = document.querySelectorAll('.filter-menu input[type="checkbox"]');
+    const filterCheckboxes = document.querySelectorAll('.filter-dropdown input[type="checkbox"]');
     const courseCards = document.querySelectorAll('.course-card');
-    
+
     // Search functionality
     searchInput.addEventListener('input', filterCourses);
-    
+
     // Filter functionality
     filterCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', filterCourses);
     });
-    
+
     function filterCourses() {
         const searchTerm = searchInput.value.toLowerCase();
         const selectedFilters = Array.from(filterCheckboxes)
             .filter(checkbox => checkbox.checked)
             .map(checkbox => checkbox.value);
-        
-        courseCards.forEach(card => {
+
+        let visibleCount = 0;
+
+        courseCards.forEach((card, index) => {
             const title = card.dataset.courseTitle || '';
             const description = card.dataset.courseDescription || '';
             const status = card.dataset.status || '';
-            
+
             // Check search match
             const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
-            
+
             // Check filter match
             const matchesFilter = selectedFilters.length === 0 || selectedFilters.includes(status);
-            
+
             // Show/hide card
             if (matchesSearch && matchesFilter) {
-                card.style.display = 'flex';
+                card.style.display = 'block';
+                card.style.animation = `fadeInUp 0.6s ease-out ${index * 0.1}s both`;
+                visibleCount++;
             } else {
                 card.style.display = 'none';
             }
         });
-        
+
+        // Update stats
+        updateStats();
+
         // Check if no courses are visible
-        const visibleCourses = Array.from(courseCards).filter(card => card.style.display !== 'none');
         const noCoursesMessage = document.getElementById('noCoursesMessage');
-        
-        if (visibleCourses.length === 0 && courseCards.length > 0) {
-            if (!noCoursesMessage) {
-                const message = document.createElement('div');
-                message.id = 'noCoursesMessage';
-                message.className = 'no-courses';
-                message.innerHTML = `
-                    <i class="fas fa-search"></i>
+
+        if (visibleCount === 0 && courseCards.length > 0) {
+            if (noCoursesMessage) {
+                noCoursesMessage.style.display = 'flex';
+                noCoursesMessage.innerHTML = `
+                    <div class="no-courses-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
                     <h3>No courses found</h3>
-                    <p>Try adjusting your search or filter criteria.</p>
+                    <p>Try adjusting your search or filter criteria to find your courses.</p>
                 `;
-                document.getElementById('coursesContainer').appendChild(message);
             }
-        } else if (noCoursesMessage && visibleCourses.length > 0) {
-            noCoursesMessage.remove();
+        } else if (noCoursesMessage) {
+            noCoursesMessage.style.display = 'none';
         }
+    }
+
+    function updateStats() {
+        const visibleCards = Array.from(courseCards).filter(card => card.style.display !== 'none');
+        const totalVisible = visibleCards.length;
+        const inProgressVisible = visibleCards.filter(card => card.dataset.status === 'in-progress').length;
+        const completedVisible = visibleCards.filter(card => card.dataset.status === 'completed').length;
+
+        animateNumber('totalCourses', totalVisible);
+        animateNumber('inProgressCourses', inProgressVisible);
+        animateNumber('completedCourses', completedVisible);
+    }
+
+    function animateNumber(elementId, targetNumber) {
+        const element = document.getElementById(elementId);
+        const currentNumber = parseInt(element.textContent) || 0;
+        const increment = targetNumber > currentNumber ? 1 : -1;
+        const duration = 300;
+        const steps = Math.abs(targetNumber - currentNumber);
+        const stepDuration = steps > 0 ? duration / steps : 0;
+
+        let current = currentNumber;
+        const timer = setInterval(() => {
+            current += increment;
+            element.textContent = current;
+
+            if (current === targetNumber) {
+                clearInterval(timer);
+            }
+        }, stepDuration);
     }
 }
 
 function initializeFilterDropdown() {
-    const filterBtn = document.querySelector('.filter-btn');
-    const filterMenu = document.querySelector('.filter-menu');
-    
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+
     filterBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        filterMenu.classList.toggle('active');
+        filterDropdown.classList.toggle('show');
+        filterBtn.classList.toggle('active');
     });
-    
+
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.filter-dropdown') && filterMenu.classList.contains('active')) {
-            filterMenu.classList.remove('active');
+        if (!filterBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
+            filterDropdown.classList.remove('show');
+            filterBtn.classList.remove('active');
         }
     });
+
+    // Initialize progress circles
+    initializeProgressCircles();
+
+    // Initialize button interactions
+    initializeButtonInteractions();
+
+    // Initialize theme updates
+    initializeThemeUpdates();
+}
+
+function initializeProgressCircles() {
+    const progressRings = document.querySelectorAll('.progress-ring-progress');
+    progressRings.forEach(ring => {
+        const circumference = 2 * Math.PI * 26; // radius = 26
+        const progress = parseInt(ring.getAttribute('data-progress')) || 0;
+
+        ring.style.strokeDasharray = `${circumference} ${circumference}`;
+        ring.style.strokeDashoffset = circumference;
+
+        // Animate on load
+        setTimeout(() => {
+            const offset = circumference - (progress / 100) * circumference;
+            ring.style.strokeDashoffset = offset;
+        }, 500);
+    });
+}
+
+function initializeButtonInteractions() {
+    const buttons = document.querySelectorAll('.btn-primary, .btn-secondary');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Add click animation
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 100);
+        });
+    });
+}
+
+function initializeThemeUpdates() {
+    function updateThemeStyles() {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const cards = document.querySelectorAll('.course-card, .stat-card');
+
+        cards.forEach(card => {
+            if (theme === 'dark') {
+                card.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            } else {
+                card.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+            }
+        });
+    }
+
+    // Update styles on theme change
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                updateThemeStyles();
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    // Initial theme setup
+    updateThemeStyles();
 }
 
 async function loadRecommendedCourses() {
@@ -268,7 +455,13 @@ async function loadRecommendedCourses() {
                 container.appendChild(courseCard);
             });
         } else {
-            container.innerHTML = '<p>No recommended courses available at the moment.</p>';
+            container.innerHTML = `
+                <div class="no-recommendations">
+                    <i class="fas fa-compass"></i>
+                    <p>No recommended courses available at the moment.</p>
+                    <p>Check out our full course catalog to discover new learning opportunities!</p>
+                </div>
+            `;
         }
     } catch (error) {
         console.error('Error loading recommended courses:', error);
@@ -279,22 +472,84 @@ async function loadRecommendedCourses() {
 function createRecommendedCourseCard(course) {
     const card = document.createElement('div');
     card.className = 'course-card recommended';
+
+    // Determine course type for banner styling
+    const courseType = getCourseType(course.title);
+
     card.innerHTML = `
-        <div class="course-image">
-            <img src="${course.imageUrl || 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'}" alt="${course.title}">
+        <div class="course-banner ${courseType}">
+            <div class="course-status-badge">
+                <i class="fas fa-star"></i>
+                <span>Recommended</span>
+            </div>
+
+            <div class="course-icon">
+                <i class="${getCourseIcon(course.title)}"></i>
+            </div>
+
+            <div class="course-price-overlay">
+                ${course.isFree ?
+                    '<div class="free-badge"><i class="fas fa-gift"></i> Free</div>' :
+                    `<div class="price-badge">$${course.price}</div>`
+                }
+            </div>
         </div>
+
         <div class="course-content">
             <h3 class="course-title">${course.title}</h3>
             <p class="course-description">${course.description}</p>
+
             <div class="course-meta">
-                <span><i class="fas fa-clock"></i> ${course.duration}</span>
-                <span><i class="fas fa-layer-group"></i> ${course.moduleCount} modules</span>
-                ${course.isFree ? '<span class="free-badge">Free</span>' : `<span class="price">$${course.price}</span>`}
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>${course.duration}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-layer-group"></i>
+                    <span>${course.moduleCount} modules</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-signal"></i>
+                    <span>${course.level}</span>
+                </div>
             </div>
-            <a href="/courses/${course.id}/" class="btn-secondary">View Course</a>
+
+            <div class="course-footer">
+                <div class="course-actions">
+                    <a href="/courses/${course.slug}/" class="btn-primary">
+                        <i class="fas fa-play"></i>
+                        Start Learning
+                    </a>
+
+                    <a href="/courses/${course.slug}/" class="btn-secondary">
+                        <i class="fas fa-info-circle"></i>
+                        View Details
+                    </a>
+                </div>
+            </div>
         </div>
     `;
     return card;
+}
+
+function getCourseType(title) {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('sql')) return 'sql';
+    if (titleLower.includes('power') || titleLower.includes('bi')) return 'powerbi';
+    if (titleLower.includes('python')) return 'python';
+    if (titleLower.includes('tableau')) return 'tableau';
+    if (titleLower.includes('bootcamp')) return 'bootcamp';
+    return 'sql'; // default
+}
+
+function getCourseIcon(title) {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('sql')) return 'fas fa-database';
+    if (titleLower.includes('power') || titleLower.includes('bi')) return 'fas fa-chart-bar';
+    if (titleLower.includes('python')) return 'fab fa-python';
+    if (titleLower.includes('tableau')) return 'fas fa-chart-pie';
+    if (titleLower.includes('bootcamp')) return 'fas fa-chart-line';
+    return 'fas fa-database'; // default
 }
 </script>
 {% endblock %}

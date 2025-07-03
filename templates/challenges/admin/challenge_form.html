@@ -48,6 +48,56 @@
     border-color: var(--border-color, #334155);
 }
 
+/* Checkbox group styling */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    background: var(--bg-secondary, #f8fafc);
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    margin: 0;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.checkbox-group label:hover {
+    background: var(--bg-hover, rgba(59, 130, 246, 0.1));
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin: 0;
+}
+
+[data-theme="dark"] .checkbox-group {
+    background: var(--bg-secondary, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
+/* Info boxes */
+.engine-sql-info {
+    background: var(--bg-secondary, #f8fafc);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+[data-theme="dark"] .engine-sql-info {
+    background: var(--bg-secondary, #1e293b);
+    border-color: var(--border-color, #334155);
+}
+
 .difficulty-preview {
     display: inline-flex;
     align-items: center;
@@ -296,9 +346,142 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
         
+        <!-- Subscription & Categorization Section -->
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">category</span>
+                Subscription & Categorization
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.subscription_type.id_for_label }}">{{ form.subscription_type.label }}</label>
+                    {{ form.subscription_type }}
+                    {% if form.subscription_type.help_text %}
+                        <div class="help-text">{{ form.subscription_type.help_text }}</div>
+                    {% endif %}
+                    {% if form.subscription_type.errors %}
+                        <div class="error-text">{{ form.subscription_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>
+                    {{ form.company }}
+                    {% if form.company.help_text %}
+                        <div class="help-text">{{ form.company.help_text }}</div>
+                    {% endif %}
+                    {% if form.company.errors %}
+                        <div class="error-text">{{ form.company.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}</label>
+                {{ form.tags }}
+                {% if form.tags.help_text %}
+                    <div class="help-text">{{ form.tags.help_text }}</div>
+                {% endif %}
+                {% if form.tags.errors %}
+                    <div class="error-text">{{ form.tags.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Database Configuration Section -->
         <div class="form-section">
             <h4>
                 <span class="material-icons">storage</span>
+                Database Configuration
+            </h4>
+
+            <div class="form-group">
+                <label for="{{ form.database_schema_type.id_for_label }}">{{ form.database_schema_type.label }}</label>
+                {{ form.database_schema_type }}
+                {% if form.database_schema_type.help_text %}
+                    <div class="help-text">{{ form.database_schema_type.help_text }}</div>
+                {% endif %}
+                {% if form.database_schema_type.errors %}
+                    <div class="error-text">{{ form.database_schema_type.errors.0 }}</div>
+                {% endif %}
+
+                <div class="schema-info" style="margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+                    <h5 style="margin: 0 0 0.5rem 0;">Available Database Schemas:</h5>
+                    <ul style="margin: 0; padding-left: 1.5rem;">
+                        <li><strong>Employee Database:</strong> Standard employee table with departments and salaries</li>
+                        <li><strong>E-commerce Database:</strong> Orders and returns tables for e-commerce challenges</li>
+                        <li><strong>Student Database:</strong> Students, courses, and enrollments tables for academic challenges</li>
+                        <li><strong>Custom Schema:</strong> Define your own database schema and initialization SQL</li>
+                    </ul>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9em; color: var(--text-secondary);">
+                        <strong>Note:</strong> Predefined schemas are configured in settings.py with sample data for all supported database engines.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Custom Schema Fields (only shown when custom is selected) -->
+            <div id="custom-schema-fields" style="display: none;">
+                <div class="form-group">
+                    <label for="{{ form.custom_initialization_sql.id_for_label }}">{{ form.custom_initialization_sql.label }}</label>
+                    {{ form.custom_initialization_sql }}
+                    {% if form.custom_initialization_sql.help_text %}
+                        <div class="help-text">{{ form.custom_initialization_sql.help_text }}</div>
+                    {% endif %}
+                    {% if form.custom_initialization_sql.errors %}
+                        <div class="error-text">{{ form.custom_initialization_sql.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.custom_database_schema_text.id_for_label }}">{{ form.custom_database_schema_text.label }}</label>
+                    {{ form.custom_database_schema_text }}
+                    {% if form.custom_database_schema_text.help_text %}
+                        <div class="help-text">{{ form.custom_database_schema_text.help_text }}</div>
+                    {% endif %}
+                    {% if form.custom_database_schema_text.errors %}
+                        <div class="error-text">{{ form.custom_database_schema_text.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Engine Support Section -->
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">dns</span>
+                Multi-Database Engine Support
+            </h4>
+
+            <div class="form-group">
+                <label for="{{ form.supported_engines.id_for_label }}">{{ form.supported_engines.label }}</label>
+                <div class="checkbox-group">
+                    {{ form.supported_engines }}
+                </div>
+                {% if form.supported_engines.help_text %}
+                    <div class="help-text">{{ form.supported_engines.help_text }}</div>
+                {% endif %}
+                {% if form.supported_engines.errors %}
+                    <div class="error-text">{{ form.supported_engines.errors.0 }}</div>
+                {% endif %}
+
+                <div class="engine-info" style="margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+                    <h5 style="margin: 0 0 0.5rem 0;">Supported Database Engines:</h5>
+                    <ul style="margin: 0; padding-left: 1.5rem;">
+                        <li><strong>SQLite:</strong> File-based database, great for development and testing</li>
+                        <li><strong>PostgreSQL:</strong> Advanced open-source database with rich features</li>
+                        <li><strong>MySQL:</strong> Popular open-source database, widely used in web applications</li>
+                    </ul>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9em; color: var(--text-secondary);">
+                        <strong>Note:</strong> Database schemas are now predefined in settings.py for consistency across all challenges.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h4>
+                <span class="material-icons">upload_file</span>
                 Sample Data
             </h4>
             
@@ -345,4 +528,29 @@ document.addEventListener('DOMContentLoaded', function() {
         </a>
     </div>
 </form>
+
+<script>
+// Toggle custom schema fields based on database schema type selection
+function toggleCustomSchemaFields(schemaType) {
+    const customFields = document.getElementById('custom-schema-fields');
+    if (customFields) {
+        if (schemaType === 'custom') {
+            customFields.style.display = 'block';
+        } else {
+            customFields.style.display = 'none';
+        }
+    }
+}
+
+// Initialize custom schema fields visibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const schemaTypeField = document.querySelector('select[name="database_schema_type"]');
+    if (schemaTypeField) {
+        toggleCustomSchemaFields(schemaTypeField.value);
+        schemaTypeField.addEventListener('change', function() {
+            toggleCustomSchemaFields(this.value);
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -102,8 +102,12 @@ WSGI_APPLICATION = "sqlplayground.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3'),
+        "NAME": BASE_DIR / os.environ.get('DATABASE_NAME', 'db.sqlite3') if os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3') == 'django.db.backends.sqlite3' else os.environ.get('DATABASE_NAME', ''),
+        "HOST": os.environ.get('DATABASE_HOST', ''),
+        "PORT": os.environ.get('DATABASE_PORT', ''),
+        "USER": os.environ.get('DATABASE_USER', ''),
+        "PASSWORD": os.environ.get('DATABASE_PASSWORD', ''),
     }
 }
 
@@ -130,26 +134,26 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = os.environ.get('LANGUAGE_CODE', 'en-us')
 
-TIME_ZONE = "UTC"
+TIME_ZONE = os.environ.get('TIME_ZONE', 'UTC')
 
-USE_I18N = True
+USE_I18N = os.environ.get('USE_I18N', 'True').lower() == 'true'
 
-USE_TZ = True
+USE_TZ = os.environ.get('USE_TZ', 'True').lower() == 'true'
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "/static/"
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media files
-MEDIA_URL = "/media/"
+MEDIA_URL = os.environ.get('MEDIA_URL', '/media/')
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
@@ -165,11 +169,11 @@ LOGIN_URL = "/auth/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-# Email Configuration for Gmail SMTP
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# Email Configuration
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')  # Your Gmail address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # Your Gmail App Password
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SQL Playground <noreply@sqlplayground.com>')
@@ -180,8 +184,12 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SQL Playground <norep
 # Stripe Payment Gateway Settings
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "pk_test_51RfhCjRn9gJUDL8d3zAbYQmqBM4irMCtLdt9cTpAR7cBZCRIqG4TpItoGuoakHvT2Ao30blthxbwjJl2hNRje5T5002RfQDrZq")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "sk_test_51RfhCjRn9gJUDL8dtKvoe4UsNByCLne2YXHs5sBg2718erSVB3ErbjbHxrIwGOlUzNSZ2ZZFRvwL2RL31OO4DMsc00IGNEEQbO")
-STRIPE_CURRENCY = "usd"  # USD for Stripe
+STRIPE_CURRENCY = os.environ.get("STRIPE_CURRENCY", "usd")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_LIVE_MODE = os.environ.get('STRIPE_LIVE_MODE', 'False').lower() == 'true'
+
+# Site URL for Stripe redirects
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 
 # Messages Framework
 MESSAGE_TAGS = {
@@ -197,26 +205,373 @@ USER_DATABASES_DIR = BASE_DIR / "user_databases"
 if not USER_DATABASES_DIR.exists():
     USER_DATABASES_DIR.mkdir(exist_ok=True)
 
+# Challenge Database Engine Settings
+CHALLENGE_POSTGRES_HOST = os.environ.get('CHALLENGE_POSTGRES_HOST', 'localhost')
+CHALLENGE_POSTGRES_PORT = int(os.environ.get('CHALLENGE_POSTGRES_PORT', '5432'))
+CHALLENGE_POSTGRES_USER = os.environ.get('CHALLENGE_POSTGRES_USER', 'postgres')
+CHALLENGE_POSTGRES_PASSWORD = os.environ.get('CHALLENGE_POSTGRES_PASSWORD', 'password')
+
+CHALLENGE_MYSQL_HOST = os.environ.get('CHALLENGE_MYSQL_HOST', 'localhost')
+CHALLENGE_MYSQL_PORT = int(os.environ.get('CHALLENGE_MYSQL_PORT', '3306'))
+CHALLENGE_MYSQL_USER = os.environ.get('CHALLENGE_MYSQL_USER', 'root')
+CHALLENGE_MYSQL_PASSWORD = os.environ.get('CHALLENGE_MYSQL_PASSWORD', 'password')
+
+# Predefined Database Schemas for Challenges
+CHALLENGE_DATABASE_SCHEMAS = {
+    'employees': {
+        'name': 'Employee Database',
+        'description': 'Standard employee database with departments and salaries',
+        'schema': {
+            "tables": {
+                "employees": {
+                    "columns": [
+                        {"name": "id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "name", "type": "TEXT"},
+                        {"name": "department", "type": "TEXT"},
+                        {"name": "salary", "type": "INTEGER"}
+                    ]
+                }
+            }
+        },
+        'initialization_sql': {
+            'sqlite': """
+                CREATE TABLE IF NOT EXISTS employees (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    department TEXT,
+                    salary INTEGER
+                );
+
+                INSERT OR REPLACE INTO employees (id, name, department, salary) VALUES
+                (1, 'John Doe', 'Engineering', 75000),
+                (2, 'Jane Smith', 'Marketing', 65000),
+                (3, 'Bob Johnson', 'Engineering', 80000),
+                (4, 'Alice Brown', 'HR', 60000),
+                (5, 'Charlie Wilson', 'Sales', 70000);
+            """,
+            'postgresql': """
+                CREATE TABLE IF NOT EXISTS employees (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255),
+                    department VARCHAR(255),
+                    salary INTEGER
+                );
+
+                INSERT INTO employees (id, name, department, salary) VALUES
+                (1, 'John Doe', 'Engineering', 75000),
+                (2, 'Jane Smith', 'Marketing', 65000),
+                (3, 'Bob Johnson', 'Engineering', 80000),
+                (4, 'Alice Brown', 'HR', 60000),
+                (5, 'Charlie Wilson', 'Sales', 70000)
+                ON CONFLICT (id) DO UPDATE SET
+                name = EXCLUDED.name,
+                department = EXCLUDED.department,
+                salary = EXCLUDED.salary;
+            """,
+            'mysql': """
+                CREATE TABLE IF NOT EXISTS employees (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255),
+                    department VARCHAR(255),
+                    salary INTEGER
+                );
+
+                INSERT INTO employees (id, name, department, salary) VALUES
+                (1, 'John Doe', 'Engineering', 75000),
+                (2, 'Jane Smith', 'Marketing', 65000),
+                (3, 'Bob Johnson', 'Engineering', 80000),
+                (4, 'Alice Brown', 'HR', 60000),
+                (5, 'Charlie Wilson', 'Sales', 70000)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                department = VALUES(department),
+                salary = VALUES(salary);
+            """
+        }
+    },
+    'ecommerce': {
+        'name': 'E-commerce Database',
+        'description': 'Orders and returns database for e-commerce challenges',
+        'schema': {
+            "tables": {
+                "orders": {
+                    "columns": [
+                        {"name": "customer_name", "type": "TEXT"},
+                        {"name": "order_date", "type": "DATE"},
+                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "sales", "type": "INTEGER"}
+                    ]
+                },
+                "returns": {
+                    "columns": [
+                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "return_date", "type": "DATE"}
+                    ]
+                }
+            }
+        },
+        'initialization_sql': {
+            'sqlite': """
+                CREATE TABLE IF NOT EXISTS orders (
+                    customer_name TEXT,
+                    order_date DATE,
+                    order_id INTEGER PRIMARY KEY,
+                    sales INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS returns (
+                    order_id INTEGER PRIMARY KEY,
+                    return_date DATE
+                );
+
+                INSERT OR REPLACE INTO orders (customer_name, order_date, order_id, sales) VALUES
+                ('Alice Johnson', '2023-01-15', 1001, 250),
+                ('Bob Smith', '2023-01-16', 1002, 180),
+                ('Charlie Brown', '2023-01-17', 1003, 320),
+                ('Diana Prince', '2023-01-18', 1004, 150),
+                ('Eve Wilson', '2023-01-19', 1005, 275);
+
+                INSERT OR REPLACE INTO returns (order_id, return_date) VALUES
+                (1002, '2023-01-20'),
+                (1004, '2023-01-22');
+            """,
+            'postgresql': """
+                CREATE TABLE IF NOT EXISTS orders (
+                    customer_name VARCHAR(255),
+                    order_date DATE,
+                    order_id SERIAL PRIMARY KEY,
+                    sales INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS returns (
+                    order_id INTEGER PRIMARY KEY,
+                    return_date DATE
+                );
+
+                INSERT INTO orders (customer_name, order_date, order_id, sales) VALUES
+                ('Alice Johnson', '2023-01-15', 1001, 250),
+                ('Bob Smith', '2023-01-16', 1002, 180),
+                ('Charlie Brown', '2023-01-17', 1003, 320),
+                ('Diana Prince', '2023-01-18', 1004, 150),
+                ('Eve Wilson', '2023-01-19', 1005, 275)
+                ON CONFLICT (order_id) DO NOTHING;
+
+                INSERT INTO returns (order_id, return_date) VALUES
+                (1002, '2023-01-20'),
+                (1004, '2023-01-22')
+                ON CONFLICT (order_id) DO NOTHING;
+            """,
+            'mysql': """
+                CREATE TABLE IF NOT EXISTS orders (
+                    customer_name VARCHAR(255),
+                    order_date DATE,
+                    order_id INT AUTO_INCREMENT PRIMARY KEY,
+                    sales INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS returns (
+                    order_id INTEGER PRIMARY KEY,
+                    return_date DATE
+                );
+
+                INSERT IGNORE INTO orders (customer_name, order_date, order_id, sales) VALUES
+                ('Alice Johnson', '2023-01-15', 1001, 250),
+                ('Bob Smith', '2023-01-16', 1002, 180),
+                ('Charlie Brown', '2023-01-17', 1003, 320),
+                ('Diana Prince', '2023-01-18', 1004, 150),
+                ('Eve Wilson', '2023-01-19', 1005, 275);
+
+                INSERT IGNORE INTO returns (order_id, return_date) VALUES
+                (1002, '2023-01-20'),
+                (1004, '2023-01-22');
+            """
+        }
+    },
+    'students': {
+        'name': 'Student Database',
+        'description': 'Student enrollment and grades database',
+        'schema': {
+            "tables": {
+                "students": {
+                    "columns": [
+                        {"name": "student_id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "name", "type": "TEXT"},
+                        {"name": "major", "type": "TEXT"},
+                        {"name": "year", "type": "INTEGER"}
+                    ]
+                },
+                "courses": {
+                    "columns": [
+                        {"name": "course_id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "course_name", "type": "TEXT"},
+                        {"name": "credits", "type": "INTEGER"}
+                    ]
+                },
+                "enrollments": {
+                    "columns": [
+                        {"name": "student_id", "type": "INTEGER"},
+                        {"name": "course_id", "type": "INTEGER"},
+                        {"name": "grade", "type": "TEXT"}
+                    ]
+                }
+            }
+        },
+        'initialization_sql': {
+            'sqlite': """
+                CREATE TABLE IF NOT EXISTS students (
+                    student_id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    major TEXT,
+                    year INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS courses (
+                    course_id INTEGER PRIMARY KEY,
+                    course_name TEXT,
+                    credits INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS enrollments (
+                    student_id INTEGER,
+                    course_id INTEGER,
+                    grade TEXT,
+                    FOREIGN KEY (student_id) REFERENCES students(student_id),
+                    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+                );
+
+                INSERT OR REPLACE INTO students VALUES
+                (1, 'Alice Johnson', 'Computer Science', 3),
+                (2, 'Bob Smith', 'Mathematics', 2),
+                (3, 'Charlie Brown', 'Physics', 4),
+                (4, 'Diana Prince', 'Computer Science', 1),
+                (5, 'Eve Wilson', 'Mathematics', 3);
+
+                INSERT OR REPLACE INTO courses VALUES
+                (101, 'Database Systems', 3),
+                (102, 'Algorithms', 4),
+                (103, 'Calculus I', 3),
+                (104, 'Physics I', 4);
+
+                INSERT OR REPLACE INTO enrollments VALUES
+                (1, 101, 'A'),
+                (1, 102, 'B+'),
+                (2, 103, 'A-'),
+                (3, 104, 'B'),
+                (4, 101, 'A-'),
+                (5, 103, 'A');
+            """,
+            'postgresql': """
+                CREATE TABLE IF NOT EXISTS students (
+                    student_id SERIAL PRIMARY KEY,
+                    name VARCHAR(255),
+                    major VARCHAR(255),
+                    year INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS courses (
+                    course_id SERIAL PRIMARY KEY,
+                    course_name VARCHAR(255),
+                    credits INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS enrollments (
+                    student_id INTEGER,
+                    course_id INTEGER,
+                    grade VARCHAR(10),
+                    FOREIGN KEY (student_id) REFERENCES students(student_id),
+                    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+                );
+
+                INSERT INTO students VALUES
+                (1, 'Alice Johnson', 'Computer Science', 3),
+                (2, 'Bob Smith', 'Mathematics', 2),
+                (3, 'Charlie Brown', 'Physics', 4),
+                (4, 'Diana Prince', 'Computer Science', 1),
+                (5, 'Eve Wilson', 'Mathematics', 3)
+                ON CONFLICT (student_id) DO NOTHING;
+
+                INSERT INTO courses VALUES
+                (101, 'Database Systems', 3),
+                (102, 'Algorithms', 4),
+                (103, 'Calculus I', 3),
+                (104, 'Physics I', 4)
+                ON CONFLICT (course_id) DO NOTHING;
+
+                INSERT INTO enrollments VALUES
+                (1, 101, 'A'),
+                (1, 102, 'B+'),
+                (2, 103, 'A-'),
+                (3, 104, 'B'),
+                (4, 101, 'A-'),
+                (5, 103, 'A');
+            """,
+            'mysql': """
+                CREATE TABLE IF NOT EXISTS students (
+                    student_id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255),
+                    major VARCHAR(255),
+                    year INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS courses (
+                    course_id INT AUTO_INCREMENT PRIMARY KEY,
+                    course_name VARCHAR(255),
+                    credits INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS enrollments (
+                    student_id INTEGER,
+                    course_id INTEGER,
+                    grade VARCHAR(10),
+                    FOREIGN KEY (student_id) REFERENCES students(student_id),
+                    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+                );
+
+                INSERT IGNORE INTO students VALUES
+                (1, 'Alice Johnson', 'Computer Science', 3),
+                (2, 'Bob Smith', 'Mathematics', 2),
+                (3, 'Charlie Brown', 'Physics', 4),
+                (4, 'Diana Prince', 'Computer Science', 1),
+                (5, 'Eve Wilson', 'Mathematics', 3);
+
+                INSERT IGNORE INTO courses VALUES
+                (101, 'Database Systems', 3),
+                (102, 'Algorithms', 4),
+                (103, 'Calculus I', 3),
+                (104, 'Physics I', 4);
+
+                INSERT IGNORE INTO enrollments VALUES
+                (1, 101, 'A'),
+                (1, 102, 'B+'),
+                (2, 103, 'A-'),
+                (3, 104, 'B'),
+                (4, 101, 'A-'),
+                (5, 103, 'A');
+            """
+        }
+    }
+}
+
 # Security Settings
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+SECURE_BROWSER_XSS_FILTER = os.environ.get('SECURE_BROWSER_XSS_FILTER', 'True').lower() == 'true'
+SECURE_CONTENT_TYPE_NOSNIFF = os.environ.get('SECURE_CONTENT_TYPE_NOSNIFF', 'True').lower() == 'true'
+X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
 
 # Session Settings
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', '86400'))  # 24 hours
+SESSION_SAVE_EVERY_REQUEST = os.environ.get('SESSION_SAVE_EVERY_REQUEST', 'True').lower() == 'true'
 
 # CSRF Settings
-CSRF_COOKIE_AGE = 31449600  # 1 year
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access for debugging
-CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_USE_SESSIONS = False  # Use cookies instead of sessions for CSRF tokens
-CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_AGE = int(os.environ.get('CSRF_COOKIE_AGE', '31449600'))  # 1 year
+CSRF_COOKIE_HTTPONLY = os.environ.get('CSRF_COOKIE_HTTPONLY', 'False').lower() == 'true'
+CSRF_COOKIE_SAMESITE = os.environ.get('CSRF_COOKIE_SAMESITE', 'Lax')
+CSRF_USE_SESSIONS = os.environ.get('CSRF_USE_SESSIONS', 'False').lower() == 'true'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
 
 # CKEditor 5 Configuration
-CKEDITOR_5_UPLOAD_PATH = "uploads/"
-CKEDITOR_5_IMAGE_UPLOAD_ENABLED = True
-CKEDITOR_5_FILE_UPLOAD_ENABLED = True
+CKEDITOR_5_UPLOAD_PATH = os.environ.get('CKEDITOR_5_UPLOAD_PATH', 'uploads/')
+CKEDITOR_5_IMAGE_UPLOAD_ENABLED = os.environ.get('CKEDITOR_5_IMAGE_UPLOAD_ENABLED', 'True').lower() == 'true'
+CKEDITOR_5_FILE_UPLOAD_ENABLED = os.environ.get('CKEDITOR_5_FILE_UPLOAD_ENABLED', 'True').lower() == 'true'
 
 CKEDITOR_5_CONFIGS = {
     'default': {
@@ -274,22 +629,203 @@ CKEDITOR_5_CONFIGS = {
 }
 
 # Admin Interface Configuration
-X_FRAME_OPTIONS = "SAMEORIGIN"
 SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 # File Upload Settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', '10485760'))  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', '10485760'))  # 10MB
 
-# Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'noreply@sqlplayground.com'
+# Challenge Database Schemas - Predefined schemas for SQL challenges
+CHALLENGE_DATABASE_SCHEMAS = {
+    'employees': {
+        'name': 'Employee Database',
+        'description': 'Standard employee database with departments and salaries',
+        'initialization_sql': {
+            'sqlite': """
+                CREATE TABLE IF NOT EXISTS employees (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT,
+                    department TEXT,
+                    salary INTEGER
+                );
 
-# Stripe settings
-STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_51RfhCjRn9gJUDL8d3zAbYQmqBM4irMCtLdt9cTpAR7cBZCRIqG4TpItoGuoakHvT2Ao30blthxbwjJl2hNRje5T5002RfQDrZq')  # Replace with your test key
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_51RfhCjRn9gJUDL8dtKvoe4UsNByCLne2YXHs5sBg2718erSVB3ErbjbHxrIwGOlUzNSZ2ZZFRvwL2RL31OO4DMsc00IGNEEQbO')  # Replace with your test key
-STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_1234567890abcdef')  # Replace with your webhook secret
-STRIPE_LIVE_MODE = os.environ.get('STRIPE_LIVE_MODE', 'False').lower() == 'true'
+                INSERT OR REPLACE INTO employees (id, name, department, salary) VALUES
+                (1, 'John Doe', 'Engineering', 75000),
+                (2, 'Jane Smith', 'Marketing', 65000),
+                (3, 'Bob Johnson', 'Engineering', 80000),
+                (4, 'Alice Brown', 'HR', 60000),
+                (5, 'Charlie Wilson', 'Sales', 70000);
+            """,
+            'postgresql': """
+                CREATE TABLE IF NOT EXISTS employees (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255),
+                    department VARCHAR(255),
+                    salary INTEGER
+                );
 
-# Site URL for Stripe redirects
-SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+                INSERT INTO employees (id, name, department, salary) VALUES
+                (1, 'John Doe', 'Engineering', 75000),
+                (2, 'Jane Smith', 'Marketing', 65000),
+                (3, 'Bob Johnson', 'Engineering', 80000),
+                (4, 'Alice Brown', 'HR', 60000),
+                (5, 'Charlie Wilson', 'Sales', 70000)
+                ON CONFLICT (id) DO UPDATE SET
+                name = EXCLUDED.name,
+                department = EXCLUDED.department,
+                salary = EXCLUDED.salary;
+            """,
+            'mysql': """
+                CREATE TABLE IF NOT EXISTS employees (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255),
+                    department VARCHAR(255),
+                    salary INTEGER
+                );
+
+                INSERT INTO employees (id, name, department, salary) VALUES
+                (1, 'John Doe', 'Engineering', 75000),
+                (2, 'Jane Smith', 'Marketing', 65000),
+                (3, 'Bob Johnson', 'Engineering', 80000),
+                (4, 'Alice Brown', 'HR', 60000),
+                (5, 'Charlie Wilson', 'Sales', 70000)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                department = VALUES(department),
+                salary = VALUES(salary);
+            """
+        },
+        'schema': {
+            "tables": {
+                "employees": {
+                    "columns": [
+                        {"name": "id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "name", "type": "TEXT"},
+                        {"name": "department", "type": "TEXT"},
+                        {"name": "salary", "type": "INTEGER"}
+                    ]
+                }
+            }
+        }
+    },
+    'ecommerce': {
+        'name': 'E-commerce Database',
+        'description': 'Orders and returns database for e-commerce challenges',
+        'initialization_sql': {
+            'sqlite': """
+                CREATE TABLE IF NOT EXISTS orders (
+                    customer_name TEXT,
+                    order_date DATE,
+                    order_id INTEGER PRIMARY KEY,
+                    sales INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS returns (
+                    order_id INTEGER PRIMARY KEY,
+                    return_date DATE
+                );
+
+                INSERT OR REPLACE INTO orders (customer_name, order_date, order_id, sales) VALUES
+                ('Alice Johnson', '2023-01-15', 1001, 250),
+                ('Bob Smith', '2023-01-16', 1002, 180),
+                ('Charlie Brown', '2023-01-17', 1003, 320),
+                ('Diana Prince', '2023-01-18', 1004, 150),
+                ('Eve Wilson', '2023-01-19', 1005, 280);
+
+                INSERT OR REPLACE INTO returns (order_id, return_date) VALUES
+                (1002, '2023-01-20'),
+                (1004, '2023-01-22');
+            """,
+            'postgresql': """
+                CREATE TABLE IF NOT EXISTS orders (
+                    customer_name VARCHAR(255),
+                    order_date DATE,
+                    order_id SERIAL PRIMARY KEY,
+                    sales INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS returns (
+                    order_id INTEGER PRIMARY KEY,
+                    return_date DATE
+                );
+
+                INSERT INTO orders (customer_name, order_date, order_id, sales) VALUES
+                ('Alice Johnson', '2023-01-15', 1001, 250),
+                ('Bob Smith', '2023-01-16', 1002, 180),
+                ('Charlie Brown', '2023-01-17', 1003, 320),
+                ('Diana Prince', '2023-01-18', 1004, 150),
+                ('Eve Wilson', '2023-01-19', 1005, 280)
+                ON CONFLICT (order_id) DO UPDATE SET
+                customer_name = EXCLUDED.customer_name,
+                order_date = EXCLUDED.order_date,
+                sales = EXCLUDED.sales;
+
+                INSERT INTO returns (order_id, return_date) VALUES
+                (1002, '2023-01-20'),
+                (1004, '2023-01-22')
+                ON CONFLICT (order_id) DO UPDATE SET
+                return_date = EXCLUDED.return_date;
+            """,
+            'mysql': """
+                CREATE TABLE IF NOT EXISTS orders (
+                    customer_name VARCHAR(255),
+                    order_date DATE,
+                    order_id INT AUTO_INCREMENT PRIMARY KEY,
+                    sales INTEGER
+                );
+
+                CREATE TABLE IF NOT EXISTS returns (
+                    order_id INT PRIMARY KEY,
+                    return_date DATE
+                );
+
+                INSERT INTO orders (customer_name, order_date, order_id, sales) VALUES
+                ('Alice Johnson', '2023-01-15', 1001, 250),
+                ('Bob Smith', '2023-01-16', 1002, 180),
+                ('Charlie Brown', '2023-01-17', 1003, 320),
+                ('Diana Prince', '2023-01-18', 1004, 150),
+                ('Eve Wilson', '2023-01-19', 1005, 280)
+                ON DUPLICATE KEY UPDATE
+                customer_name = VALUES(customer_name),
+                order_date = VALUES(order_date),
+                sales = VALUES(sales);
+
+                INSERT INTO returns (order_id, return_date) VALUES
+                (1002, '2023-01-20'),
+                (1004, '2023-01-22')
+                ON DUPLICATE KEY UPDATE
+                return_date = VALUES(return_date);
+            """
+        },
+        'schema': {
+            "tables": {
+                "orders": {
+                    "columns": [
+                        {"name": "customer_name", "type": "TEXT"},
+                        {"name": "order_date", "type": "DATE"},
+                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "sales", "type": "INTEGER"}
+                    ]
+                },
+                "returns": {
+                    "columns": [
+                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
+                        {"name": "return_date", "type": "DATE"}
+                    ]
+                }
+            }
+        }
+    },
+    'custom': {
+        'name': 'Custom Schema',
+        'description': 'Use custom database schema (for advanced challenges)',
+        'initialization_sql': {
+            'sqlite': '',
+            'postgresql': '',
+            'mysql': ''
+        },
+        'schema': {}
+    }
+}
+
+

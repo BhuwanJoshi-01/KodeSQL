@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.reorder-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.reorder-info {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.modules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.module-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    cursor: move;
+    transition: all 0.3s ease;
+}
+
+.module-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.module-item.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.module-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.module-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.drag-handle {
+    color: var(--text-secondary);
+    cursor: move;
+}
+
+.lessons-list {
+    margin-left: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.lesson-item {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+    cursor: move;
+    transition: all 0.3s ease;
+}
+
+.lesson-item:hover {
+    background: var(--bg-secondary);
+}
+
+.lesson-item.dragging {
+    opacity: 0.5;
+}
+
+.lesson-title {
+    color: var(--text-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.save-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.breadcrumb {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.drop-zone {
+    min-height: 60px;
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+    transition: all 0.3s ease;
+}
+
+.drop-zone.drag-over {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'courses:admin_courses_list' %}">Courses</a> /
+        <a href="{% url 'courses:admin_course_detail' course.slug %}">{{ course.title }}</a> /
+        Reorder Structure
+    </nav>
+
+    <div class="reorder-container">
+        <div class="form-header">
+            <h1>Reorder Course Structure</h1>
+            <p>Drag and drop modules and lessons to reorder them. Changes will be saved when you click "Save Order".</p>
+        </div>
+
+        <div class="reorder-info">
+            <h4>📋 Instructions:</h4>
+            <ul>
+                <li>Drag modules up or down to change their order in the course</li>
+                <li>Drag lessons within a module to reorder them</li>
+                <li>The new order will be reflected immediately for students</li>
+                <li>Click "Save Order" to confirm your changes</li>
+            </ul>
+        </div>
+
+        <form id="reorder-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="module_orders" id="module_orders">
+            <input type="hidden" name="lesson_orders" id="lesson_orders">
+
+            <div class="modules-list" id="modules-list">
+                {% for module in modules %}
+                <div class="module-item" data-module-id="{{ module.id }}">
+                    <div class="module-header">
+                        <div class="module-title">
+                            <span class="material-icons drag-handle">drag_indicator</span>
+                            <strong>{{ forloop.counter }}. {{ module.title }}</strong>
+                            <span style="color: var(--text-secondary); font-weight: normal;">({{ module.lessons.count }} lesson{{ module.lessons.count|pluralize }})</span>
+                        </div>
+                    </div>
+                    
+                    {% if module.lessons.exists %}
+                    <div class="lessons-list" data-module-id="{{ module.id }}">
+                        {% for lesson in module.lessons.all %}
+                        <div class="lesson-item" data-lesson-id="{{ lesson.id }}">
+                            <div class="lesson-title">
+                                <span class="material-icons drag-handle" style="font-size: 1rem;">drag_indicator</span>
+                                {{ forloop.counter }}. {{ lesson.title }}
+                                <span style="color: var(--text-secondary); font-size: 0.875rem;">({{ lesson.get_lesson_type_display }})</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="color: var(--text-secondary); font-style: italic; margin-left: 2rem;">
+                        No lessons in this module
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <h4>No modules found</h4>
+                    <p>Create some modules first before reordering.</p>
+                    <a href="{% url 'courses:admin_module_create' course.slug %}" class="btn btn-primary">
+                        <span class="material-icons">add</span>
+                        Add First Module
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if modules %}
+            <div class="save-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-icons">save</span>
+                    Save Order
+                </button>
+                
+                <button type="button" class="btn btn-secondary" onclick="resetOrder()">
+                    <span class="material-icons">refresh</span>
+                    Reset to Original
+                </button>
+                
+                <a href="{% url 'courses:admin_course_detail' course.slug %}" class="btn btn-outline">
+                    <span class="material-icons">cancel</span>
+                    Cancel
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // This is a placeholder for drag-and-drop functionality
+    // For now, we'll show a message that this feature is coming soon
+    
+    const modulesList = document.getElementById('modules-list');
+    const form = document.getElementById('reorder-form');
+    
+    if (modulesList && modulesList.children.length > 0) {
+        // Add a notice about drag-and-drop
+        const notice = document.createElement('div');
+        notice.style.cssText = `
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+            text-align: center;
+        `;
+        notice.innerHTML = `
+            <strong>🚧 Drag & Drop Coming Soon!</strong><br>
+            <small>For now, you can reorder modules and lessons through the individual edit forms. 
+            Drag-and-drop functionality will be added in the next update.</small>
+        `;
+        
+        modulesList.parentNode.insertBefore(notice, modulesList);
+        
+        // Hide the save button for now
+        const saveActions = document.querySelector('.save-actions');
+        if (saveActions) {
+            saveActions.style.display = 'none';
+        }
+    }
+});
+
+function resetOrder() {
+    // Placeholder function
+    alert('Reset functionality will be implemented with drag-and-drop.');
+}
+</script>
+{% endblock %}

@@ -10,7 +10,7 @@ function initSQLEditor() {
         const theme = document.documentElement.getAttribute('data-theme');
         
         monacoEditor = monaco.editor.create(document.getElementById('sql-editor'), {
-            value: '-- Write your SQL query here\nSELECT * FROM users LIMIT 10;',
+            value: '',
             language: 'sql',
             theme: theme === 'dark' ? 'vs-dark' : 'vs',
             automaticLayout: true,

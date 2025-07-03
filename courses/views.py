@@ -19,10 +19,13 @@ import stripe
 import uuid
 
 from .models import (
-    Course, CourseModule, CourseLesson, UserCourseEnrollment,
+    Course, CourseModule, CourseLesson, LessonResource, UserCourseEnrollment,
     CourseReview, CourseCertificate, CoursePayment, SubscriptionPlan, UserSubscription
 )
-from .forms import CourseForm, CourseModuleForm, CourseLessonForm, CourseFilterForm, SubscriptionPlanForm
+from .forms import (
+    CourseForm, CourseModuleForm, CourseLessonForm, LessonResourceForm,
+    BulkResourceUploadForm, CourseStructureReorderForm, CourseFilterForm, SubscriptionPlanForm
+)
 
 
 def courses_list(request):
@@ -56,6 +59,16 @@ def courses_list(request):
         enrollment_count=Count('enrollments', filter=Q(enrollments__status__in=['active', 'completed'])),
         avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True))
     ).order_by('-is_featured', 'order', '-created_at')
+
+    # Add category classification for frontend filtering
+    for course in courses:
+        # Determine course category for tab filtering
+        if 'live' in course.course_type.lower() or 'live' in course.title.lower():
+            course.display_category = 'live'
+        elif 'power bi' in course.title.lower() or 'tableau' in course.title.lower() or course.category == 'tools':
+            course.display_category = 'tools'
+        else:
+            course.display_category = 'recorded'
 
     # Pagination
     paginator = Paginator(courses, 12)
@@ -183,6 +196,122 @@ def my_courses(request):
 
 
 @login_required
+def course_watch(request, slug, module_id=None, lesson_id=None):
+    """
+    Course watching page with video player and lesson navigation.
+    """
+    # Get course with all related data
+    course = get_object_or_404(
+        Course.objects.select_related('instructor').prefetch_related(
+            Prefetch('modules', queryset=CourseModule.objects.filter(is_active=True).order_by('order')),
+            Prefetch('modules__lessons', queryset=CourseLesson.objects.filter(is_active=True).order_by('order')),
+            Prefetch('modules__lessons__resources', queryset=LessonResource.objects.filter(is_downloadable=True).order_by('order'))
+        ),
+        slug=slug,
+        status='published'
+    )
+
+    # Check if user is enrolled
+    try:
+        user_enrollment = UserCourseEnrollment.objects.get(
+            user=request.user,
+            course=course,
+            status__in=['active', 'completed']
+        )
+    except UserCourseEnrollment.DoesNotExist:
+        messages.error(request, 'You need to enroll in this course to access the content.')
+        return redirect('courses:course_detail', slug=course.slug)
+
+    # Get current lesson
+    current_lesson = None
+    current_module = None
+
+    if lesson_id:
+        try:
+            current_lesson = CourseLesson.objects.select_related('module').prefetch_related('resources').get(
+                id=lesson_id,
+                module__course=course,
+                is_active=True
+            )
+            current_module = current_lesson.module
+        except CourseLesson.DoesNotExist:
+            pass
+
+    if not current_lesson:
+        if module_id:
+            try:
+                current_module = CourseModule.objects.get(
+                    id=module_id,
+                    course=course,
+                    is_active=True
+                )
+                current_lesson = current_module.lessons.filter(is_active=True).order_by('order').first()
+            except CourseModule.DoesNotExist:
+                pass
+
+        if not current_lesson:
+            # Get first lesson of first module
+            first_module = course.modules.filter(is_active=True).order_by('order').first()
+            if first_module:
+                current_lesson = first_module.lessons.filter(is_active=True).order_by('order').first()
+                current_module = first_module
+
+    # Update user's current progress
+    if current_lesson and current_module:
+        user_enrollment.current_module = current_module
+        user_enrollment.current_lesson = current_lesson
+        user_enrollment.last_accessed = timezone.now()
+        user_enrollment.save()
+
+    # Get next and previous lessons
+    next_lesson = None
+    prev_lesson = None
+
+    if current_lesson:
+        # Try to get next lesson in same module
+        next_lesson = current_lesson.module.lessons.filter(
+            order__gt=current_lesson.order,
+            is_active=True
+        ).order_by('order').first()
+
+        # If no next lesson in current module, get first lesson of next module
+        if not next_lesson:
+            next_module = course.modules.filter(
+                order__gt=current_lesson.module.order,
+                is_active=True
+            ).order_by('order').first()
+            if next_module:
+                next_lesson = next_module.lessons.filter(is_active=True).order_by('order').first()
+
+        # Try to get previous lesson in same module
+        prev_lesson = current_lesson.module.lessons.filter(
+            order__lt=current_lesson.order,
+            is_active=True
+        ).order_by('-order').first()
+
+        # If no previous lesson in current module, get last lesson of previous module
+        if not prev_lesson:
+            prev_module = course.modules.filter(
+                order__lt=current_lesson.module.order,
+                is_active=True
+            ).order_by('-order').first()
+            if prev_module:
+                prev_lesson = prev_module.lessons.filter(is_active=True).order_by('-order').first()
+
+    context = {
+        'page_title': f'Watch: {course.title}',
+        'course': course,
+        'current_lesson': current_lesson,
+        'current_module': current_module,
+        'next_lesson': next_lesson,
+        'prev_lesson': prev_lesson,
+        'user_enrollment': user_enrollment,
+        'completed_lessons': user_enrollment.completed_lessons.all(),
+    }
+    return render(request, 'courses/course_watch.html', context)
+
+
+@login_required
 def api_my_courses(request):
     """
     API endpoint for user's enrolled courses (matches reference JavaScript expectations).
@@ -239,6 +368,7 @@ def api_courses_list(request):
     for course in courses[:6]:  # Limit to 6 recommendations
         courses_data.append({
             'id': course.id,
+            'slug': course.slug,
             'title': course.title,
             'description': course.short_description,
             'duration': f"{course.duration_hours}h" if course.duration_hours else "0h",
@@ -335,8 +465,10 @@ def api_course_enroll(request, slug):
 @require_POST
 def api_lesson_complete(request, lesson_id):
     """
-    Mark a lesson as completed and update progress.
+    Mark a lesson as completed/incomplete and update progress.
     """
+    import json
+
     lesson = get_object_or_404(CourseLesson, id=lesson_id)
 
     # Get user's enrollment
@@ -352,8 +484,20 @@ def api_lesson_complete(request, lesson_id):
             'message': 'You are not enrolled in this course.'
         })
 
-    # Mark lesson as completed
-    enrollment.completed_lessons.add(lesson)
+    # Get completion status from request
+    try:
+        data = json.loads(request.body)
+        is_completed = data.get('completed', True)
+    except (json.JSONDecodeError, AttributeError):
+        is_completed = True
+
+    # Mark lesson as completed or incomplete
+    if is_completed:
+        enrollment.completed_lessons.add(lesson)
+        message = 'Lesson marked as completed!'
+    else:
+        enrollment.completed_lessons.remove(lesson)
+        message = 'Lesson marked as incomplete!'
 
     # Update current lesson and module
     enrollment.current_lesson = lesson
@@ -364,11 +508,58 @@ def api_lesson_complete(request, lesson_id):
 
     return JsonResponse({
         'success': True,
-        'message': 'Lesson marked as completed!',
-        'progress': enrollment.progress_percentage,
+        'message': message,
+        'progress_percentage': enrollment.progress_percentage,
         'is_completed': enrollment.is_completed,
         'certificate_issued': enrollment.certificate_issued
     })
+
+
+@login_required
+def download_lesson_resource(request, resource_id):
+    """
+    Download a lesson resource with tracking.
+    """
+    resource = get_object_or_404(LessonResource, id=resource_id)
+
+    # Check if user is enrolled in the course
+    try:
+        enrollment = UserCourseEnrollment.objects.get(
+            user=request.user,
+            course=resource.lesson.module.course,
+            status__in=['active', 'completed']
+        )
+    except UserCourseEnrollment.DoesNotExist:
+        messages.error(request, 'You need to be enrolled in this course to download resources.')
+        return redirect('courses:course_detail', slug=resource.lesson.module.course.slug)
+
+    # Check if resource is downloadable
+    if not resource.is_downloadable:
+        messages.error(request, 'This resource is not available for download.')
+        return redirect('courses:course_watch_lesson',
+                       slug=resource.lesson.module.course.slug,
+                       lesson_id=resource.lesson.id)
+
+    # Increment download count
+    resource.download_count += 1
+    resource.save()
+
+    # Serve the file
+    from django.http import FileResponse
+    import os
+
+    if resource.file and os.path.exists(resource.file.path):
+        response = FileResponse(
+            open(resource.file.path, 'rb'),
+            as_attachment=True,
+            filename=os.path.basename(resource.file.name)
+        )
+        return response
+    else:
+        messages.error(request, 'Resource file not found.')
+        return redirect('courses:course_watch_lesson',
+                       slug=resource.lesson.module.course.slug,
+                       lesson_id=resource.lesson.id)
 
 
 @login_required
@@ -500,7 +691,9 @@ def admin_course_detail(request, slug):
     """
     course = get_object_or_404(
         Course.objects.select_related('instructor').prefetch_related(
-            'modules__lessons',
+            Prefetch('modules', queryset=CourseModule.objects.order_by('order')),
+            Prefetch('modules__lessons', queryset=CourseLesson.objects.order_by('order')),
+            Prefetch('modules__lessons__resources', queryset=LessonResource.objects.order_by('order')),
             'enrollments__user'
         ),
         slug=slug
@@ -560,6 +753,330 @@ def admin_course_delete(request, slug):
     course.delete()
     messages.success(request, f'Course "{course_title}" deleted successfully!')
     return redirect('courses:admin_courses_list')
+
+
+# Enhanced Admin Views for Course Content Management
+
+@staff_member_required
+def admin_module_create(request, course_slug):
+    """
+    Create new course module.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+
+    if request.method == 'POST':
+        form = CourseModuleForm(request.POST, course=course)
+        if form.is_valid():
+            module = form.save()
+            messages.success(request, f'Module "{module.title}" created successfully!')
+
+            # Redirect based on request
+            if request.POST.get('save_and_add_lesson'):
+                return redirect('courses:admin_lesson_create', course_slug=course.slug, module_id=module.id)
+            elif request.POST.get('save_and_continue'):
+                return redirect('courses:admin_module_edit', course_slug=course.slug, module_id=module.id)
+            else:
+                return redirect('courses:admin_course_detail', slug=course.slug)
+    else:
+        form = CourseModuleForm(course=course)
+
+    context = {
+        'page_title': f'Add Module - {course.title}',
+        'form': form,
+        'course': course,
+        'action': 'create'
+    }
+    return render(request, 'courses/admin/module_form.html', context)
+
+
+@staff_member_required
+def admin_module_edit(request, course_slug, module_id):
+    """
+    Edit course module.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    module = get_object_or_404(CourseModule, id=module_id, course=course)
+
+    if request.method == 'POST':
+        form = CourseModuleForm(request.POST, instance=module, course=course)
+        if form.is_valid():
+            module = form.save()
+            messages.success(request, f'Module "{module.title}" updated successfully!')
+
+            # Redirect based on request
+            if request.POST.get('save_and_add_lesson'):
+                return redirect('courses:admin_lesson_create', course_slug=course.slug, module_id=module.id)
+            else:
+                return redirect('courses:admin_course_detail', slug=course.slug)
+    else:
+        form = CourseModuleForm(instance=module, course=course)
+
+    context = {
+        'page_title': f'Edit Module - {module.title}',
+        'form': form,
+        'course': course,
+        'module': module,
+        'action': 'edit'
+    }
+    return render(request, 'courses/admin/module_form.html', context)
+
+
+@staff_member_required
+@require_POST
+def admin_module_delete(request, course_slug, module_id):
+    """
+    Delete course module.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    module = get_object_or_404(CourseModule, id=module_id, course=course)
+
+    module_title = module.title
+    lesson_count = module.lessons.count()
+
+    module.delete()
+    messages.success(
+        request,
+        f'Module "{module_title}" and its {lesson_count} lesson(s) deleted successfully!'
+    )
+    return redirect('courses:admin_course_detail', slug=course.slug)
+
+
+@staff_member_required
+def admin_lesson_create(request, course_slug, module_id):
+    """
+    Create new lesson.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    module = get_object_or_404(CourseModule, id=module_id, course=course)
+
+    if request.method == 'POST':
+        form = CourseLessonForm(request.POST, request.FILES, module=module)
+        if form.is_valid():
+            lesson = form.save()
+            messages.success(request, f'Lesson "{lesson.title}" created successfully!')
+
+            # Redirect based on request
+            if request.POST.get('save_and_add_resources'):
+                return redirect('courses:admin_lesson_resources', course_slug=course.slug, lesson_id=lesson.id)
+            elif request.POST.get('save_and_continue'):
+                return redirect('courses:admin_lesson_edit', course_slug=course.slug, lesson_id=lesson.id)
+            else:
+                return redirect('courses:admin_course_detail', slug=course.slug)
+    else:
+        form = CourseLessonForm(module=module)
+
+    context = {
+        'page_title': f'Add Lesson - {module.title}',
+        'form': form,
+        'course': course,
+        'module': module,
+        'action': 'create'
+    }
+    return render(request, 'courses/admin/lesson_form.html', context)
+
+
+@staff_member_required
+def admin_lesson_edit(request, course_slug, lesson_id):
+    """
+    Edit lesson.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    lesson = get_object_or_404(CourseLesson, id=lesson_id, module__course=course)
+
+    if request.method == 'POST':
+        form = CourseLessonForm(request.POST, request.FILES, instance=lesson, module=lesson.module)
+        if form.is_valid():
+            lesson = form.save()
+            messages.success(request, f'Lesson "{lesson.title}" updated successfully!')
+
+            # Redirect based on request
+            if request.POST.get('save_and_add_resources'):
+                return redirect('courses:admin_lesson_resources', course_slug=course.slug, lesson_id=lesson.id)
+            else:
+                return redirect('courses:admin_course_detail', slug=course.slug)
+    else:
+        form = CourseLessonForm(instance=lesson, module=lesson.module)
+
+    context = {
+        'page_title': f'Edit Lesson - {lesson.title}',
+        'form': form,
+        'course': course,
+        'module': lesson.module,
+        'lesson': lesson,
+        'action': 'edit'
+    }
+    return render(request, 'courses/admin/lesson_form.html', context)
+
+
+@staff_member_required
+@require_POST
+def admin_lesson_delete(request, course_slug, lesson_id):
+    """
+    Delete lesson.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    lesson = get_object_or_404(CourseLesson, id=lesson_id, module__course=course)
+
+    lesson_title = lesson.title
+    resource_count = lesson.resources.count()
+
+    lesson.delete()
+    messages.success(
+        request,
+        f'Lesson "{lesson_title}" and its {resource_count} resource(s) deleted successfully!'
+    )
+    return redirect('courses:admin_course_detail', slug=course.slug)
+
+
+@staff_member_required
+def admin_lesson_resources(request, course_slug, lesson_id):
+    """
+    Manage lesson resources.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    lesson = get_object_or_404(CourseLesson, id=lesson_id, module__course=course)
+
+    # Handle bulk upload
+    if request.method == 'POST' and 'bulk_upload' in request.POST:
+        bulk_form = BulkResourceUploadForm(request.POST, lesson=lesson)
+        files_list = request.FILES.getlist('files')
+
+        if files_list and bulk_form.is_valid():
+            try:
+                resources = bulk_form.save(files_list)
+                messages.success(
+                    request,
+                    f'{len(resources)} resource(s) uploaded successfully!'
+                )
+                return redirect('courses:admin_lesson_resources', course_slug=course.slug, lesson_id=lesson.id)
+            except forms.ValidationError as e:
+                messages.error(request, str(e))
+        elif not files_list:
+            messages.error(request, 'Please select at least one file to upload.')
+    else:
+        bulk_form = BulkResourceUploadForm(lesson=lesson)
+
+    # Handle single resource creation
+    if request.method == 'POST' and 'single_upload' in request.POST:
+        resource_form = LessonResourceForm(request.POST, request.FILES, lesson=lesson)
+        if resource_form.is_valid():
+            resource = resource_form.save()
+            messages.success(request, f'Resource "{resource.title}" created successfully!')
+            return redirect('courses:admin_lesson_resources', course_slug=course.slug, lesson_id=lesson.id)
+    else:
+        resource_form = LessonResourceForm(lesson=lesson)
+
+    # Get existing resources
+    resources = lesson.resources.all().order_by('order', 'created_at')
+
+    context = {
+        'page_title': f'Manage Resources - {lesson.title}',
+        'course': course,
+        'lesson': lesson,
+        'resources': resources,
+        'bulk_form': bulk_form,
+        'resource_form': resource_form,
+    }
+    return render(request, 'courses/admin/lesson_resources.html', context)
+
+
+@staff_member_required
+def admin_resource_edit(request, course_slug, resource_id):
+    """
+    Edit lesson resource.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    resource = get_object_or_404(LessonResource, id=resource_id, lesson__module__course=course)
+
+    if request.method == 'POST':
+        form = LessonResourceForm(request.POST, request.FILES, instance=resource, lesson=resource.lesson)
+        if form.is_valid():
+            resource = form.save()
+            messages.success(request, f'Resource "{resource.title}" updated successfully!')
+            return redirect('courses:admin_lesson_resources', course_slug=course.slug, lesson_id=resource.lesson.id)
+    else:
+        form = LessonResourceForm(instance=resource, lesson=resource.lesson)
+
+    context = {
+        'page_title': f'Edit Resource - {resource.title}',
+        'form': form,
+        'course': course,
+        'lesson': resource.lesson,
+        'resource': resource,
+        'action': 'edit'
+    }
+    return render(request, 'courses/admin/resource_form.html', context)
+
+
+@staff_member_required
+@require_POST
+def admin_resource_delete(request, course_slug, resource_id):
+    """
+    Delete lesson resource.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+    resource = get_object_or_404(LessonResource, id=resource_id, lesson__module__course=course)
+
+    resource_title = resource.title
+    lesson_id = resource.lesson.id
+
+    # Delete the file from storage
+    if resource.file:
+        resource.file.delete(save=False)
+
+    resource.delete()
+    messages.success(request, f'Resource "{resource_title}" deleted successfully!')
+    return redirect('courses:admin_lesson_resources', course_slug=course.slug, lesson_id=lesson_id)
+
+
+@staff_member_required
+def admin_course_structure_reorder(request, course_slug):
+    """
+    Reorder course structure (modules and lessons).
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+
+    if request.method == 'POST':
+        form = CourseStructureReorderForm(request.POST, course=course)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Course structure reordered successfully!')
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+
+    # Get current structure
+    modules = course.modules.prefetch_related('lessons').order_by('order')
+
+    context = {
+        'page_title': f'Reorder Structure - {course.title}',
+        'course': course,
+        'modules': modules,
+    }
+    return render(request, 'courses/admin/course_structure_reorder.html', context)
+
+
+@staff_member_required
+def admin_course_preview(request, course_slug):
+    """
+    Preview course as student would see it.
+    """
+    course = get_object_or_404(Course, slug=course_slug)
+
+    # Get first lesson for preview
+    first_module = course.modules.filter(is_active=True).order_by('order').first()
+    first_lesson = None
+    if first_module:
+        first_lesson = first_module.lessons.filter(is_active=True).order_by('order').first()
+
+    context = {
+        'page_title': f'Preview - {course.title}',
+        'course': course,
+        'current_lesson': first_lesson,
+        'current_module': first_module,
+        'is_preview': True,
+    }
+    return render(request, 'courses/course_watch.html', context)
 
 
 # Payment Views

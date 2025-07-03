@@ -4,124 +4,174 @@
 {% block title %}Courses - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/courses.css' %}">
-<link rel="stylesheet" href="{% static 'css/course-button-fixes.css' %}">
+<link rel="stylesheet" href="{% static 'css/courses-new.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="main-content">
-    <div class="tile-wrap">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1>SQL Courses</h1>
-            <p>Master SQL and data analytics with our comprehensive course collection</p>
-        </div>
+<main class="main-container">
+    <div class="page-header">
+        <h1 class="page-title">Master SQL with Our Courses</h1>
+        <p class="page-subtitle">Choose from our comprehensive selection of SQL courses designed for all skill levels</p>
+    </div>
 
-        <!-- Course Results -->
-        <div class="course-results">
-            <div class="results-header">
-                <h3>{{ total_courses }} Course{{ total_courses|pluralize }} Found</h3>
+    <div class="course-tabs">
+        <button class="tab-btn active" data-category="all">All Courses</button>
+        <button class="tab-btn" data-category="live">Live Classes</button>
+        <button class="tab-btn" data-category="recorded">Recorded</button>
+        <button class="tab-btn" data-category="tools">Tools & Resources</button>
+    </div>
+
+    <div class="courses-grid">
+        {% for course in courses %}
+        <div class="course-card" data-category="{% if 'live' in course.course_type %}live{% elif 'power' in course.title|lower or 'tableau' in course.title|lower %}tools{% else %}recorded{% endif %}">
+            <div class="course-banner {% if 'sql' in course.title|lower %}sql{% elif 'power' in course.title|lower %}powerbi{% elif 'python' in course.title|lower %}python{% elif 'tableau' in course.title|lower %}tableau{% elif 'bootcamp' in course.title|lower %}bootcamp{% else %}sql{% endif %}">
+                <i class="{% if 'sql' in course.title|lower %}fas fa-database{% elif 'power' in course.title|lower %}fas fa-chart-bar{% elif 'python' in course.title|lower %}fab fa-python{% elif 'tableau' in course.title|lower %}fas fa-chart-pie{% elif 'bootcamp' in course.title|lower %}fas fa-chart-line{% else %}fas fa-database{% endif %} course-icon"></i>
+                <div class="course-level">{{ course.get_difficulty_display }}</div>
+                <div class="instructor-avatar">
+                    {% if course.instructor.first_name %}
+                        {{ course.instructor.first_name|first|upper }}{% if course.instructor.last_name %}{{ course.instructor.last_name|first|upper }}{% endif %}
+                    {% else %}
+                        {{ course.instructor.email|first|upper }}
+                    {% endif %}
+                </div>
             </div>
-
-            {% if courses %}
-            <div class="courses-grid">
-                {% for course in courses %}
-                <div class="course-card-grid">
-                    <div class="course-image">
-                        {% if course.thumbnail %}
-                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
-                        {% else %}
-                            <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="{{ course.title }}">
-                        {% endif %}
-                        
-                        {% if course.is_featured %}
-                        <div class="featured-badge">
-                            <i class="fas fa-star"></i> Featured
-                        </div>
-                        {% endif %}
-                        
-                        <div class="course-type-badge {% if course.is_free %}free{% else %}paid{% endif %}">
-                            {% if course.is_free %}
-                                Free
-                            {% else %}
-                                ${{ course.effective_price }}
-                            {% endif %}
-                        </div>
+            <div class="course-content">
+                <h3 class="course-title">{{ course.title }}</h3>
+                <div class="course-rating">
+                    <div class="stars">★★★★★</div>
+                    <span class="rating-score">{{ course.average_rating|default:"4.8" }}</span>
+                    <span class="rating-count">({{ course.enrolled_count }})</span>
+                </div>
+                <ul class="course-highlights">
+                    <li>{{ course.module_count }} Module{{ course.module_count|pluralize }}</li>
+                    <li>{{ course.total_lessons }} Lesson{{ course.total_lessons|pluralize }}</li>
+                    <li>{{ course.duration_hours }} Hour{{ course.duration_hours|pluralize }} Content</li>
+                    <li>{% if course.certificate_enabled %}Certificate Included{% else %}Practical Learning{% endif %}</li>
+                </ul>
+                <div class="course-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ course.module_count }}</span>
+                        <span class="stat-label">Modules</span>
                     </div>
-                    
-                    <div class="course-content">
-                        <div class="course-header">
-                            <h3 class="course-title">
-                                <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary"{{ course.title }}</a>
-                            </h3>
-                            <div class="course-rating">
-                                {% if course.avg_rating %}
-                                    <div class="stars">
-                                        <!-- Star rating display -->
-                                        {% if course.avg_rating >= 1 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                        {% if course.avg_rating >= 2 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                        {% if course.avg_rating >= 3 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                        {% if course.avg_rating >= 4 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                        {% if course.avg_rating >= 5 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                    </div>
-                                    <span class="rating-text">({{ course.avg_rating|floatformat:1 }})</span>
-                                {% else %}
-                                    <span class="no-rating">No ratings yet</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <p class="course-description">{{ course.short_description }}</p>
-                        
-                        <div class="course-meta">
-                            <span class="difficulty {{ course.difficulty }}">
-                                <i class="fas fa-signal"></i> {{ course.get_difficulty_display }}
-                            </span>
-                            <span class="duration">
-                                <i class="fas fa-clock"></i> {{ course.duration_hours }}h
-                            </span>
-                            <span class="modules">
-                                <i class="fas fa-layer-group"></i> {{ course.module_count }} modules
-                            </span>
-                            <span class="students">
-                                <i class="fas fa-users"></i> {{ course.enrollment_count }} student{{ course.enrollment_count|pluralize }}
-                            </span>
-                        </div>
-                        
-                        <div class="course-instructor">
-                            <i class="fas fa-user-tie"></i>
-                            <span>{{ course.instructor.first_name }} {% if course.instructor.last_name %}{{ course.instructor.last_name }}{% else %}{{ course.instructor.email }}{% endif %}</span>
-                        </div>
-                        
-                        <div class="course-actions">
-                            <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-primary">
-                                {% if course.is_free %}
-                                    Start Learning
-                                {% else %}
-                                    View Course
-                                {% endif %}
-                            </a>
-                            {% if course.allow_preview %}
-                            <a href="{% url 'courses:course_detail' course.slug %}#preview" class="btn btn-secondary">
-                                <i class="fas fa-play"></i> Preview
-                            </a>
-                            {% endif %}
-                        </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ course.total_lessons }}</span>
+                        <span class="stat-label">Lessons</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">∞</span>
+                        <span class="stat-label">Access</span>
                     </div>
                 </div>
-                {% endfor %}
+                <p class="course-description">
+                    {{ course.short_description|truncatewords:20 }}
+                </p>
+                <div class="course-footer">
+                    <div class="course-price">
+                        {% if course.is_free %}
+                            <span class="price-current">Free</span>
+                        {% else %}
+                            <span class="price-current">₹{{ course.effective_price }}</span>
+                            {% if course.discount_price and course.discount_price != course.price %}
+                                <span class="price-original">₹{{ course.price }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'courses:course_detail' course.slug %}" class="course-btn">View Detail</a>
+                </div>
             </div>
-
-            {% else %}
-            <div class="no-courses">
-                <i class="fas fa-search"></i>
-                <h3>No courses found</h3>
-                <p>Try adjusting your search criteria or browse all courses.</p>
-                <a href="{% url 'courses:courses_list' %}" class="btn btn-primary"View All Courses</a>
-            </div>
-            {% endif %}
         </div>
+        {% empty %}
+        <div class="no-courses">
+            <i class="fas fa-search"></i>
+            <h3>No courses found</h3>
+            <p>Try adjusting your search criteria or browse all courses.</p>
+        </div>
+        {% endfor %}
     </div>
-</div>
+</main>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality with animation
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const courseCards = document.querySelectorAll('.course-card');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            button.classList.add('active');
+
+            const category = button.getAttribute('data-category');
+
+            // Show/hide courses based on category with animation
+            courseCards.forEach((card, index) => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.5s ease forwards';
+                    card.style.animationDelay = `${index * 0.1}s`;
+                } else {
+                    card.style.animation = 'fadeOut 0.5s ease forwards';
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 500);
+                }
+            });
+        });
+    });
+
+    // Button interactions
+    const buttons = document.querySelectorAll('.course-btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Add click animation
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+        });
+    });
+
+    // Initialize course cards with staggered animation
+    courseCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // Theme-aware styling updates
+    function updateThemeStyles() {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const cards = document.querySelectorAll('.course-card');
+
+        cards.forEach(card => {
+            if (theme === 'dark') {
+                card.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.3)';
+            } else {
+                card.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+            }
+        });
+    }
+
+    // Update styles on theme change
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                updateThemeStyles();
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    // Initial theme setup
+    updateThemeStyles();
+});
+</script>
 {% endblock %}

@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+.resources-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.upload-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.upload-section {
+    background: var(--bg-primary);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.upload-section h3 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bulk-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-secondary);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.bulk-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.bulk-upload-area.dragover {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.1);
+}
+
+/* Ensure file input is completely hidden but functional */
+#id_files {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+}
+
+/* File list styling */
+#file-list {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+#selected-files {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.resources-list {
+    background: var(--bg-primary);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.resources-header {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.resources-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.resource-item:hover {
+    background: var(--bg-secondary);
+}
+
+.resource-item:last-child {
+    border-bottom: none;
+}
+
+.resource-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+}
+
+.resource-info {
+    flex: 1;
+}
+
+.resource-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.resource-meta {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.resource-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.btn-icon:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.btn-icon.delete:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.empty-state .material-icons {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.breadcrumb {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+@media (max-width: 768px) {
+    .upload-sections {
+        grid-template-columns: 1fr;
+    }
+    
+    .resource-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .resource-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'courses:admin_courses_list' %}">Courses</a> /
+        <a href="{% url 'courses:admin_course_detail' course.slug %}">{{ course.title }}</a> /
+        <span>{{ lesson.module.title }}</span> /
+        <span>{{ lesson.title }}</span> /
+        Resources
+    </nav>
+
+    <div class="resources-container">
+        <!-- Upload Sections -->
+        <div class="upload-sections">
+            <!-- Bulk Upload -->
+            <div class="upload-section">
+                <h3>
+                    <span class="material-icons">cloud_upload</span>
+                    Bulk Upload
+                </h3>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Hidden multiple file input -->
+                    <input type="file"
+                           name="files"
+                           id="id_files"
+                           multiple
+                           accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.py,.js,.html,.css,.sql,.java,.cpp,.c,.csv,.xlsx,.json,.xml,.zip,.rar,.jpg,.jpeg,.png,.gif,.svg"
+                           style="display: none;">
+
+                    <div class="bulk-upload-area" id="bulk-upload-area">
+                        <div class="upload-icon">📁</div>
+                        <div>
+                            <strong>Drop multiple files here</strong><br>
+                            <small>or click to select files</small><br>
+                            <small>PDF, DOC, PPT, Code, Images, etc.</small>
+                        </div>
+                        <div id="file-list" style="margin-top: 1rem; display: none;">
+                            <strong>Selected files:</strong>
+                            <ul id="selected-files" style="text-align: left; margin-top: 0.5rem;"></ul>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" name="bulk_upload" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">
+                        <span class="material-icons">upload</span>
+                        Upload All Files
+                    </button>
+                </form>
+            </div>
+
+            <!-- Single Upload -->
+            <div class="upload-section">
+                <h3>
+                    <span class="material-icons">add</span>
+                    Add Single Resource
+                </h3>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="{{ resource_form.title.id_for_label }}">{{ resource_form.title.label }}</label>
+                        {{ resource_form.title }}
+                        {% if resource_form.title.errors %}
+                            <div class="text-danger">{{ resource_form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ resource_form.description.id_for_label }}">{{ resource_form.description.label }}</label>
+                        {{ resource_form.description }}
+                        {% if resource_form.description.errors %}
+                            <div class="text-danger">{{ resource_form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ resource_form.file.id_for_label }}">{{ resource_form.file.label }}</label>
+                        {{ resource_form.file }}
+                        {% if resource_form.file.errors %}
+                            <div class="text-danger">{{ resource_form.file.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="{{ resource_form.resource_type.id_for_label }}">{{ resource_form.resource_type.label }}</label>
+                            {{ resource_form.resource_type }}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ resource_form.order.id_for_label }}">{{ resource_form.order.label }}</label>
+                            {{ resource_form.order }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-check">
+                            {{ resource_form.is_downloadable }}
+                            <label for="{{ resource_form.is_downloadable.id_for_label }}">{{ resource_form.is_downloadable.label }}</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" name="single_upload" class="btn btn-primary" style="width: 100%;">
+                        <span class="material-icons">add</span>
+                        Add Resource
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resources List -->
+        <div class="resources-list">
+            <div class="resources-header">
+                <h3>
+                    <span class="material-icons">folder</span>
+                    Lesson Resources ({{ resources.count }})
+                </h3>
+                <a href="{% url 'courses:admin_lesson_edit' course.slug lesson.id %}" class="btn btn-outline">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Lesson
+                </a>
+            </div>
+
+            {% if resources %}
+                {% for resource in resources %}
+                <div class="resource-item">
+                    <div class="resource-icon">
+                        {% if resource.resource_type == 'pdf' %}📄
+                        {% elif resource.resource_type == 'doc' %}📝
+                        {% elif resource.resource_type == 'ppt' %}📊
+                        {% elif resource.resource_type == 'code' %}💻
+                        {% elif resource.resource_type == 'dataset' %}📊
+                        {% elif resource.resource_type == 'image' %}🖼️
+                        {% else %}📎
+                        {% endif %}
+                    </div>
+                    
+                    <div class="resource-info">
+                        <div class="resource-title">{{ resource.title }}</div>
+                        <div class="resource-meta">
+                            <span>{{ resource.get_resource_type_display }}</span>
+                            <span>{{ resource.formatted_file_size }}</span>
+                            <span>{{ resource.download_count }} downloads</span>
+                            <span>Order: {{ resource.order }}</span>
+                            {% if not resource.is_downloadable %}
+                                <span style="color: #ef4444;">Not downloadable</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="resource-actions">
+                        {% if resource.file %}
+                            <a href="{{ resource.file.url }}" target="_blank" class="btn-icon" title="Preview">
+                                <span class="material-icons">visibility</span>
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'courses:admin_resource_edit' course.slug resource.id %}" class="btn-icon" title="Edit">
+                            <span class="material-icons">edit</span>
+                        </a>
+                        <form method="post" action="{% url 'courses:admin_resource_delete' course.slug resource.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon delete" title="Delete" onclick="return confirm('Are you sure you want to delete this resource?')">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="material-icons">folder_open</div>
+                    <h4>No resources yet</h4>
+                    <p>Upload files using the forms above to add resources to this lesson.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bulk upload drag and drop
+    const bulkUploadArea = document.querySelector('#bulk-upload-area');
+    const bulkInput = document.querySelector('#id_files');
+    const fileListDiv = document.querySelector('#file-list');
+    const selectedFilesList = document.querySelector('#selected-files');
+
+    if (!bulkInput) {
+        console.error('File input not found');
+        return;
+    }
+
+    // Click to select files
+    bulkUploadArea.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'BUTTON') {
+            bulkInput.click();
+        }
+    });
+
+    // Drag and drop functionality
+    bulkUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        bulkUploadArea.classList.add('dragover');
+    });
+
+    bulkUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        bulkUploadArea.classList.remove('dragover');
+    });
+
+    bulkUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        bulkUploadArea.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            // Create a new FileList-like object
+            const dt = new DataTransfer();
+            for (let i = 0; i < files.length; i++) {
+                dt.items.add(files[i]);
+            }
+            bulkInput.files = dt.files;
+            updateBulkUploadDisplay(files);
+        }
+    });
+
+    // File input change handler
+    bulkInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            updateBulkUploadDisplay(e.target.files);
+        }
+    });
+
+    function updateBulkUploadDisplay(files) {
+        if (files.length > 0) {
+            // Show file list
+            fileListDiv.style.display = 'block';
+            selectedFilesList.innerHTML = '';
+
+            Array.from(files).forEach(file => {
+                const li = document.createElement('li');
+                li.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                li.style.cssText = 'color: var(--text-primary); margin-bottom: 0.25rem;';
+                selectedFilesList.appendChild(li);
+            });
+
+            // Update upload area text
+            const uploadText = bulkUploadArea.querySelector('div:last-child');
+            if (uploadText) {
+                uploadText.innerHTML = `
+                    <strong>${files.length} file(s) selected</strong><br>
+                    <small>Click to select different files or drag new ones</small>
+                `;
+            }
+        } else {
+            // Reset to original state
+            fileListDiv.style.display = 'none';
+            const uploadText = bulkUploadArea.querySelector('div:last-child');
+            if (uploadText) {
+                uploadText.innerHTML = `
+                    <strong>Drop multiple files here</strong><br>
+                    <small>or click to select files</small><br>
+                    <small>PDF, DOC, PPT, Code, Images, etc.</small>
+                `;
+            }
+        }
+    }
+
+    // Form validation
+    const form = bulkUploadArea.closest('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!bulkInput.files || bulkInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one file to upload.');
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

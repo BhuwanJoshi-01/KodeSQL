@@ -22,6 +22,19 @@ class Challenge(models.Model):
         ('paid', 'Paid'),
     ]
 
+    DATABASE_ENGINE_CHOICES = [
+        ('sqlite', 'SQLite'),
+        ('postgresql', 'PostgreSQL'),
+        ('mysql', 'MySQL'),
+    ]
+
+    DATABASE_SCHEMA_CHOICES = [
+        ('employees', 'Employee Database'),
+        ('ecommerce', 'E-commerce Database (Orders & Returns)'),
+        ('students', 'Student Database (Students, Courses, Enrollments)'),
+        ('custom', 'Custom Schema'),
+    ]
+
     title = models.CharField(max_length=255)
     description = CKEditor5Field(config_name='tutorial')
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='easy')
@@ -32,11 +45,31 @@ class Challenge(models.Model):
     sample_data = models.FileField(upload_to='challenges/sample_data/', blank=True, null=True,
                                    help_text="Upload CSV or SQL file with sample data")
 
-    # Database schema information
-    database_schema = models.JSONField(default=dict, blank=True,
-                                     help_text="Database schema information for this challenge")
-    initialization_sql = models.TextField(blank=True,
-                                        help_text="SQL commands to initialize the challenge database")
+    # Simplified database schema selection
+    database_schema_type = models.CharField(
+        max_length=20,
+        choices=DATABASE_SCHEMA_CHOICES,
+        default='employees',
+        help_text="Select a predefined database schema for this challenge"
+    )
+
+    # Custom schema fields (only used when database_schema_type='custom')
+    custom_initialization_sql = models.TextField(
+        blank=True,
+        help_text="Custom SQL commands (only used for custom schema type)"
+    )
+    custom_database_schema = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Custom database schema information (only used for custom schema type)"
+    )
+
+    # Multi-database engine support (simplified)
+    supported_engines = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of supported database engines for this challenge"
+    )
 
     # Subscription and categorization fields
     subscription_type = models.CharField(max_length=10, choices=SUBSCRIPTION_TYPE_CHOICES, default='free')
@@ -53,6 +86,45 @@ class Challenge(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.difficulty})"
+
+    def get_database_schema_config(self):
+        """Get the database schema configuration from settings"""
+        from django.conf import settings
+
+        if self.database_schema_type == 'custom':
+            return {
+                'name': 'Custom Schema',
+                'description': 'Custom database schema',
+                'initialization_sql': {
+                    'sqlite': self.custom_initialization_sql,
+                    'postgresql': self.custom_initialization_sql,
+                    'mysql': self.custom_initialization_sql,
+                },
+                'schema': self.custom_database_schema
+            }
+
+        return settings.CHALLENGE_DATABASE_SCHEMAS.get(
+            self.database_schema_type,
+            settings.CHALLENGE_DATABASE_SCHEMAS['employees']
+        )
+
+    def get_initialization_sql(self, engine='sqlite'):
+        """Get initialization SQL for the specified database engine"""
+        schema_config = self.get_database_schema_config()
+        return schema_config['initialization_sql'].get(engine, '')
+
+    def get_database_schema(self):
+        """Get the database schema information"""
+        schema_config = self.get_database_schema_config()
+        return schema_config.get('schema', {})
+
+
+
+    def get_supported_engines(self):
+        """Get list of supported database engines"""
+        if isinstance(self.supported_engines, list) and self.supported_engines:
+            return self.supported_engines
+        return ['sqlite', 'postgresql', 'mysql']
 
     @property
     def expected_result_json(self):
@@ -82,7 +154,18 @@ class Challenge(models.Model):
         """Check if this is a premium challenge"""
         return self.subscription_type == 'paid'
 
-    def get_challenge_database_path(self, user):
+    def get_supported_engines(self):
+        """Get list of supported database engines for this challenge"""
+        if self.supported_engines:
+            return self.supported_engines
+        # Default to SQLite if no engines specified
+        return ['sqlite']
+
+    def supports_engine(self, engine):
+        """Check if challenge supports a specific database engine"""
+        return engine in self.get_supported_engines()
+
+    def get_challenge_database_path(self, user, engine='sqlite'):
         """Get the path to the challenge-specific database for a user"""
         from django.conf import settings
         import os
@@ -90,44 +173,21 @@ class Challenge(models.Model):
         # Create challenge-specific database path
         db_dir = os.path.join(settings.MEDIA_ROOT, 'challenge_databases', str(user.id))
         os.makedirs(db_dir, exist_ok=True)
-        return os.path.join(db_dir, f'challenge_{self.id}.db')
 
-    def initialize_challenge_database(self, user):
-        """Initialize the challenge database with sample data"""
-        import sqlite3
-        import os
-        import csv
-        import json
+        # Different file extensions for different engines
+        if engine == 'sqlite':
+            return os.path.join(db_dir, f'challenge_{self.id}.db')
+        else:
+            # For PostgreSQL and MySQL, we'll use a different naming convention
+            return os.path.join(db_dir, f'challenge_{self.id}_{engine}.db')
 
-        db_path = self.get_challenge_database_path(user)
+    def initialize_challenge_database(self, user, engine='sqlite'):
+        """Initialize the challenge database with sample data for specified engine"""
+        from .utils import DatabaseEngineManager
 
-        # Remove existing database to start fresh
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        try:
-            # Execute initialization SQL if provided
-            if self.initialization_sql:
-                # Split by semicolon and execute each statement
-                statements = [stmt.strip() for stmt in self.initialization_sql.split(';') if stmt.strip()]
-                for statement in statements:
-                    cursor.execute(statement)
-
-            # Load sample data if provided
-            if self.sample_data:
-                self._load_sample_data(cursor, self.sample_data.path)
-
-            conn.commit()
-            return True
-
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            conn.close()
+        # Use the new database engine manager with simplified schema system
+        db_manager = DatabaseEngineManager(engine)
+        return db_manager.initialize_challenge_database(self, user)
 
     def _load_sample_data(self, cursor, file_path):
         """Load sample data from CSV or SQL file"""

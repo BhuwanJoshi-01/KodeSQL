@@ -237,6 +237,20 @@ def delete_saved_query(request, query_id):
 
 # Helper Functions
 
+def remove_sql_comments(query):
+    """
+    Remove SQL comments from query.
+    Handles both single-line (--) and multi-line (/* */) comments.
+    """
+    # Remove single-line comments (-- comment)
+    query = re.sub(r'--.*$', '', query, flags=re.MULTILINE)
+
+    # Remove multi-line comments (/* comment */)
+    query = re.sub(r'/\*.*?\*/', '', query, flags=re.DOTALL)
+
+    return query
+
+
 def is_dangerous_query(query):
     """
     Check if query contains dangerous SQL commands.
@@ -248,9 +262,7 @@ def is_dangerous_query(query):
     ]
 
     # Convert to uppercase and remove comments
-    clean_query = re.sub(r'--.*$', '', query, flags=re.MULTILINE)
-    clean_query = re.sub(r'/\*.*?\*/', '', clean_query, flags=re.DOTALL)
-    clean_query = clean_query.upper()
+    clean_query = remove_sql_comments(query).upper()
 
     # Check for dangerous commands
     for cmd in dangerous_commands:
@@ -269,8 +281,16 @@ def execute_sql_query(db_path, query):
         conn.row_factory = sqlite3.Row  # Enable column access by name
         cursor = conn.cursor()
 
-        # Clean the query
-        clean_query = query.strip()
+        # Clean the query - remove comments and whitespace
+        clean_query = remove_sql_comments(query).strip()
+
+        # Check if query is empty after cleaning
+        if not clean_query:
+            conn.close()
+            return {
+                'success': False,
+                'error': 'Query is empty or contains only comments'
+            }
 
         # Execute the query
         cursor.execute(clean_query)

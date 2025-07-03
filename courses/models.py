@@ -162,8 +162,26 @@ class CourseLesson(models.Model):
     lesson_type = models.CharField(max_length=15, choices=LESSON_TYPE_CHOICES, default='text')
 
     # Media content
-    video_url = models.URLField(blank=True, help_text="YouTube, Vimeo, or direct video URL")
-    video_duration = models.PositiveIntegerField(default=0, help_text="Video duration in seconds")
+    video_file = models.FileField(
+        upload_to='courses/videos/',
+        blank=True,
+        null=True,
+        help_text="Upload video file (MP4, WebM, AVI, MOV supported)"
+    )
+    video_duration = models.PositiveIntegerField(
+        default=0,
+        help_text="Video duration in seconds (auto-detected when possible)"
+    )
+    video_thumbnail = models.ImageField(
+        upload_to='courses/video_thumbnails/',
+        blank=True,
+        null=True,
+        help_text="Upload custom video thumbnail (auto-generated if not provided)"
+    )
+    video_size = models.PositiveIntegerField(
+        default=0,
+        help_text="Video file size in bytes"
+    )
     attachments = models.FileField(upload_to='courses/lessons/', blank=True, null=True)
 
     # SQL-specific content
@@ -187,6 +205,124 @@ class CourseLesson(models.Model):
 
     def __str__(self):
         return f"{self.module.course.title} - {self.module.title} - {self.title}"
+
+    @property
+    def has_video(self):
+        """Check if lesson has video content"""
+        return bool(self.video_file)
+
+    @property
+    def video_source(self):
+        """Get the video source URL"""
+        if self.video_file:
+            return self.video_file.url
+        return None
+
+    @property
+    def formatted_video_size(self):
+        """Return human-readable video file size"""
+        if self.video_size == 0:
+            return "Unknown size"
+
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if self.video_size < 1024.0:
+                return f"{self.video_size:.1f} {unit}"
+            self.video_size /= 1024.0
+        return f"{self.video_size:.1f} TB"
+
+    @property
+    def formatted_duration(self):
+        """Return formatted duration string"""
+        if self.duration_minutes == 0:
+            return "No duration set"
+        hours = self.duration_minutes // 60
+        minutes = self.duration_minutes % 60
+        if hours > 0:
+            return f"{hours}h {minutes}m"
+        return f"{minutes}m"
+
+    def save(self, *args, **kwargs):
+        # Auto-set video file size
+        if self.video_file and self.video_size == 0:
+            self.video_size = self.video_file.size
+
+        super().save(*args, **kwargs)
+
+
+class LessonResource(models.Model):
+    """
+    Resources/materials attached to course lessons.
+    """
+    RESOURCE_TYPE_CHOICES = [
+        ('pdf', 'PDF Document'),
+        ('doc', 'Word Document'),
+        ('ppt', 'Presentation'),
+        ('code', 'Code File'),
+        ('dataset', 'Dataset'),
+        ('image', 'Image'),
+        ('other', 'Other'),
+    ]
+
+    lesson = models.ForeignKey(CourseLesson, on_delete=models.CASCADE, related_name='resources')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    file = models.FileField(upload_to='courses/resources/')
+    resource_type = models.CharField(max_length=10, choices=RESOURCE_TYPE_CHOICES, default='other')
+    file_size = models.PositiveIntegerField(default=0, help_text="File size in bytes")
+    download_count = models.PositiveIntegerField(default=0)
+    is_downloadable = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        unique_together = ['lesson', 'order']
+
+    def __str__(self):
+        return f"{self.lesson.title} - {self.title}"
+
+    @property
+    def file_extension(self):
+        """Get file extension"""
+        if self.file:
+            return self.file.name.split('.')[-1].lower()
+        return ''
+
+    @property
+    def formatted_file_size(self):
+        """Return human-readable file size"""
+        if self.file_size == 0:
+            return "Unknown size"
+
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if self.file_size < 1024.0:
+                return f"{self.file_size:.1f} {unit}"
+            self.file_size /= 1024.0
+        return f"{self.file_size:.1f} TB"
+
+    def save(self, *args, **kwargs):
+        # Auto-detect resource type based on file extension
+        if self.file and not self.resource_type or self.resource_type == 'other':
+            ext = self.file_extension
+            if ext in ['pdf']:
+                self.resource_type = 'pdf'
+            elif ext in ['doc', 'docx']:
+                self.resource_type = 'doc'
+            elif ext in ['ppt', 'pptx']:
+                self.resource_type = 'ppt'
+            elif ext in ['py', 'js', 'html', 'css', 'sql', 'java', 'cpp', 'c']:
+                self.resource_type = 'code'
+            elif ext in ['csv', 'xlsx', 'json', 'xml']:
+                self.resource_type = 'dataset'
+            elif ext in ['jpg', 'jpeg', 'png', 'gif', 'svg']:
+                self.resource_type = 'image'
+
+        # Set file size
+        if self.file and self.file_size == 0:
+            self.file_size = self.file.size
+
+        super().save(*args, **kwargs)
 
 
 class UserCourseEnrollment(models.Model):

@@ -20,9 +20,33 @@ urlpatterns = [
     path('admin/<slug:slug>/edit/', views.admin_course_edit, name='admin_course_edit'),
     path('admin/<slug:slug>/delete/', views.admin_course_delete, name='admin_course_delete'),
 
+    # Enhanced admin content management
+    path('admin/<slug:course_slug>/modules/create/', views.admin_module_create, name='admin_module_create'),
+    path('admin/<slug:course_slug>/modules/<int:module_id>/edit/', views.admin_module_edit, name='admin_module_edit'),
+    path('admin/<slug:course_slug>/modules/<int:module_id>/delete/', views.admin_module_delete, name='admin_module_delete'),
+
+    path('admin/<slug:course_slug>/modules/<int:module_id>/lessons/create/', views.admin_lesson_create, name='admin_lesson_create'),
+    path('admin/<slug:course_slug>/lessons/<int:lesson_id>/edit/', views.admin_lesson_edit, name='admin_lesson_edit'),
+    path('admin/<slug:course_slug>/lessons/<int:lesson_id>/delete/', views.admin_lesson_delete, name='admin_lesson_delete'),
+    path('admin/<slug:course_slug>/lessons/<int:lesson_id>/resources/', views.admin_lesson_resources, name='admin_lesson_resources'),
+
+    path('admin/<slug:course_slug>/resources/<int:resource_id>/edit/', views.admin_resource_edit, name='admin_resource_edit'),
+    path('admin/<slug:course_slug>/resources/<int:resource_id>/delete/', views.admin_resource_delete, name='admin_resource_delete'),
+
+    path('admin/<slug:course_slug>/structure/reorder/', views.admin_course_structure_reorder, name='admin_course_structure_reorder'),
+    path('admin/<slug:course_slug>/preview/', views.admin_course_preview, name='admin_course_preview'),
+
     # User course management
     path('my-courses/', views.my_courses, name='my_courses'),
     path('certificates/<str:certificate_id>/', views.certificate_view, name='certificate_view'),
+
+    # Course watching
+    path('<slug:slug>/watch/', views.course_watch, name='course_watch'),
+    path('<slug:slug>/watch/module/<int:module_id>/', views.course_watch, name='course_watch_module'),
+    path('<slug:slug>/watch/lesson/<int:lesson_id>/', views.course_watch, name='course_watch_lesson'),
+
+    # Resource downloads
+    path('resource/download/<int:resource_id>/', views.download_lesson_resource, name='download_lesson_resource'),
 
     # Payment views
     path('payment/<int:payment_id>/', views.payment_page, name='payment_page'),

@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Master - Course Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(45deg, #4f46e5, #7c3aed);
+            --secondary-gradient: linear-gradient(45deg, #4299e1, #3182ce);
+            --primary-color: #4f46e5;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --bg-primary: #ffffff;  
+            --bg-secondary: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 15px 25px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e7ff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            text-decoration: none;
+            color: #4f46e5;
+            font-weight: 700;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: "⚡";
+            font-size: 28px;
+        }
+
+        .nav-items {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: #4f46e5;
+        }
+
+        .nav-item.active {
+            color: #4f46e5;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .user-dropdown {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(79, 70, 229, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .user-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            min-width: 240px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            z-index: 1000;
+            margin-top: 8px;
+            padding: 8px 0;
+        }
+
+        .dropdown-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .user-email {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .user-dropdown-content.show {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+            color: #4f46e5;
+        }
+
+        .dropdown-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 8px 0;
+        }
+
+        @media (max-width: 768px) {
+            .nav-items {
+                position: static;
+                transform: none;
+                gap: 15px;
+            }
+
+            .user-menu {
+                gap: 10px;
+            }
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 2rem auto;
+            gap: 2rem;
+            padding: 0 2rem;
+            position: relative;
+        }
+
+        /* Enhanced Sidebar */
+        .sidebar {
+            width: 400px;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            position: sticky;
+            top: 100px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--bg-secondary);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .sidebar-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .course-progress {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            width: 45%;
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .course-modules {
+            list-style: none;
+            padding: 1rem;
+        }
+
+        .module-item {
+            margin-bottom: 1rem;
+        }
+
+        .module-link {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-link:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .module-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-right: 1rem;
+            opacity: 0.8;
+        }
+
+        .module-dropdown {
+            display: none;
+            padding: 0.5rem 1rem;
+        }
+
+        .module-dropdown.expanded {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .lesson-item {
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .lesson-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .lesson-title {
+            flex: 1;
+        }
+
+        .lesson-duration {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-height: calc(100vh - 120px);
+        }
+
+        .content-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            opacity: 0.2;
+        }
+
+        .course-title {
+            font-size: 2.2rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .course-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        /* Enhanced Video Container */
+        .video-container {
+            position: relative;
+            background: linear-gradient(45deg, #1e293b, #334155);
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.05)"/></svg>') repeat;
+            opacity: 0.3;
+        }
+
+        .video-placeholder {
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+        }
+
+        .play-button {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin: 0 auto 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .play-button:hover::before {
+            opacity: 1;
+        }
+
+        .play-button::after {
+            content: "▶";
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-left: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .play-button:hover::after {
+            color: white;
+        }
+
+        .video-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            opacity: 0.9;
+        }
+
+        /* Enhanced Tabs */
+        .content-body {
+            padding: 0;
+            background: var(--bg-primary);
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            padding: 0 1rem;
+        }
+
+        .tab {
+            padding: 1.2rem 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .tab:hover {
+            color: var(--primary-color);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+        }
+
+        .tab.active::before {
+            width: 100%;
+        }
+
+        .tab-content {
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Course Info Cards */
+        .course-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.5s ease backwards;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card:hover::before {
+            opacity: 1;
+        }
+
+        .info-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+            line-height: 1;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Q&A Section */
+        .qa-item {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .qa-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .qa-question {
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-primary);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .qa-question:hover {
+            background: var(--bg-secondary);
+        }
+
+        .qa-answer {
+            padding: 1.5rem;
+            display: none;
+            border-left: 4px solid var(--primary-color);
+            color: var(--text-secondary);
+            line-height: 1.7;
+            animation: slideDown 0.3s ease;
+        }
+
+        .qa-answer.show {
+            display: block;
+        }
+
+        /* Announcements */
+        .announcement-card {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .announcement-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .announcement-card.new {
+            background: #e6fffa;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .announcement-card.live {
+            background: #fef5e7;
+            border-left: 4px solid #f6ad55;
+        }
+
+        .announcement-card.update {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+        }
+
+        .announcement-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .announcement-date {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+        }
+
+        /* Course Info Cards Animation */
+        .info-card:nth-child(1) { animation-delay: 0.1s; }
+        .info-card:nth-child(2) { animation-delay: 0.2s; }
+        .info-card:nth-child(3) { animation-delay: 0.3s; }
+        .info-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        /* Enhanced Mobile Styles */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 0 1rem;
+            }
+
+            .nav-items {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+                border-bottom: 1px solid var(--border-color);
+                transform: translateY(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .nav-items.show {
+                transform: translateY(0);
+            }
+
+            .nav-item {
+                padding: 1rem;
+                border-radius: 8px;
+            }
+
+            .container {
+                flex-direction: column;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 500px;
+                position: static;
+            }
+
+            .video-container {
+                height: 300px;
+            }
+
+            .play-button {
+                width: 80px;
+                height: 80px;
+            }
+
+            .play-button::after {
+                font-size: 2rem;
+                margin-left: 0.3rem;
+            }
+
+            .video-title {
+                font-size: 1.2rem;
+            }
+
+            .course-info {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .info-card {
+                padding: 1rem;
+            }
+
+            .info-number {
+                font-size: 2rem;
+            }
+
+            .tabs {
+                padding: 0;
+            }
+
+            .tab {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Enhanced Course Stats */
+        .course-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            stroke: var(--primary-color);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Enhanced Q&A Section */
+        .qa-section {
+            padding: 2rem;
+        }
+
+        .qa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .qa-filters {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .qa-filter {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .qa-filter:hover, .qa-filter.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .qa-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .qa-question {
+            padding: 1.5rem;
+            cursor: pointer;
+        }
+
+        .qa-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .qa-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .qa-answer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .qa-comment-form {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .qa-comment-input {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .qa-comment-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Enhanced Notes Section */
+        .notes-section {
+            padding: 2rem;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .notes-list {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+
+        .note-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .note-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .note-timestamp {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .note-content {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .note-content pre {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .note-content code {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .note-action-btn {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .note-action-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .add-note-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .add-note-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.6);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .modal-close:hover {
+            color: var(--primary-color);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+    </style>
+    <script>
+        function toggleMobileMenu() {
+            const navItems = document.querySelector('.nav-items');
+            navItems.classList.toggle('show');
+        }
+
+        // Toggle user dropdown
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('userDropdown');
+            const avatar = document.querySelector('.user-avatar');
+
+            if (!avatar.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        function showTab(tabId) {
+            // Hide all tab panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Show the selected tab panel
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update tab button states
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function toggleQA(element) {
+            const answer = element.nextElementSibling;
+            answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showAddNoteModal() {
+            document.getElementById('addNoteModal').style.display = 'flex';
+        }
+
+        function hideAddNoteModal() {
+            document.getElementById('addNoteModal').style.display = 'none';
+        }
+
+        function saveNote() {
+            // Add note saving logic here
+            hideAddNoteModal();
+        }
+
+        function toggleModuleDropdown(element) {
+            const dropdown = element.nextElementSibling;
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            element.querySelector('.dropdown-arrow').style.transform = 
+                dropdown.style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        // Add smooth scroll behavior
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (sidebar) {
+                sidebar.addEventListener('scroll', () => {
+                    requestAnimationFrame(() => {
+                        if (sidebar.scrollTop > 100) {
+                            sidebar.classList.add('scrolled');
+                        } else {
+                            sidebar.classList.remove('scrolled');
+                        }
+                    });
+                });
+            }
+
+            // Mark current page in navigation
+            const currentPage = window.location.pathname;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.getAttribute('href') === currentPage) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- Header -->
+
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="back-btn" onclick="window.location.href='index.html'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <span>Back to Course</span>
+            </div>
+            
+            <div class="course-progress">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600;">Course Progress</span>
+                    <span style="color: var(--primary-color); font-weight: 600;">45%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <small style="color: var(--text-secondary); margin-top: 0.75rem; display: block;">18 of 40 lessons completed</small>
+            </div>
+            
+            <ul class="course-modules">
+                <li class="module-item module-active">
+                    <div class="module-link" onclick="toggleModuleDropdown(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="module-number">01</span>
+                            <div>
+                                <div style="font-weight: 600;">Installation & Setup</div>
+                                <small style="color: #718096;">4 lessons • 2hr 30min</small>
+                            </div>
+                        </div>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="module-dropdown expanded">
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox" checked>
+                            <span class="lesson-title">1.1 Course Introduction</span>
+                            <span class="lesson-duration">15min</span>
+                        </div>
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox" checked>
+                            <span class="lesson-title">1.2 Development Environment Setup</span>
+                            <span class="lesson-duration">45min</span>
+                        </div>
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox">
+                            <span class="lesson-title">1.3 First Program</span>
+                            <span class="lesson-duration">30min</span>
+                        </div>
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox">
+                            <span class="lesson-title">1.4 Development Tools</span>
+                            <span class="lesson-duration">50min</span>
+                        </div>
+                    </div>
+                </li>
+                <li class="module-item">
+                    <div class="module-link" onclick="toggleModuleDropdown(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="module-number">02</span>
+                            <div>
+                                <div style="font-weight: 600;">Basic Syntax & Commands</div>
+                                <small style="color: #718096;">6 lessons • 3hr 15min</small>
+                            </div>
+                        </div>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="module-dropdown">
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox">
+                            <span class="lesson-title">2.1 Variables and Constants</span>
+                            <span class="lesson-duration">35min</span>
+                        </div>
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox">
+                            <span class="lesson-title">2.2 Data Types</span>
+                            <span class="lesson-duration">40min</span>
+                        </div>
+                        <div class="lesson-item">
+                            <input type="checkbox" class="lesson-checkbox">
+                            <span class="lesson-title">2.3 Operators</span>
+                            <span class="lesson-duration">30min</span>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h1 class="course-title">Master SQL: From Basics to Advanced</h1>
+                <p class="course-subtitle">Learn SQL for Data Analysis, Database Management, and Backend Development</p>
+            </div>
+
+            <div class="video-container">
+                <div class="video-placeholder">
+                    <div class="play-button" onclick="playVideo()"></div>
+                    <div class="video-title">1.2 Setting Up Your SQL Environment</div>
+                </div>
+            </div>
+
+            <div class="content-body">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('overview')">Overview</button>
+                    <button class="tab" onclick="showTab('qa')">Q&A</button>
+                    <button class="tab" onclick="showTab('notes')">Notes</button>
+                    <button class="tab" onclick="showTab('announcements')">Updates</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div id="overview" class="tab-panel active">
+                        <h2 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">Master SQL for Data Analysis and Development</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.7;">
+                            Take your SQL skills from zero to professional level with our comprehensive course. Learn through hands-on exercises, real-world projects, and interactive challenges. Perfect for beginners and intermediate learners looking to advance their database skills.
+                        </p>
+
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">What you'll learn:</h3>
+                        <ul style="color: var(--text-secondary); line-height: 1.8; margin-left: 1.5rem;">
+                            <li>SQL fundamentals and advanced concepts</li>
+                            <li>Database design and optimization</li>
+                            <li>Data analysis and reporting</li>
+                            <li>Performance tuning and best practices</li>
+                            <li>Real-world project implementation</li>
+                        </ul>
+                    </div>
+
+                    <!-- Q&A Tab -->
+                    <div id="qa" class="tab-panel">
+                        <div class="qa-section">
+                            <div class="qa-header">
+                                <h3>Questions & Answers</h3>
+                                <div class="qa-filters">
+                                    <button class="qa-filter active">All Questions</button>
+                                    <button class="qa-filter">My Questions</button>
+                                    <button class="qa-filter">Unanswered</button>
+                                </div>
+                            </div>
+
+                            <div class="qa-list">
+                                <div class="qa-item">
+                                    <div class="qa-question" onclick="toggleQA(this)">
+                                        <h4>How do I connect to a PostgreSQL database using Python?</h4>
+                                        <div class="qa-meta">
+                                            <div class="qa-meta-item">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                2 days ago
+                                            </div>
+                                            <div class="qa-meta-item">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                                </svg>
+                                                3 replies
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="qa-answer">
+                                        <p>You can use the psycopg2 library to connect to PostgreSQL. Here's an example:</p>
+                                        <pre><code>import psycopg2
+conn = psycopg2.connect(
+    dbname="your_db",
+    user="your_user",
+    password="your_password",
+    host="localhost"
+)</code></pre>
+                                        <div class="qa-comment-form">
+                                            <textarea class="qa-comment-input" placeholder="Add a comment..."></textarea>
+                                            <button class="btn btn-primary">Reply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Tab -->
+                    <div id="notes" class="tab-panel">
+                        <div class="notes-section">
+                            <div class="notes-header">
+                                <h3>My Notes</h3>
+                                <button class="btn btn-primary" onclick="showAddNoteModal()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Add Note
+                                </button>
+                            </div>
+
+                            <div class="notes-list">
+                                <div class="note-card">
+                                    <div class="note-timestamp">Today at 2:30 PM</div>
+                                    <div class="note-content">
+                                        Remember to use prepared statements to prevent SQL injection attacks. Example:
+                                        <pre><code>cursor.execute(
+    "SELECT * FROM users WHERE id = %s", 
+    (user_id,)
+)</code></pre>
+                                    </div>
+                                    <div class="note-actions">
+                                        <button class="note-action-btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                        </button>
+                                        <button class="note-action-btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="add-note-btn" onclick="showAddNoteModal()">+</button>
+                    </div>
+
+                    <!-- Add Note Modal -->
+                    <div id="addNoteModal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Add New Note</h3>
+                                <button class="modal-close" onclick="hideAddNoteModal()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <textarea class="qa-comment-input" style="width: 100%; height: 150px;" placeholder="Write your note here..."></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="hideAddNoteModal()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveNote()">Save Note</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Announcements Tab -->
+                    <div id="announcements" class="tab-panel">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Latest Updates</h3>
+                        <div class="announcement-card new">
+                            <div class="announcement-title">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                New Advanced SQL Challenges Added!
+                            </div>
+                            <p>We've added 20 new advanced SQL challenges to help you master complex queries.</p>
+                            <div class="announcement-date">2 days ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

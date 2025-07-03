@@ -4,203 +4,297 @@
 {% block title %}{{ course.title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/courses.css' %}">
-<link rel="stylesheet" href="{% static 'css/course-button-fixes.css' %}">
+<link rel="stylesheet" href="{% static 'css/course-detail-new.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-<div class="main-content">
-    <div class="tile-wrap">
-        <!-- Course Header -->
-        <div class="course-detail-header">
-            <div class="course-hero">
-                <div class="course-hero-content">
-                    <div class="course-breadcrumb">
-                        <a href="{% url 'courses:courses_list' %}" class="btn btn-primary">Courses</a>
-                        <span>/</span>
-                        <span>{{ course.title }}</span>
-                    </div>
-                    
-                    <h1 class="course-title">{{ course.title }}</h1>
-                    <p class="course-subtitle">{{ course.short_description }}</p>
-                    
-                    <div class="course-meta-info">
-                        <div class="meta-item">
-                            <i class="fas fa-signal"></i>
-                            <span class="difficulty {{ course.difficulty }}">{{ course.get_difficulty_display }}</span>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            <span>{{ course.duration_hours }} hours</span>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-layer-group"></i>
-                            <span>{{ course.module_count }} modules</span>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-users"></i>
-                            <span>{{ total_enrollments }} student{{ total_enrollments|pluralize }}</span>
-                        </div>
-                        {% if avg_rating > 0 %}
-                        <div class="meta-item">
-                            <div class="rating">
-                                {% if avg_rating >= 1 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                {% if avg_rating >= 2 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                {% if avg_rating >= 3 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                {% if avg_rating >= 4 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                {% if avg_rating >= 5 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
-                                <span>({{ avg_rating }}/5)</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="course-instructor">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Instructor: {{ course.instructor.first_name }} {% if course.instructor.last_name %}{{ course.instructor.last_name }}{% else %}{{ course.instructor.email }}{% endif %}</span>
-                    </div>
-                </div>
-                
-                <div class="course-hero-image">
-                    {% if course.thumbnail %}
-                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
-                    {% else %}
-                        <img src="https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" alt="{{ course.title }}">
-                    {% endif %}
-                </div>
+<main class="course-detail-container">
+    <!-- Course Hero Section -->
+    <section class="course-hero">
+        <div class="hero-background {% if 'sql' in course.title|lower %}sql{% elif 'power' in course.title|lower %}powerbi{% elif 'python' in course.title|lower %}python{% elif 'tableau' in course.title|lower %}tableau{% elif 'bootcamp' in course.title|lower %}bootcamp{% else %}sql{% endif %}">
+            <div class="hero-overlay"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="breadcrumb">
+                <a href="{% url 'courses:courses_list' %}" class="breadcrumb-link">
+                    <i class="fas fa-arrow-left"></i> Back to Courses
+                </a>
             </div>
-            
-            <!-- Enrollment Card -->
-            <div class="enrollment-card">
-                <div class="price-section">
-                    {% if course.is_free %}
-                        <div class="price free">Free</div>
-                    {% else %}
-                        {% if course.discount_price %}
-                            <div class="price discounted">
-                                <span class="original-price">${{ course.price }}</span>
-                                <span class="discount-price">${{ course.discount_price }}</span>
-                            </div>
-                        {% else %}
-                            <div class="price">${{ course.price }}</div>
-                        {% endif %}
-                    {% endif %}
+
+            <div class="course-header">
+                <div class="course-badge">
+                    <i class="{% if 'sql' in course.title|lower %}fas fa-database{% elif 'power' in course.title|lower %}fas fa-chart-bar{% elif 'python' in course.title|lower %}fab fa-python{% elif 'tableau' in course.title|lower %}fas fa-chart-pie{% elif 'bootcamp' in course.title|lower %}fas fa-chart-line{% else %}fas fa-database{% endif %}"></i>
+                    <span>{{ course.get_difficulty_display }}</span>
                 </div>
-                
-                <div class="enrollment-actions">
-                    {% if user_enrollment %}
-                        {% if user_enrollment.is_completed %}
-                            <a href="{% url 'courses:my_courses' %}" class="btn-primary">
-                                <i class="fas fa-check-circle"></i> Completed
-                            </a>
-                            {% if user_enrollment.certificate_issued %}
-                                <a href="{% url 'courses:certificate_view' user_enrollment.certificate.certificate_id %}" class="btn-secondary">
-                                    <i class="fas fa-certificate"></i> View Certificate
-                                </a>
+
+                <h1 class="course-title">{{ course.title }}</h1>
+                <p class="course-subtitle">{{ course.short_description }}</p>
+
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-star"></i>
+                        <span>{{ avg_rating|default:"4.8" }} ({{ total_enrollments }} student{{ total_enrollments|pluralize }})</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ course.duration_hours }} hour{{ course.duration_hours|pluralize }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-layer-group"></i>
+                        <span>{{ course.module_count }} module{{ course.module_count|pluralize }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span>
+                            {% if course.instructor.first_name %}
+                                {{ course.instructor.first_name }} {% if course.instructor.last_name %}{{ course.instructor.last_name }}{% endif %}
+                            {% else %}
+                                {{ course.instructor.email }}
                             {% endif %}
-                        {% else %}
-                            <a href="{% url 'courses:my_courses' %}" class="btn-primary">
-                                <i class="fas fa-play"></i> Continue Learning
-                            </a>
-                            <div class="progress-info">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: {{ user_enrollment.progress_percentage }}%"></div>
-                                </div>
-                                <span class="progress-text">{{ user_enrollment.progress_percentage }}% Complete</span>
-                            </div>
-                        {% endif %}
-                    {% else %}
-                        {% if user.is_authenticated %}
-                            <form method="post" action="{% url 'courses:course_enroll' course.slug %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-primary">
-                                    {% if course.is_free %}
-                                        <i class="fas fa-play"></i> Start Learning
-                                    {% else %}
-                                        <i class="fas fa-shopping-cart"></i> Enroll Now
-                                    {% endif %}
-                                </button>
-                            </form>
-                        {% else %}
-                            <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn-primary">
-                                <i class="fas fa-sign-in-alt"></i> Login to Enroll
-                            </a>
-                        {% endif %}
-                    {% endif %}
-                </div>
-                
-                <div class="course-features">
-                    <div class="feature">
-                        <i class="fas fa-infinity"></i>
-                        <span>Lifetime Access</span>
-                    </div>
-                    {% if course.certificate_enabled %}
-                    <div class="feature">
-                        <i class="fas fa-certificate"></i>
-                        <span>Certificate of Completion</span>
-                    </div>
-                    {% endif %}
-                    <div class="feature">
-                        <i class="fas fa-mobile-alt"></i>
-                        <span>Mobile Friendly</span>
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Course Content -->
-        <div class="course-content-section">
-            <div class="course-tabs">
-                <button class="tab-btn active" data-tab="overview">Overview</button>
-                <button class="tab-btn" data-tab="curriculum">Curriculum</button>
-                <button class="tab-btn" data-tab="reviews">Reviews ({{ total_reviews }})</button>
+    </section>
+    <!-- Enrollment Section -->
+    <section class="enrollment-section" id="enrollmentCard">
+        <div class="enrollment-card">
+            <button class="close-card-btn" onclick="toggleEnrollmentCard()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="price-section">
+                {% if course.is_free %}
+                    <div class="price-tag free">
+                        <span class="price-label">Free Course</span>
+                        <span class="price-value">₹0</span>
+                    </div>
+                {% else %}
+                    <div class="price-tag">
+                        {% if course.discount_price and course.discount_price != course.price %}
+                            <span class="price-original">₹{{ course.price }}</span>
+                            <span class="price-value">₹{{ course.discount_price }}</span>
+                            <span class="price-discount">SALE</span>
+                        {% else %}
+                            <span class="price-value">₹{{ course.price }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
-            
+
+            <div class="enrollment-actions">
+                {% if user_enrollment %}
+                    {% if user_enrollment.is_completed %}
+                        <a href="{% url 'courses:my_courses' %}" class="btn-primary completed">
+                            <i class="fas fa-check-circle"></i> Course Completed
+                        </a>
+                        {% if user_enrollment.certificate_issued and user_enrollment.certificate and user_enrollment.certificate.certificate_id %}
+                            <a href="{% url 'courses:certificate_view' user_enrollment.certificate.certificate_id %}" class="btn-secondary">
+                                <i class="fas fa-certificate"></i> View Certificate
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'courses:course_watch' course.slug %}" class="btn-primary">
+                            <i class="fas fa-play"></i> Continue Learning
+                        </a>
+                        <div class="progress-section">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ user_enrollment.progress_percentage }}%"></div>
+                            </div>
+                            <span class="progress-text">{{ user_enrollment.progress_percentage }}% Complete</span>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'courses:course_enroll' course.slug %}" class="enrollment-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-primary">
+                                {% if course.is_free %}
+                                    <i class="fas fa-play"></i> Start Learning Free
+                                {% else %}
+                                    <i class="fas fa-shopping-cart"></i> Enroll Now
+                                {% endif %}
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'users:login' %}?next={{ request.path }}" class="btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login to Enroll
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="course-features">
+                <div class="feature-item">
+                    <i class="fas fa-infinity"></i>
+                    <span>Lifetime Access</span>
+                </div>
+                {% if course.certificate_enabled %}
+                <div class="feature-item">
+                    <i class="fas fa-certificate"></i>
+                    <span>Certificate Included</span>
+                </div>
+                {% endif %}
+                <div class="feature-item">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Mobile & Desktop</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-download"></i>
+                    <span>Downloadable Resources</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Course Content -->
+    <section class="course-content">
+        <div class="content-container">
+            <div class="content-tabs">
+                <button class="tab-btn active" data-tab="overview">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Overview</span>
+                </button>
+                <button class="tab-btn" data-tab="curriculum">
+                    <i class="fas fa-list"></i>
+                    <span>Curriculum</span>
+                </button>
+                <button class="tab-btn" data-tab="reviews">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews ({{ total_reviews }})</span>
+                </button>
+            </div>
+
             <div class="tab-content active" id="overview">
-                <div class="course-description">
-                    {{ course.description|safe }}
+                <div class="overview-grid">
+                    <div class="description-section">
+                        <h3>About This Course</h3>
+                        <div class="course-description">
+                            {{ course.description|safe }}
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <div class="course-stats">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value">{{ total_enrollments }}</span>
+                                    <span class="stat-label">Students Enrolled</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value">{{ avg_rating|default:"4.8" }}</span>
+                                    <span class="stat-label">Average Rating</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value">{{ course.duration_hours }}h</span>
+                                    <span class="stat-label">Total Duration</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-value">{{ course.module_count }}</span>
+                                    <span class="stat-label">Modules</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {% if course.learning_outcomes %}
                 <div class="learning-outcomes">
-                    <h3>What You'll Learn</h3>
-                    {{ course.learning_outcomes|safe }}
+                    <h3><i class="fas fa-graduation-cap"></i> What You'll Learn</h3>
+                    <div class="outcomes-content">
+                        {{ course.learning_outcomes|safe }}
+                    </div>
                 </div>
                 {% endif %}
 
                 {% if course.prerequisites %}
                 <div class="prerequisites">
-                    <h3>Prerequisites</h3>
-                    {{ course.prerequisites|safe }}
+                    <h3><i class="fas fa-exclamation-triangle"></i> Prerequisites</h3>
+                    <div class="prerequisites-content">
+                        {{ course.prerequisites|safe }}
+                    </div>
                 </div>
                 {% endif %}
             </div>
-            
+
             <div class="tab-content" id="curriculum">
+                <div class="curriculum-header">
+                    <h3><i class="fas fa-list"></i> Course Curriculum</h3>
+                    <p>{{ course.module_count }} modules • {{ course.total_lessons }} lessons • {{ course.duration_hours }} hours total</p>
+                </div>
+
                 <div class="course-modules">
                     {% for module in course.modules.all %}
-                    <div class="module-item">
+                    <div class="module-card">
                         <div class="module-header">
-                            <h4>{{ module.title }}</h4>
-                            <span class="lesson-count">{{ module.lesson_count }} lesson{% if module.lesson_count != 1 %}s{% else %}{% endif %}</span>
+                            <div class="module-info">
+                                <h4 class="module-title">
+                                    <i class="fas fa-folder"></i>
+                                    {{ module.title }}
+                                </h4>
+                                {% if module.description %}
+                                <p class="module-description">{{ module.description }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="module-meta">
+                                <span class="lesson-count">
+                                    <i class="fas fa-play-circle"></i>
+                                    {{ module.lesson_count }} lesson{{ module.lesson_count|pluralize }}
+                                </span>
+                            </div>
                         </div>
-                        {% if module.description %}
-                        <p class="module-description">{{ module.description }}</p>
-                        {% endif %}
-                        
+
                         <div class="module-lessons">
                             {% for lesson in module.lessons.all %}
                             <div class="lesson-item">
-                                <div class="lesson-info">
-                                    <i class="fas fa-play-circle"></i>
-                                    <span class="lesson-title">{{ lesson.title }}</span>
+                                <div class="lesson-content">
+                                    <div class="lesson-icon">
+                                        {% if lesson.lesson_type == 'video' %}
+                                            <i class="fas fa-play"></i>
+                                        {% elif lesson.lesson_type == 'text' %}
+                                            <i class="fas fa-file-text"></i>
+                                        {% elif lesson.lesson_type == 'quiz' %}
+                                            <i class="fas fa-question-circle"></i>
+                                        {% else %}
+                                            <i class="fas fa-book"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="lesson-info">
+                                        <span class="lesson-title">{{ lesson.title }}</span>
+                                        <span class="lesson-type">{{ lesson.get_lesson_type_display }}</span>
+                                    </div>
                                 </div>
                                 <div class="lesson-meta">
                                     {% if lesson.duration_minutes %}
-                                        <span class="duration">{{ lesson.duration_minutes }} min</span>
+                                        <span class="duration">
+                                            <i class="fas fa-clock"></i>
+                                            {{ lesson.duration_minutes }} min
+                                        </span>
                                     {% endif %}
-                                    <span class="lesson-type">{{ lesson.get_lesson_type_display }}</span>
+                                    {% if user_enrollment and lesson in user_enrollment.completed_lessons.all %}
+                                        <span class="lesson-status completed">
+                                            <i class="fas fa-check-circle"></i>
+                                        </span>
+                                    {% endif %}
                                 </div>
                             </div>
                             {% endfor %}
@@ -209,15 +303,45 @@
                     {% endfor %}
                 </div>
             </div>
-            
+
             <div class="tab-content" id="reviews">
+                <div class="reviews-header">
+                    <h3><i class="fas fa-star"></i> Student Reviews</h3>
+                    {% if avg_rating > 0 %}
+                    <div class="rating-summary">
+                        <div class="rating-score">{{ avg_rating|floatformat:1 }}</div>
+                        <div class="rating-stars">
+                            {% if avg_rating >= 1 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                            {% if avg_rating >= 2 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                            {% if avg_rating >= 3 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                            {% if avg_rating >= 4 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                            {% if avg_rating >= 5 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                        </div>
+                        <div class="rating-text">Based on {{ total_reviews }} review{{ total_reviews|pluralize }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
                 {% if recent_reviews %}
                 <div class="reviews-list">
                     {% for review in recent_reviews %}
-                    <div class="review-item">
+                    <div class="review-card">
                         <div class="review-header">
+                            <div class="reviewer-avatar">
+                                {% if review.user.first_name %}
+                                    {{ review.user.first_name|first|upper }}
+                                {% else %}
+                                    {{ review.user.email|first|upper }}
+                                {% endif %}
+                            </div>
                             <div class="reviewer-info">
-                                <strong>{% if review.user.first_name %}{{ review.user.first_name }}{% else %}{{ review.user.email }}{% endif %}</strong>
+                                <div class="reviewer-name">
+                                    {% if review.user.first_name %}
+                                        {{ review.user.first_name }} {% if review.user.last_name %}{{ review.user.last_name|first }}.{% endif %}
+                                    {% else %}
+                                        {{ review.user.email|truncatechars:20 }}
+                                    {% endif %}
+                                </div>
                                 <div class="review-rating">
                                     {% if review.rating >= 1 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
                                     {% if review.rating >= 2 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
@@ -225,48 +349,209 @@
                                     {% if review.rating >= 4 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
                                     {% if review.rating >= 5 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
                                 </div>
+                                <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
                             </div>
-                            <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
                         </div>
                         {% if review.review_text %}
-                        <p class="review-text">{{ review.review_text }}</p>
+                        <div class="review-content">
+                            <p class="review-text">{{ review.review_text }}</p>
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
                 <div class="no-reviews">
-                    <i class="fas fa-star"></i>
+                    <div class="no-reviews-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
                     <h3>No reviews yet</h3>
-                    <p>Be the first to review this course!</p>
+                    <p>Be the first to review this course and help other students!</p>
                 </div>
                 {% endif %}
             </div>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
+    // Tab functionality with smooth transitions
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
-    
+
     tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
             const targetTab = this.dataset.tab;
-            
+
             // Remove active class from all tabs and contents
             tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            
+            tabContents.forEach(c => {
+                c.classList.remove('active');
+                c.style.display = 'none';
+            });
+
             // Add active class to clicked tab and corresponding content
             this.classList.add('active');
-            document.getElementById(targetTab).classList.add('active');
+            const targetContent = document.getElementById(targetTab);
+
+            if (targetContent) {
+                targetContent.style.display = 'block';
+                targetContent.classList.add('active');
+
+                // Smooth fade in
+                setTimeout(() => {
+                    targetContent.style.opacity = '1';
+                }, 50);
+            }
         });
     });
+
+    // Enrollment form animation
+    const enrollmentForm = document.querySelector('.enrollment-form');
+    if (enrollmentForm) {
+        enrollmentForm.addEventListener('submit', function(e) {
+            const button = this.querySelector('.btn-primary');
+            button.style.transform = 'scale(0.95)';
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+        });
+    }
+
+    // Smooth scroll for breadcrumb
+    const breadcrumbLink = document.querySelector('.breadcrumb-link');
+    if (breadcrumbLink) {
+        breadcrumbLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.history.back();
+        });
+    }
+
+    // Theme-aware styling updates
+    function updateThemeStyles() {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const cards = document.querySelectorAll('.module-card, .review-card, .enrollment-card');
+
+        cards.forEach(card => {
+            if (theme === 'dark') {
+                card.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+            } else {
+                card.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+            }
+        });
+    }
+
+    // Update styles on theme change
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                updateThemeStyles();
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    // Initial theme setup
+    updateThemeStyles();
+
+    // Initialize tabs properly
+    function initializeTabs() {
+        // Hide all tab contents first
+        tabContents.forEach(content => {
+            content.style.display = 'none';
+            content.classList.remove('active');
+        });
+
+        // Remove active from all tabs
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+
+        // Activate first tab and content
+        const firstTab = document.querySelector('.tab-btn[data-tab="overview"]');
+        const firstContent = document.getElementById('overview');
+
+        if (firstTab && firstContent) {
+            firstTab.classList.add('active');
+            firstContent.classList.add('active');
+            firstContent.style.display = 'block';
+            firstContent.style.opacity = '1';
+        }
+    }
+
+    // Initialize tabs
+    initializeTabs();
+
+    // Check if we need to show toggle button on mobile
+    function checkMobileToggle() {
+        const enrollmentSection = document.getElementById('enrollmentCard');
+        const computedStyle = window.getComputedStyle(enrollmentSection);
+
+        if (computedStyle.display === 'none') {
+            showEnrollmentToggle();
+        } else {
+            hideEnrollmentToggle();
+        }
+    }
+
+    // Check on resize
+    window.addEventListener('resize', checkMobileToggle);
+    checkMobileToggle();
 });
+
+// Toggle enrollment card visibility
+function toggleEnrollmentCard() {
+    const card = document.getElementById('enrollmentCard');
+    const isHidden = card.style.display === 'none' || window.getComputedStyle(card).display === 'none';
+
+    if (isHidden) {
+        card.style.display = 'block';
+        card.style.position = 'fixed';
+        card.style.top = '50%';
+        card.style.right = '1rem';
+        card.style.transform = 'translateY(-50%)';
+        card.style.zIndex = '1001';
+        setTimeout(() => {
+            card.style.opacity = '1';
+        }, 10);
+        hideEnrollmentToggle();
+    } else {
+        card.style.opacity = '0';
+        setTimeout(() => {
+            card.style.display = 'none';
+            showEnrollmentToggle();
+        }, 300);
+    }
+}
+
+// Show enrollment toggle button
+function showEnrollmentToggle() {
+    let toggleBtn = document.getElementById('enrollmentToggle');
+    if (!toggleBtn) {
+        toggleBtn = document.createElement('button');
+        toggleBtn.id = 'enrollmentToggle';
+        toggleBtn.className = 'enrollment-toggle-btn';
+        toggleBtn.innerHTML = '<i class="fas fa-shopping-cart"></i>';
+        toggleBtn.onclick = toggleEnrollmentCard;
+        document.body.appendChild(toggleBtn);
+    }
+    toggleBtn.style.display = 'flex';
+}
+
+// Hide enrollment toggle button
+function hideEnrollmentToggle() {
+    const toggleBtn = document.getElementById('enrollmentToggle');
+    if (toggleBtn) {
+        toggleBtn.style.display = 'none';
+    }
+}
 </script>
 {% endblock %}
