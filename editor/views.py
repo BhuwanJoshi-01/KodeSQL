@@ -272,9 +272,10 @@ def is_dangerous_query(query):
     return False
 
 
-def execute_sql_query(db_path, query):
+def execute_sql_query_enhanced(db_path, query):
     """
-    Execute SQL query against user's database.
+    Enhanced SQL query execution for SQLite that handles complex queries, CTEs,
+    multiple statements, and multiple result sets.
     """
     try:
         conn = sqlite3.connect(db_path)
@@ -292,56 +293,205 @@ def execute_sql_query(db_path, query):
                 'error': 'Query is empty or contains only comments'
             }
 
-        # Execute the query
-        cursor.execute(clean_query)
+        # Split query into individual statements
+        statements = _split_sql_statements_sqlite(clean_query)
 
-        # Check if it's a SELECT query
-        if clean_query.upper().startswith('SELECT'):
-            rows = cursor.fetchall()
-            columns = [description[0] for description in cursor.description] if cursor.description else []
+        all_results = []
+        total_changes = 0
+        last_insert_id = None
 
-            # Convert rows to list of dictionaries
-            results = []
-            for row in rows:
-                results.append(dict(row))
+        for i, statement in enumerate(statements):
+            statement = statement.strip()
+            if not statement:
+                continue
 
-            conn.close()
+            try:
+                # Execute the statement
+                cursor.execute(statement)
 
-            return {
-                'success': True,
-                'results': results,
-                'columns': columns,
-                'row_count': len(results)
-            }
+                # Determine if this is a SELECT statement or returns results
+                is_select = _is_select_statement_sqlite(statement)
+
+                if is_select:
+                    # Handle SELECT statements and other statements that return results
+                    rows = cursor.fetchall()
+                    columns = [desc[0] for desc in cursor.description] if cursor.description else []
+
+                    # Convert rows to list of dictionaries
+                    results = []
+                    for row in rows:
+                        results.append(dict(row))
+
+                    all_results.append({
+                        'statement_index': i,
+                        'statement': statement,
+                        'type': 'SELECT',
+                        'results': results,
+                        'columns': columns,
+                        'row_count': len(results)
+                    })
+                else:
+                    # Handle INSERT, UPDATE, DELETE, etc.
+                    conn.commit()
+                    changes = cursor.rowcount
+                    total_changes += changes
+
+                    # Get last insert ID for INSERT statements
+                    if cursor.lastrowid:
+                        last_insert_id = cursor.lastrowid
+
+                    all_results.append({
+                        'statement_index': i,
+                        'statement': statement,
+                        'type': 'MODIFICATION',
+                        'changes': changes,
+                        'message': f'Query executed successfully. {changes} row(s) affected.'
+                    })
+
+            except Exception as stmt_error:
+                # If one statement fails, return error for that specific statement
+                conn.close()
+                return {
+                    'success': False,
+                    'error': f'Error in statement {i + 1}: {str(stmt_error)}',
+                    'statement': statement
+                }
+
+        conn.close()
+
+        # Prepare the response based on results
+        if len(all_results) == 1:
+            # Single statement - return simplified format
+            result = all_results[0]
+            if result['type'] == 'SELECT':
+                return {
+                    'success': True,
+                    'results': result['results'],
+                    'columns': result['columns'],
+                    'row_count': result['row_count']
+                }
+            else:
+                return {
+                    'success': True,
+                    'changes': result['changes'],
+                    'last_id': last_insert_id,
+                    'message': result['message']
+                }
         else:
-            # For INSERT, UPDATE, DELETE, etc.
-            conn.commit()
-            changes = cursor.rowcount
-            last_id = cursor.lastrowid
+            # Multiple statements - return comprehensive format
+            select_results = [r for r in all_results if r['type'] == 'SELECT']
+            modification_results = [r for r in all_results if r['type'] == 'MODIFICATION']
 
-            conn.close()
-
-            return {
+            response = {
                 'success': True,
-                'changes': changes,
-                'last_id': last_id,
-                'message': f'Query executed successfully. {changes} row(s) affected.'
+                'multiple_statements': True,
+                'total_statements': len(statements)
             }
 
-    except sqlite3.Error as e:
-        if 'conn' in locals():
-            conn.close()
-        return {
-            'success': False,
-            'error': str(e)
-        }
+            if select_results:
+                # If there are SELECT results, prioritize the last one for main display
+                last_select = select_results[-1]
+                response.update({
+                    'results': last_select['results'],
+                    'columns': last_select['columns'],
+                    'row_count': last_select['row_count']
+                })
+                response['all_select_results'] = select_results
+
+            if modification_results:
+                response.update({
+                    'total_changes': total_changes,
+                    'last_id': last_insert_id,
+                    'modification_results': modification_results
+                })
+
+            if not select_results and modification_results:
+                response['message'] = f'All statements executed successfully. {total_changes} total row(s) affected.'
+
+            return response
+
     except Exception as e:
-        if 'conn' in locals():
+        try:
             conn.close()
+        except:
+            pass
         return {
             'success': False,
-            'error': f'Unexpected error: {str(e)}'
+            'error': f'SQLite Error: {str(e)}'
         }
+
+
+def execute_sql_query(db_path, query):
+    """
+    Legacy SQL query execution function - now uses enhanced execution.
+    Maintained for backward compatibility.
+    """
+    return execute_sql_query_enhanced(db_path, query)
+
+
+def _split_sql_statements_sqlite(query):
+    """
+    Split SQL query into individual statements for SQLite, handling complex cases.
+    """
+    # Remove comments first
+    clean_query = remove_sql_comments(query)
+
+    # Simple approach: split by semicolon, but be smart about it
+    statements = []
+    current_statement = ""
+    in_string = False
+    string_char = None
+
+    i = 0
+    while i < len(clean_query):
+        char = clean_query[i]
+
+        # Handle string literals
+        if char in ("'", '"') and not in_string:
+            in_string = True
+            string_char = char
+            current_statement += char
+        elif char == string_char and in_string:
+            # Check if it's escaped
+            if i > 0 and clean_query[i-1] == '\\':
+                current_statement += char
+            else:
+                in_string = False
+                string_char = None
+                current_statement += char
+        elif char == ';' and not in_string:
+            # End of statement
+            if current_statement.strip():
+                statements.append(current_statement.strip())
+            current_statement = ""
+        else:
+            current_statement += char
+
+        i += 1
+
+    # Add the last statement if it doesn't end with semicolon
+    if current_statement.strip():
+        statements.append(current_statement.strip())
+
+    return statements
+
+
+def _is_select_statement_sqlite(statement):
+    """
+    Determine if a SQL statement returns results for SQLite.
+    """
+    statement_upper = statement.upper().strip()
+
+    # Statements that return results in SQLite
+    result_returning_keywords = [
+        'SELECT', 'WITH', 'PRAGMA', 'EXPLAIN'
+    ]
+
+    for keyword in result_returning_keywords:
+        if statement_upper.startswith(keyword):
+            return True
+
+    return False
 
 
 def initialize_user_database(db_path):

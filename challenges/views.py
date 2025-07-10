@@ -17,7 +17,7 @@ import os
 import time
 
 from .models import Challenge, UserChallengeProgress, ChallengeSubscriptionPlan, UserChallengeSubscription
-from users.models import UserDatabase
+from users.models import UserDatabase, UserProfile
 from editor.views import execute_sql_query
 from .utils import execute_sql_query_multi_engine, DatabaseEngineManager
 from .forms import ChallengeForm, ChallengeFilterForm, UserChallengeSubscriptionForm, SubscriptionFilterForm, ChallengeSubscriptionPlanForm
@@ -27,7 +27,31 @@ def challenges_list(request):
     """
     Challenges list view with real data and subscription information.
     """
-    challenges = Challenge.objects.filter(is_active=True).order_by('order', 'difficulty')
+    challenges_queryset = Challenge.objects.filter(is_active=True).order_by('order', 'difficulty')
+
+    # Apply filters from URL parameters
+    search_query = request.GET.get('search', '')
+    difficulty_filter = request.GET.get('difficulty', '')
+    company_filter = request.GET.get('company', '')
+    status_filter = request.GET.get('status', '')
+    subscription_filter = request.GET.get('subscription_type', '')
+
+    if search_query:
+        challenges_queryset = challenges_queryset.filter(title__icontains=search_query)
+
+    if difficulty_filter:
+        challenges_queryset = challenges_queryset.filter(difficulty=difficulty_filter)
+
+    if company_filter:
+        challenges_queryset = challenges_queryset.filter(company__icontains=company_filter)
+
+    if subscription_filter:
+        challenges_queryset = challenges_queryset.filter(subscription_type=subscription_filter)
+
+    # Pagination
+    paginator = Paginator(challenges_queryset, 20)  # Show 20 challenges per page
+    page_number = request.GET.get('page')
+    challenges = paginator.get_page(page_number)
 
     # Get user progress if authenticated and attach to challenges
     user_subscription = None
@@ -47,17 +71,24 @@ def challenges_list(request):
                 challenge.progress_data = progress_dict[challenge.id]
             else:
                 challenge.progress_data = None
+            # Add user access information
+            challenge.user_has_access_to_challenge = challenge.user_has_access(request.user)
 
         # Get user's active challenge subscription
         user_subscription = UserChallengeSubscription.objects.filter(
             user=request.user,
             status='active'
         ).first()
+    else:
+        # For unauthenticated users, add access information
+        for challenge in challenges:
+            challenge.progress_data = None
+            challenge.user_has_access_to_challenge = challenge.user_has_access(request.user)
 
-    # Calculate progress statistics
-    total_challenges = challenges.count()
-    free_challenges = challenges.filter(subscription_type='free').count()
-    paid_challenges = challenges.filter(subscription_type='paid').count()
+    # Calculate progress statistics (use original queryset for accurate counts)
+    total_challenges = challenges_queryset.count()
+    free_challenges = challenges_queryset.filter(subscription_type='free').count()
+    paid_challenges = challenges_queryset.filter(subscription_type='paid').count()
 
     completed_challenges = 0
     completed_easy = 0
@@ -79,21 +110,30 @@ def challenges_list(request):
                 elif challenge.difficulty == 'extreme':
                     completed_extreme += 1
 
-    # Get challenge statistics by difficulty
-    easy_total = challenges.filter(difficulty='easy').count()
-    medium_total = challenges.filter(difficulty='medium').count()
-    hard_total = challenges.filter(difficulty='hard').count()
-    extreme_total = challenges.filter(difficulty='extreme').count()
+    # Get challenge statistics by difficulty (use original queryset)
+    easy_total = challenges_queryset.filter(difficulty='easy').count()
+    medium_total = challenges_queryset.filter(difficulty='medium').count()
+    hard_total = challenges_queryset.filter(difficulty='hard').count()
+    extreme_total = challenges_queryset.filter(difficulty='extreme').count()
 
     context = {
         'page_title': 'SQL Challenges',
         'challenges': challenges,
+        'paginator': paginator,
+        'page_obj': challenges,
+        'is_paginated': challenges.has_other_pages(),
         'user_subscription': user_subscription,
         'has_active_subscription': user_subscription and user_subscription.is_active if user_subscription else False,
         'total_challenges': total_challenges,
         'free_challenges': free_challenges,
         'paid_challenges': paid_challenges,
         'completed_challenges': completed_challenges,
+        # Filter values for form persistence
+        'current_search': search_query,
+        'current_difficulty': difficulty_filter,
+        'current_company': company_filter,
+        'current_status': status_filter,
+        'current_subscription': subscription_filter,
         'progress_stats': {
             'total': {
                 'completed': completed_challenges,
@@ -131,17 +171,18 @@ def challenge_detail(request, challenge_id):
     """
     challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
 
+    # Require authentication for all challenges (both free and premium)
+    if not request.user.is_authenticated:
+        messages.warning(request, 'Please login to access challenges and solve SQL problems.')
+        return redirect('users:login')
+
     # Check if user has access to this challenge
     has_access = challenge.user_has_access(request.user)
 
     # If no access and it's a paid challenge, redirect to subscription plans
     if not has_access and challenge.is_premium:
-        if request.user.is_authenticated:
-            messages.warning(request, 'This is a premium challenge. Please subscribe to access it.')
-            return redirect('challenges:subscription_plans')
-        else:
-            messages.warning(request, 'Please login and subscribe to access premium challenges.')
-            return redirect('users:login')
+        messages.warning(request, 'This is a premium challenge. Please subscribe to access it.')
+        return redirect('challenges:subscription_plans')
 
     # Get user progress if authenticated
     user_progress = None
@@ -151,12 +192,8 @@ def challenge_detail(request, challenge_id):
             challenge=challenge
         )
 
-        # Initialize challenge database for this user if they have access
-        if has_access:
-            try:
-                challenge.initialize_challenge_database(request.user)
-            except Exception as e:
-                messages.error(request, f'Error initializing challenge database: {str(e)}')
+        # Note: Database initialization is now handled dynamically during query execution
+        # No need to pre-initialize databases since we use temporary databases for each query
 
     # Get database schema configuration from the simplified system
     schema_config = challenge.get_database_schema_config()
@@ -191,7 +228,7 @@ def execute_challenge_query(request, challenge_id):
     try:
         data = json.loads(request.body)
         user_query = data.get('query', '').strip()
-        engine = data.get('engine', 'sqlite')  # Get selected database engine
+        engine = data.get('engine', 'mysql')  # Get selected database engine
 
         if not user_query:
             return JsonResponse({
@@ -206,24 +243,30 @@ def execute_challenge_query(request, challenge_id):
                 'error': f'This challenge does not support {engine.upper()} database engine.'
             })
 
-        # Initialize database for the selected engine
-        try:
-            challenge.initialize_challenge_database(request.user, engine)
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': f'Failed to initialize {engine} database: {str(e)}'
-            })
+        # Database initialization is handled dynamically by the dual-dataset system
+        # No need to pre-initialize databases
 
         # Execute user query with selected engine
         start_time = time.time()
 
-        if engine == 'sqlite':
-            # Use existing SQLite logic
-            db_path = challenge.get_challenge_database_path(request.user, engine)
-            result = execute_sql_query(db_path, user_query)
+        # Use new dual-dataset system if available
+        if challenge.has_multi_table_setup() or (challenge.schema_sql and challenge.run_dataset_sql):
+            # New dual-dataset system (test mode - flag_id=1)
+            from .utils import execute_dual_dataset_query
+
+            result = execute_dual_dataset_query(
+                challenge=challenge,
+                query=user_query,
+                flag_id=1,  # Test dataset
+                engine=engine
+            )
+
+            # Add fallback message if MySQL fallback was used
+            if result.get('fallback_used') and result.get('original_engine') == 'mysql':
+                original_message = result.get('message', f'Query executed successfully. {result.get("row_count", 0)} row(s) returned.')
+                result['message'] = original_message + ' (Note: Executed on PostgreSQL - MySQL server not available)'
         else:
-            # Use multi-engine logic for PostgreSQL/MySQL
+            # Use multi-engine logic for PostgreSQL/MySQL (hosting service engines)
             db_config = {
                 'database': f"challenge_{challenge.id}_user_{request.user.id}"
             }
@@ -242,9 +285,32 @@ def execute_challenge_query(request, challenge_id):
         columns = result.get('columns', [])
         row_count = result.get('row_count', 0)
 
+        # Convert results to JSON-serializable format
+        def serialize_value(value):
+            """Convert Python objects to JSON-serializable format"""
+            from decimal import Decimal
+            import datetime
+
+            if isinstance(value, Decimal):
+                return float(value)
+            elif isinstance(value, (datetime.date, datetime.datetime)):
+                return value.isoformat()
+            elif value is None:
+                return None
+            else:
+                return str(value)
+
+        # Serialize all results
+        serialized_results = []
+        for row in user_results:
+            serialized_row = {}
+            for key, value in row.items():
+                serialized_row[key] = serialize_value(value)
+            serialized_results.append(serialized_row)
+
         return JsonResponse({
             'success': True,
-            'results': user_results,
+            'results': serialized_results,
             'columns': columns,
             'row_count': row_count,
             'execution_time': execution_time,
@@ -272,7 +338,7 @@ def submit_challenge(request, challenge_id):
     try:
         challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
         user_query = request.POST.get('query', '').strip()
-        engine = request.POST.get('engine', 'sqlite')  # Get selected database engine
+        engine = request.POST.get('engine', 'mysql')  # Get selected database engine
 
         if not user_query:
             return JsonResponse({
@@ -296,26 +362,36 @@ def submit_challenge(request, challenge_id):
         # Increment attempts
         user_progress.attempts += 1
 
-        # Initialize database for the selected engine
-        try:
-            challenge.initialize_challenge_database(request.user, engine)
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'error': f'Failed to initialize {engine} database: {str(e)}'
-            })
-
-        # Execute user query with selected engine
-        if engine == 'sqlite':
-            # Use existing SQLite logic
-            db_path = challenge.get_challenge_database_path(request.user, engine)
-            result = execute_sql_query(db_path, user_query)
+        # Execute user query using dual-dataset system (submit dataset for validation)
+        if challenge.has_multi_table_setup() or (challenge.schema_sql and challenge.submit_dataset_sql):
+            # Use new dual-dataset system
+            from .utils import execute_dual_dataset_query
+            result = execute_dual_dataset_query(
+                challenge=challenge,
+                query=user_query,
+                flag_id=2,  # Submit dataset for validation
+                engine=engine
+            )
         else:
-            # Use multi-engine logic for PostgreSQL/MySQL
-            db_config = {
-                'database': f"challenge_{challenge.id}_user_{request.user.id}"
-            }
-            result = execute_sql_query_multi_engine(engine, db_config, user_query)
+            # Fallback to legacy system for old challenges
+            try:
+                challenge.initialize_challenge_database(request.user, engine)
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Failed to initialize {engine} database: {str(e)}'
+                })
+
+            if engine == 'sqlite':
+                # Use existing SQLite logic
+                db_path = challenge.get_challenge_database_path(request.user, engine)
+                result = execute_sql_query(db_path, user_query)
+            else:
+                # Use multi-engine logic for PostgreSQL/MySQL
+                db_config = {
+                    'database': f"challenge_{challenge.id}_user_{request.user.id}"
+                }
+                result = execute_sql_query_multi_engine(engine, db_config, user_query)
 
         if not result['success']:
             user_progress.save()
@@ -325,14 +401,53 @@ def submit_challenge(request, challenge_id):
                 'attempts': user_progress.attempts
             })
 
-        # Compare results with expected output
+        # Get user result and expected result for response
         user_result = result.get('results', [])
         expected_result = challenge.expected_result
 
-        # Normalize results for comparison
-        is_correct = compare_query_results(user_result, expected_result)
+        # Use dual-dataset validation for both legacy and multi-table systems
+        if (challenge.schema_sql and challenge.submit_dataset_sql) or challenge.has_multi_table_setup():
+            # Dual-dataset validation (submit mode)
+            is_correct, validation_message = challenge.validate_user_query(user_query, engine, is_test_mode=False)
+            if not is_correct and "Query execution failed" not in validation_message:
+                # Query executed successfully but result doesn't match
+                user_progress.save()
+                return JsonResponse({
+                    'success': False,
+                    'error': validation_message,
+                    'attempts': user_progress.attempts,
+                    'validation_type': 'dual_dataset'
+                })
+        else:
+            # Fallback validation for challenges not yet migrated
+            # Normalize results for comparison
+            is_correct = compare_query_results(user_result, expected_result)
 
         if is_correct:
+            # Check if this is the first completion to award XP
+            if not user_progress.is_completed:
+                user_progress.xp_earned = challenge.xp
+                xp_message = f" You earned {challenge.xp} XP!"
+
+                # Create XP transaction for audit trail
+                from .models import XPTransaction
+                XPTransaction.objects.create(
+                    user=request.user,
+                    challenge=challenge,
+                    transaction_type='challenge_completion',
+                    xp_amount=challenge.xp,
+                    description=f"Completed challenge: {challenge.title}"
+                )
+
+                # Update user profile total XP
+                try:
+                    profile = request.user.profile
+                except UserProfile.DoesNotExist:
+                    profile = UserProfile.objects.create(user=request.user)
+                profile.update_total_xp()
+            else:
+                xp_message = ""
+
             user_progress.is_completed = True
             user_progress.completed_at = timezone.now()
             user_progress.best_query = user_query
@@ -341,10 +456,11 @@ def submit_challenge(request, challenge_id):
             return JsonResponse({
                 'success': True,
                 'correct': True,
-                'message': 'Congratulations! Your solution is correct!',
+                'message': f'Congratulations! Your solution is correct!{xp_message}',
                 'attempts': user_progress.attempts,
                 'user_result': user_result,
-                'expected_result': expected_result
+                'expected_result': expected_result,
+                'xp_earned': user_progress.xp_earned
             })
         else:
             user_progress.save()
@@ -383,6 +499,218 @@ def compare_query_results(user_result, expected_result):
 
 
 # Admin Views for Challenge Management
+
+def _extract_table_name_from_schema(schema_sql, table_id):
+    """
+    Enhanced table name extraction from CREATE TABLE statements.
+    Handles various syntax variations including IF NOT EXISTS, backticks, quotes, etc.
+    """
+    import re
+
+    # Multiple patterns to handle different CREATE TABLE syntax variations
+    patterns = [
+        # Pattern 1: CREATE TABLE with backticks
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?`([a-zA-Z_][a-zA-Z0-9_]*)`',
+        # Pattern 2: CREATE TABLE with double quotes
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"([a-zA-Z_][a-zA-Z0-9_]*)"',
+        # Pattern 3: CREATE TABLE with square brackets (SQL Server style)
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?\[([a-zA-Z_][a-zA-Z0-9_]*)\]',
+        # Pattern 4: CREATE TABLE without quotes
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\(',
+        # Pattern 5: CREATE TABLE with schema prefix (database.table or schema.table)
+        r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:[a-zA-Z_][a-zA-Z0-9_]*\.)?([a-zA-Z_][a-zA-Z0-9_]*)\s*\('
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, schema_sql, re.IGNORECASE)
+        if match:
+            return match.group(1)
+
+    # Fallback name if no pattern matches
+    return f"table_{table_id}"
+
+
+def _auto_generate_expected_results(challenge):
+    """
+    Automatically generate expected results JSON when reference query is provided.
+    Enhanced with automatic column ordering for consistency.
+    Returns True if JSON was generated, False otherwise.
+    """
+    # Only generate if we have a reference query and the necessary data
+    if not challenge.reference_query:
+        return False
+
+    # Check if we have the required data for execution
+    has_data = False
+    if challenge.has_multi_table_setup():
+        # Multi-table system: check if all tables have submit datasets
+        has_data = all(table.submit_dataset_sql for table in challenge.tables.all())
+    else:
+        # Legacy system: check if submit dataset exists
+        has_data = bool(challenge.schema_sql and challenge.submit_dataset_sql)
+
+    if not has_data:
+        return False
+
+    try:
+        success, message = challenge.execute_reference_query()
+        if success:
+            print(f"✅ Auto-generated expected results with consistent column ordering for challenge: {challenge.title}")
+            return True
+        else:
+            print(f"⚠️ Failed to auto-generate expected results for {challenge.title}: {message}")
+            return False
+    except Exception as e:
+        print(f"❌ Error auto-generating expected results for {challenge.title}: {str(e)}")
+        return False
+
+
+def handle_multi_table_data(request, challenge, is_update=False):
+    """
+    Helper function to process multi-table data from the frontend form.
+    Enhanced with improved table name detection and update handling.
+    """
+    tables_created = 0
+
+    # Process tables data from the frontend form
+    # The JavaScript sends data in format: tables[1][table_name], tables[1][schema_sql], etc.
+    table_data = {}
+
+    for key, value in request.POST.items():
+        if key.startswith('tables[') and value.strip():
+            # Parse the key: tables[1][table_name] -> table_id=1, field=table_name
+            import re
+            match = re.match(r'tables\[(\d+)\]\[(\w+)\]', key)
+            if match:
+                table_id = match.group(1)
+                field_name = match.group(2)
+
+                if table_id not in table_data:
+                    table_data[table_id] = {}
+
+                table_data[table_id][field_name] = value.strip()
+
+    # If this is an update, we'll use update_or_create instead of deleting
+    # This prevents unique constraint violations
+
+    # Validate and create ChallengeTable objects
+    for table_id, data in table_data.items():
+        # Check for required fields (table_name is now optional and auto-extracted)
+        required_fields = ['schema_sql', 'run_dataset_sql', 'submit_dataset_sql']
+        if all(field in data for field in required_fields):
+            try:
+                # Validate the table data before creating
+                validation_result = _validate_multi_table_data(data, table_id)
+                if not validation_result['valid']:
+                    raise Exception(validation_result['error'])
+
+                # Additional validation: ensure flag_id column will be added
+                schema_sql = data['schema_sql'].strip()
+                if schema_sql and 'flag_id' not in schema_sql.lower():
+                    # This is expected - flag_id will be auto-added by the model
+                    pass
+
+                from .models import ChallengeTable
+                import re
+
+                # Enhanced auto-extraction of table name from schema SQL
+                table_name = data.get('table_name', '')
+                if not table_name:
+                    schema_sql = data['schema_sql'].strip()
+                    table_name = _extract_table_name_from_schema(schema_sql, table_id)
+
+                # Create or update the table using update_or_create to handle duplicates
+                table_obj, created = ChallengeTable.objects.update_or_create(
+                    challenge=challenge,
+                    table_name=table_name,
+                    defaults={
+                        'schema_sql': data['schema_sql'],
+                        'run_dataset_sql': data['run_dataset_sql'],
+                        'submit_dataset_sql': data['submit_dataset_sql'],
+                        'order': int(table_id) * 10  # Use table_id for ordering
+                    }
+                )
+                tables_created += 1
+            except Exception as e:
+                print(f"Error creating table {data.get('table_name', 'unknown')}: {e}")
+                # Re-raise the exception to show validation errors to the user
+                raise Exception(f"Table {table_id} validation failed: {str(e)}")
+
+    return tables_created
+
+
+def _preserve_table_data_from_request(request):
+    """
+    Extract and preserve table data from request for re-display when validation fails.
+    """
+    preserved_data = {}
+
+    for key, value in request.POST.items():
+        if key.startswith('tables[') and value.strip():
+            # Parse the key: tables[1][table_name] -> table_id=1, field=table_name
+            import re
+            match = re.match(r'tables\[(\d+)\]\[(\w+)\]', key)
+            if match:
+                table_id = match.group(1)
+                field_name = match.group(2)
+
+                if table_id not in preserved_data:
+                    preserved_data[table_id] = {}
+
+                preserved_data[table_id][field_name] = value.strip()
+
+    return preserved_data
+
+
+def _validate_multi_table_data(table_data, table_id):
+    """
+    Validate individual table data for multi-table challenges.
+    Returns dict with 'valid' boolean and 'error' message.
+    """
+    try:
+        from .forms import validate_sql_syntax, extract_table_info_from_schema, validate_insert_statements_against_schema
+
+        schema_sql = table_data.get('schema_sql', '')
+        run_dataset_sql = table_data.get('run_dataset_sql', '')
+        submit_dataset_sql = table_data.get('submit_dataset_sql', '')
+
+        # Validate schema SQL syntax
+        is_valid, error_msg = validate_sql_syntax(schema_sql, f"Table {table_id} Schema SQL")
+        if not is_valid:
+            return {'valid': False, 'error': error_msg}
+
+        # Validate run dataset SQL syntax
+        is_valid, error_msg = validate_sql_syntax(run_dataset_sql, f"Table {table_id} Run Dataset SQL")
+        if not is_valid:
+            return {'valid': False, 'error': error_msg}
+
+        # Validate submit dataset SQL syntax
+        is_valid, error_msg = validate_sql_syntax(submit_dataset_sql, f"Table {table_id} Submit Dataset SQL")
+        if not is_valid:
+            return {'valid': False, 'error': error_msg}
+
+        # Extract table info and validate data consistency
+        try:
+            tables_info = extract_table_info_from_schema(schema_sql)
+
+            if tables_info:
+                # Validate run dataset against schema
+                is_valid, error_msg = validate_insert_statements_against_schema(run_dataset_sql, tables_info)
+                if not is_valid:
+                    return {'valid': False, 'error': f"Table {table_id} Run Dataset validation: {error_msg}"}
+
+                # Validate submit dataset against schema
+                is_valid, error_msg = validate_insert_statements_against_schema(submit_dataset_sql, tables_info)
+                if not is_valid:
+                    return {'valid': False, 'error': f"Table {table_id} Submit Dataset validation: {error_msg}"}
+
+        except Exception as e:
+            return {'valid': False, 'error': f"Table {table_id} schema parsing error: {str(e)}"}
+
+        return {'valid': True, 'error': ''}
+
+    except Exception as e:
+        return {'valid': False, 'error': f"Table {table_id} validation error: {str(e)}"}
 
 @staff_member_required
 def admin_challenges_list(request):
@@ -425,14 +753,65 @@ def admin_challenges_list(request):
 @staff_member_required
 def admin_challenge_create(request):
     """
-    Admin view to create a new challenge.
+    Admin view to create a new challenge with multi-table support and automatic JSON generation.
     """
     if request.method == 'POST':
         form = ChallengeForm(request.POST, request.FILES)
         if form.is_valid():
-            challenge = form.save()
-            messages.success(request, f'Challenge "{challenge.title}" created successfully!')
-            return redirect('challenges:admin_challenge_detail', challenge_id=challenge.id)
+            try:
+                challenge = form.save()
+
+                # Handle multi-table data with validation
+                tables_created = handle_multi_table_data(request, challenge)
+
+                # Automatic JSON generation with column ordering if reference query is provided
+                json_generated = _auto_generate_expected_results(challenge)
+
+                # If JSON wasn't generated automatically, try to generate it now that all tables are created
+                if not json_generated and challenge.reference_query and tables_created > 0:
+                    try:
+                        success, message = challenge.execute_reference_query()
+                        if success:
+                            json_generated = True
+                            print(f"✅ Generated expected results with column ordering after table creation: {challenge.title}")
+                    except Exception as e:
+                        print(f"⚠️ Failed to generate expected results after table creation: {str(e)}")
+
+                # Build success message
+                success_parts = [f'Challenge "{challenge.title}" created successfully']
+                if tables_created > 0:
+                    success_parts.append(f'with {tables_created} database table(s)')
+                if json_generated:
+                    success_parts.append('and expected results auto-generated')
+
+                messages.success(request, ' '.join(success_parts) + '!')
+
+                return redirect('challenges:admin_challenge_detail', challenge_id=challenge.id)
+
+            except Exception as e:
+                # Handle validation errors from multi-table data
+                error_message = str(e)
+                if "validation failed" in error_message.lower():
+                    messages.error(request, f"Challenge creation failed: {error_message}")
+                else:
+                    messages.error(request, f"An error occurred while creating the challenge: {error_message}")
+
+                # Keep the form data so user doesn't lose their work
+                form.add_error(None, error_message)
+
+                # Preserve multi-table data for re-display
+                preserved_table_data = _preserve_table_data_from_request(request)
+                context = {
+                    'page_title': 'Create Challenge',
+                    'form': form,
+                    'is_edit': False,
+                    'preserved_table_data': preserved_table_data,
+                    'validation_error': True
+                }
+                return render(request, 'challenges/admin/challenge_form.html', context)
+        else:
+            # Form validation failed - errors will be displayed in the template
+            messages.error(request, "Please correct the errors below and try again.")
     else:
         form = ChallengeForm()
 
@@ -447,7 +826,7 @@ def admin_challenge_create(request):
 @staff_member_required
 def admin_challenge_edit(request, challenge_id):
     """
-    Admin view to edit an existing challenge.
+    Admin view to edit an existing challenge with multi-table support.
     """
     challenge = get_object_or_404(Challenge, id=challenge_id)
 
@@ -455,9 +834,61 @@ def admin_challenge_edit(request, challenge_id):
         form = ChallengeForm(request.POST, request.FILES, instance=challenge)
 
         if form.is_valid():
-            challenge = form.save()
-            messages.success(request, f'Challenge "{challenge.title}" updated successfully!')
-            return redirect('challenges:admin_challenge_detail', challenge_id=challenge.id)
+            try:
+                challenge = form.save()
+
+                # Handle multi-table data with proper update logic
+                tables_created = handle_multi_table_data(request, challenge, is_update=True)
+
+                # Automatic JSON generation with column ordering if reference query is provided
+                json_generated = _auto_generate_expected_results(challenge)
+
+                # If JSON wasn't generated automatically, try to generate it now that all tables are updated
+                if not json_generated and challenge.reference_query and tables_created > 0:
+                    try:
+                        success, message = challenge.execute_reference_query()
+                        if success:
+                            json_generated = True
+                            print(f"✅ Regenerated expected results with column ordering after table update: {challenge.title}")
+                    except Exception as e:
+                        print(f"⚠️ Failed to regenerate expected results after table update: {str(e)}")
+
+                # Build success message
+                success_parts = [f'Challenge "{challenge.title}" updated successfully']
+                if tables_created > 0:
+                    success_parts.append(f'with {tables_created} database table(s)')
+                if json_generated:
+                    success_parts.append('and expected results auto-generated')
+
+                messages.success(request, ' '.join(success_parts) + '!')
+
+                return redirect('challenges:admin_challenge_detail', challenge_id=challenge.id)
+
+            except Exception as e:
+                # Handle validation errors from multi-table data
+                error_message = str(e)
+                if "validation failed" in error_message.lower():
+                    messages.error(request, f"Challenge update failed: {error_message}")
+                else:
+                    messages.error(request, f"An error occurred while updating the challenge: {error_message}")
+
+                # Keep the form data so user doesn't lose their work
+                form.add_error(None, error_message)
+
+                # Preserve multi-table data for re-display
+                preserved_table_data = _preserve_table_data_from_request(request)
+                context = {
+                    'page_title': f'Edit Challenge: {challenge.title}',
+                    'form': form,
+                    'is_edit': True,
+                    'challenge': challenge,
+                    'preserved_table_data': preserved_table_data,
+                    'validation_error': True
+                }
+                return render(request, 'challenges/admin/challenge_form.html', context)
+        else:
+            # Form validation failed - errors will be displayed in the template
+            messages.error(request, "Please correct the errors below and try again.")
     else:
         form = ChallengeForm(instance=challenge)
 
@@ -466,6 +897,7 @@ def admin_challenge_edit(request, challenge_id):
         'form': form,
         'challenge': challenge,
         'is_edit': True,
+        'existing_tables': challenge.tables.all().order_by('order', 'table_name'),
     }
     return render(request, 'challenges/admin/challenge_form.html', context)
 
@@ -517,6 +949,37 @@ def admin_challenge_delete(request, challenge_id):
         'challenge': challenge,
     }
     return render(request, 'challenges/admin/challenge_confirm_delete.html', context)
+
+
+@staff_member_required
+@require_http_methods(["POST"])
+def admin_generate_output(request, challenge_id):
+    """
+    Generate expected output JSON for a challenge by executing the reference query.
+    """
+    challenge = get_object_or_404(Challenge, id=challenge_id)
+
+    try:
+        success, message = challenge.execute_reference_query()
+
+        if success:
+            # Reload the challenge to get the updated expected_result
+            challenge.refresh_from_db()
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'expected_result_json': challenge.expected_result_json
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': message
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        })
 
 
 # Challenge Subscription Views
@@ -603,8 +1066,8 @@ def subscription_checkout(request, plan_id):
             status='pending',
             amount_paid=plan.effective_price,
         )
-        # Set pending expiration (30 minutes)
-        subscription.set_pending_expiration(30)
+        # Set pending expiration (6 hours)
+        subscription.set_pending_expiration(360)
 
     context = {
         'page_title': f'Checkout - {plan.name}',
@@ -634,9 +1097,9 @@ def cancel_pending_subscription(request, subscription_id):
 
 @login_required
 @require_http_methods(["POST"])
-def create_stripe_checkout(request, subscription_id):
+def create_razorpay_checkout(request, subscription_id):
     """
-    Create Stripe checkout session for subscription payment.
+    Create Razorpay order for subscription payment.
     """
     subscription = get_object_or_404(
         UserChallengeSubscription,
@@ -646,13 +1109,13 @@ def create_stripe_checkout(request, subscription_id):
     )
 
     try:
-        from .stripe_service import StripeService
+        from .razorpay_service import RazorpayService
 
-        # Create Stripe checkout session
-        session = StripeService.create_checkout_session(subscription, request)
+        # Create Razorpay order
+        order = RazorpayService.create_order(subscription, request)
 
-        # Redirect to Stripe checkout
-        return redirect(session.url, code=303)
+        # Redirect to checkout page with order details
+        return redirect('challenges:razorpay_checkout_page', subscription_id=subscription.id)
 
     except Exception as e:
         messages.error(request, f'Payment processing error: {str(e)}')
@@ -662,7 +1125,7 @@ def create_stripe_checkout(request, subscription_id):
 @login_required
 def payment_success(request, subscription_id):
     """
-    Handle successful payment redirect from Stripe.
+    Handle successful payment redirect from Razorpay.
     """
     subscription = get_object_or_404(
         UserChallengeSubscription,
@@ -670,23 +1133,31 @@ def payment_success(request, subscription_id):
         user=request.user
     )
 
+    # Get payment details from request
+    razorpay_payment_id = request.GET.get('razorpay_payment_id')
+    razorpay_order_id = request.GET.get('razorpay_order_id')
+    razorpay_signature = request.GET.get('razorpay_signature')
+
     try:
-        from .stripe_service import StripeService
+        from .razorpay_service import RazorpayService
 
-        # Retrieve the checkout session to verify payment
-        if subscription.stripe_payment_intent_id:
-            session = StripeService.retrieve_checkout_session(subscription.stripe_payment_intent_id)
+        # Verify payment signature
+        if razorpay_payment_id and razorpay_order_id and razorpay_signature:
+            is_valid = RazorpayService.verify_payment_signature(
+                razorpay_order_id, razorpay_payment_id, razorpay_signature
+            )
 
-            if session.payment_status == 'paid':
+            if is_valid:
                 # Activate subscription if not already active
                 if subscription.status == 'pending':
                     subscription.activate()
-                    subscription.payment_reference = session.payment_intent
+                    subscription.payment_reference = razorpay_payment_id
+                    subscription.razorpay_payment_id = razorpay_payment_id
                     subscription.save()
 
                 messages.success(request, f'Payment successful! Your {subscription.plan.name} subscription is now active.')
             else:
-                messages.warning(request, 'Payment is being processed. You will receive confirmation shortly.')
+                messages.error(request, 'Payment verification failed. Please contact support.')
         else:
             messages.warning(request, 'Payment verification in progress.')
 
@@ -694,6 +1165,42 @@ def payment_success(request, subscription_id):
         messages.error(request, f'Error verifying payment: {str(e)}')
 
     return redirect('challenges:challenges_list')
+
+
+@login_required
+def razorpay_checkout_page(request, subscription_id):
+    """
+    Display Razorpay checkout page with payment form.
+    """
+    from django.conf import settings
+
+    subscription = get_object_or_404(
+        UserChallengeSubscription,
+        id=subscription_id,
+        user=request.user,
+        status='pending'
+    )
+
+    try:
+        from .razorpay_service import RazorpayService
+
+        # Get Razorpay key for frontend
+        razorpay_key = RazorpayService.get_key_id()
+
+        context = {
+            'page_title': f'Payment - {subscription.plan.name}',
+            'subscription': subscription,
+            'plan': subscription.plan,
+            'razorpay_key': razorpay_key,
+            'razorpay_order_id': subscription.razorpay_order_id,
+            'amount_in_paise': int(subscription.amount_paid * 100),
+            'currency': settings.RAZORPAY_CURRENCY,
+        }
+        return render(request, 'challenges/razorpay_checkout.html', context)
+
+    except Exception as e:
+        messages.error(request, f'Error loading payment page: {str(e)}')
+        return redirect('challenges:subscription_checkout', plan_id=subscription.plan.id)
 
 
 @login_required
@@ -714,30 +1221,37 @@ def payment_cancel(request, subscription_id):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def stripe_webhook(request):
+def razorpay_webhook(request):
     """
-    Handle Stripe webhook events.
+    Handle Razorpay webhook events.
     """
-    from .stripe_service import StripeService
+    from .razorpay_service import RazorpayService
+    import json
 
     payload = request.body
-    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    sig_header = request.META.get('HTTP_X_RAZORPAY_SIGNATURE')
 
     try:
-        # Construct the event
-        event = StripeService.construct_webhook_event(payload, sig_header)
+        # Verify webhook signature
+        if not RazorpayService.verify_webhook_signature(payload, sig_header):
+            logger.error("Invalid webhook signature")
+            return HttpResponse(status=400)
+
+        # Parse the event
+        event = json.loads(payload.decode('utf-8'))
 
         # Handle the event
-        if event['type'] == 'checkout.session.completed':
-            session = event['data']['object']
-            StripeService.handle_payment_success(session)
+        if event.get('event') == 'payment.captured':
+            payment_data = event.get('payload', {}).get('payment', {}).get('entity', {})
+            RazorpayService.handle_payment_success(payment_data)
 
-        elif event['type'] == 'payment_intent.succeeded':
-            payment_intent = event['data']['object']
-            StripeService.handle_payment_success(payment_intent)
+        elif event.get('event') == 'order.paid':
+            order_data = event.get('payload', {}).get('order', {}).get('entity', {})
+            # Handle order paid event if needed
+            pass
 
         else:
-            print(f'Unhandled event type: {event["type"]}')
+            print(f'Unhandled event type: {event.get("event")}')
 
         return HttpResponse(status=200)
 

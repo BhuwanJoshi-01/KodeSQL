@@ -10,7 +10,7 @@
 {% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
-        <div class="admin-header-content">
+        <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>
                 <span class="material-icons">card_membership</span>
                 {% if subscription %}Edit User Challenge Subscription{% else %}Create User Challenge Subscription{% endif %}
@@ -174,50 +174,7 @@
 
     <!-- Sidebar -->
     <div class="admin-content-sidebar">
-        <!-- Help Information -->
-        <div class="admin-card">
-            <div class="card-header">
-                <h3>
-                    <span class="material-icons">help</span>
-                    Help & Tips
-                </h3>
-            </div>
-            <div class="card-content">
-                <div class="help-content">
-                    <h5>Creating User Subscriptions</h5>
-                    <ul>
-                        <li>This assigns a subscription plan to a specific user</li>
-                        <li>Select the user who will receive the subscription</li>
-                        <li>Choose an active subscription plan</li>
-                        <li>Set the status (usually 'active' for immediate access)</li>
-                        <li>Start date defaults to now if not specified</li>
-                        <li>End date is auto-calculated for non-unlimited plans</li>
-                    </ul>
-
-                    <h5>Managing Subscription Plans</h5>
-                    <ul>
-                        <li>To create or edit subscription plans, use the <a href="{% url 'challenges:admin_subscription_plans_list' %}" class="btn btn-primary"Subscription Plans</a> section</li>
-                        <li>Plans define pricing, duration, and features</li>
-                        <li>This page only assigns existing plans to users</li>
-                    </ul>
-                    
-                    <h5>Status Options</h5>
-                    <ul>
-                        <li><strong>Active:</strong> User has full access to premium challenges</li>
-                        <li><strong>Pending:</strong> Waiting for payment confirmation</li>
-                        <li><strong>Expired:</strong> Subscription has ended</li>
-                        <li><strong>Cancelled:</strong> Subscription was cancelled</li>
-                    </ul>
-                    
-                    <h5>Payment Information</h5>
-                    <ul>
-                        <li>Amount paid should match the plan price</li>
-                        <li>Payment reference is optional but helpful for tracking</li>
-                        <li>Use this for manual subscriptions or payment adjustments</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        <!-- Sidebar content can be added here if needed -->
 
         {% if subscription %}
         <!-- Current Subscription Info -->

@@ -44,8 +44,8 @@ class Command(BaseCommand):
             # Create a mock request object for the email function
             class MockRequest:
                 def build_absolute_uri(self, path):
-                    # You'll need to update this with your actual domain
-                    base_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8007')
+                    # Use EMAIL_BASE_URL from settings for consistent URL generation
+                    base_url = getattr(settings, 'EMAIL_BASE_URL', 'http://127.0.0.1:8007')
                     return f"{base_url}{path}"
             
             mock_request = MockRequest()

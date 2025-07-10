@@ -19,11 +19,12 @@ urlpatterns = [
     path('subscription/checkout/<int:plan_id>/', views.subscription_checkout, name='subscription_checkout'),
     path('subscription/cancel/<int:subscription_id>/', views.cancel_pending_subscription, name='cancel_pending_subscription'),
 
-    # Stripe payment views
-    path('subscription/stripe-checkout/<int:subscription_id>/', views.create_stripe_checkout, name='create_stripe_checkout'),
+    # Razorpay payment views
+    path('subscription/razorpay-checkout/<int:subscription_id>/', views.create_razorpay_checkout, name='create_razorpay_checkout'),
+    path('subscription/razorpay-payment/<int:subscription_id>/', views.razorpay_checkout_page, name='razorpay_checkout_page'),
     path('subscription/payment-success/<int:subscription_id>/', views.payment_success, name='payment_success'),
     path('subscription/payment-cancel/<int:subscription_id>/', views.payment_cancel, name='payment_cancel'),
-    path('stripe/webhook/', views.stripe_webhook, name='stripe_webhook'),
+    path('razorpay/webhook/', views.razorpay_webhook, name='razorpay_webhook'),
 
     # Analytics
     path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
@@ -31,6 +32,7 @@ urlpatterns = [
     # Admin views
     path('admin/', views.admin_challenges_list, name='admin_challenges_list'),
     path('admin/create/', views.admin_challenge_create, name='admin_challenge_create'),
+    path('admin/<int:challenge_id>/generate-output/', views.admin_generate_output, name='admin_generate_output'),
 
     # Challenge Subscription Plan Admin views (superuser only)
     path('admin/subscription-plans/', views.admin_subscription_plans_list, name='admin_subscription_plans_list'),

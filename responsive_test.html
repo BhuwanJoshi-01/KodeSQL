@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Design Test - Challenge Solve Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .breakpoint-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4f46e5;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            min-height: 44px;
+            margin: 5px;
+        }
+        
+        .test-selector {
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            min-height: 44px;
+            margin: 5px;
+        }
+        
+        .responsive-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .mobile-layout {
+            display: none;
+        }
+        
+        /* Responsive breakpoints matching our implementation */
+        @media (max-width: 1024px) {
+            .responsive-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-layout {
+                display: block;
+            }
+            
+            .desktop-layout {
+                display: none;
+            }
+            
+            .test-button {
+                width: 100%;
+                margin: 5px 0;
+            }
+            
+            .test-selector {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .test-container {
+                padding: 10px;
+                margin: 10px;
+            }
+            
+            .test-button {
+                min-height: 48px;
+                font-size: 16px;
+            }
+            
+            .test-selector {
+                min-height: 48px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="breakpoint-info" id="breakpointInfo">
+        Screen: <span id="screenSize"></span>
+    </div>
+    
+    <div class="test-container">
+        <h1>Challenge Solve Page - Responsive Design Test</h1>
+        
+        <div class="test-section">
+            <h2>Touch Target Test</h2>
+            <p>All buttons and interactive elements should be at least 44px (mobile) or 48px (small mobile) in height:</p>
+            <button class="test-button">Run Query</button>
+            <button class="test-button">Submit Solution</button>
+            <select class="test-selector">
+                <option>MySQL</option>
+                <option>PostgreSQL</option>
+            </select>
+        </div>
+        
+        <div class="test-section">
+            <h2>Layout Test</h2>
+            <div class="desktop-layout">
+                <p><strong>Desktop Layout:</strong> Side-by-side panels with horizontal resizer</p>
+            </div>
+            <div class="mobile-layout">
+                <p><strong>Mobile Layout:</strong> Stacked panels with vertical resizer</p>
+            </div>
+            
+            <div class="responsive-grid">
+                <div style="background: #e3f2fd; padding: 20px; border-radius: 5px;">
+                    <h3>Left Panel (Question)</h3>
+                    <p>Challenge description, question, and expected output</p>
+                </div>
+                <div style="background: #f3e5f5; padding: 20px; border-radius: 5px;">
+                    <h3>Right Panel (Editor)</h3>
+                    <p>SQL editor and output results</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Breakpoint Information</h2>
+            <ul>
+                <li><strong>Desktop (1024px+):</strong> Horizontal layout with resizer</li>
+                <li><strong>Tablet (768px-1024px):</strong> Vertical layout, larger touch targets</li>
+                <li><strong>Mobile (480px-768px):</strong> Vertical layout, optimized spacing</li>
+                <li><strong>Small Mobile (320px-480px):</strong> Maximum touch targets, minimal spacing</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function updateBreakpointInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const screenSize = document.getElementById('screenSize');
+            const breakpointInfo = document.getElementById('breakpointInfo');
+            
+            let breakpoint = '';
+            if (width >= 1920) breakpoint = 'Ultra-wide (1920px+)';
+            else if (width >= 1440) breakpoint = 'Large Desktop (1440px+)';
+            else if (width >= 1200) breakpoint = 'Desktop (1200px+)';
+            else if (width >= 1024) breakpoint = 'Small Desktop (1024px+)';
+            else if (width >= 768) breakpoint = 'Tablet (768px+)';
+            else if (width >= 600) breakpoint = 'Large Tablet (600px+)';
+            else if (width >= 480) breakpoint = 'Large Mobile (480px+)';
+            else if (width >= 360) breakpoint = 'Mobile (360px+)';
+            else breakpoint = 'Small Mobile (320px+)';
+            
+            screenSize.textContent = `${width}x${height} - ${breakpoint}`;
+            
+            // Color code based on breakpoint
+            if (width < 480) {
+                breakpointInfo.style.background = '#e53e3e'; // Red for small mobile
+            } else if (width < 768) {
+                breakpointInfo.style.background = '#dd6b20'; // Orange for mobile
+            } else if (width < 1024) {
+                breakpointInfo.style.background = '#38a169'; // Green for tablet
+            } else {
+                breakpointInfo.style.background = '#3182ce'; // Blue for desktop
+            }
+        }
+        
+        // Update on load and resize
+        updateBreakpointInfo();
+        window.addEventListener('resize', updateBreakpointInfo);
+        
+        // Test touch events on mobile
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.test-button, .test-selector').forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.8';
+                });
+                
+                element.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+        }
+    </script>
+</body>
+</html>

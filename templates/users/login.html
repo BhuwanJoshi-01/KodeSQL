@@ -1,60 +1,487 @@
-{% extends "users/auth_base.html" %}
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KodeSQL - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
 
-{% block content %}
-<div class="auth-title">Welcome Back</div>
-<div class="auth-subtitle">Sign in to your SQL Playground account</div>
+        .login-container {
+            width: 400px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+        }
 
-<form method="post" class="auth-form" id="login-form">
-    {% csrf_token %}
-    
-    <div class="form-group">
-        <label class="form-label" for="id_email">Email Address</label>
-        <input type="email" id="id_email" name="email" class="form-input" placeholder="Enter your email address" autofocus required>
-    </div>
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+            justify-content: center;
+        }
 
-    <div class="form-group">
-        <label class="form-label" for="id_password">Password</label>
-        <input type="password" id="id_password" name="password" class="form-input" placeholder="Enter your password" required>
-    </div>
-    
-    <div class="form-group">
-        <div style="text-align: right; margin-bottom: 1rem;">
-            <a href="{% url 'users:forgot_password' %}" class="auth-link">Forgot your password?</a>
+
+
+        /* Enhanced Theme Toggle */
+        .theme-toggle {
+            background: rgba(var(--bg-secondary-rgb), 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 50%;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(180deg);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .theme-toggle:hover::before {
+            opacity: 1;
+        }
+
+        .theme-toggle .material-icons {
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+
+
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            text-decoration: none;
+        }
+
+
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent-color), #7c3aed);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-google {
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .btn-google:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .btn-google {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .btn-google:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .google-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+
+        .social-login {
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider span {
+            margin: 0 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .form-footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-messages {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success-messages {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .warning-messages {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        [data-theme="dark"] .error-messages {
+            background: #450a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        [data-theme="dark"] .success-messages {
+            background: #064e3b;
+            border-color: #065f46;
+            color: #6ee7b7;
+        }
+
+        [data-theme="dark"] .warning-messages {
+            background: #451a03;
+            border-color: #92400e;
+            color: #fbbf24;
+        }
+
+        .resend-verification {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .resend-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .resend-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        [data-theme="dark"] .resend-verification {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                width: 90%;
+                padding: 30px 20px;
+            }
+        }
+
+        /* Theme Variables */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-primary-rgb: 255, 255, 255;
+            --bg-secondary: rgba(255, 255, 255, 0.98);
+            --bg-secondary-rgb: 248, 250, 252;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent-color: #4f46e5;
+            --primary-color: #3b82f6;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-primary-rgb: 15, 23, 42;
+            --bg-secondary: rgba(15, 23, 42, 0.98);
+            --bg-secondary-rgb: 30, 41, 59;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --accent-color: #6366f1;
+            --primary-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span class="material-icons">dark_mode</span>
+    </button>
+
+    <div class="login-container">
+        <div class="logo">KodeSQL</div>
+
+        <!-- Social Login -->
+        <div class="social-login">
+            <a href="/accounts/google/login/" class="btn btn-google">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </a>
+        </div>
+
+        <div class="divider">
+            <span>or continue with email</span>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}success-messages{% elif message.tags == 'warning' %}warning-messages{% else %}error-messages{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if unverified_email %}
+            <div class="resend-verification">
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 10px;">
+                    Didn't receive the verification email?
+                </p>
+                <a href="{% url 'users:resend_verification' %}?email={{ unverified_email }}"
+                   class="resend-btn">
+                    📧 Resend Verification Email
+                </a>
+            </div>
+        {% endif %}
+
+        <form method="post" id="loginForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="email">Email address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+            </div>
+
+            <div class="form-footer">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    Remember me
+                </label>
+                <a href="{% url 'users:forgot_password' %}">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 24px;">
+                Sign in to your account
+            </button>
+        </form>
+
+        <div class="register-link">
+            Don't have an account? <a href="{% url 'users:register' %}">Sign up</a>
         </div>
     </div>
-    
-    <button type="submit" class="auth-submit">
-        Sign In
-    </button>
-</form>
-{% endblock %}
 
-{% block auth_footer %}
-<p>Don't have an account? <a href="{% url 'users:register' %}" class="auth-link">Sign up here</a></p>
-{% endblock %}
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('login-form');
-    const submitBtn = form.querySelector('.auth-submit');
-    
-    form.addEventListener('submit', function(e) {
-        if (!validateForm(form)) {
-            e.preventDefault();
-            return;
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update theme toggle icon
+            const themeToggle = document.querySelector('.theme-toggle .material-icons');
+            themeToggle.textContent = newTheme === 'dark' ? 'dark_mode' : 'light_mode';
         }
-        
-        setLoading(submitBtn, true);
-    });
-    
-    // Auto-focus first input
-    const firstInput = form.querySelector('input');
-    if (firstInput) {
-        firstInput.focus();
-    }
-});
-</script>
-{% endblock %}
+
+        // Initialize theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // Update theme toggle icon
+            const themeToggle = document.querySelector('.theme-toggle .material-icons');
+            themeToggle.textContent = savedTheme === 'dark' ? 'dark_mode' : 'light_mode';
+        });
+    </script>
+</body>
+</html>

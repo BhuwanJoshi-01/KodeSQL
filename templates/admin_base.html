@@ -654,8 +654,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             }
 
-            // For delete buttons, add confirmation
-            if (text.toLowerCase().includes('delete')) {
+            // For delete buttons, add confirmation (except on delete confirmation pages)
+            if (text.toLowerCase().includes('delete') && !window.location.pathname.includes('confirm_delete')) {
                 if (!confirm(`Are you sure you want to ${text.toLowerCase()}?`)) {
                     e.preventDefault();
                     return false;

@@ -1,0 +1,719 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | KodeSQL</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modern-header.css' %}">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 404 Page Specific Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--bg-primary);
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            top: 20%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            border-radius: 10px;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            width: 100px;
+            height: 100px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            bottom: 30%;
+            right: 20%;
+            width: 70px;
+            height: 70px;
+            background: var(--warning-color);
+            border-radius: 15px;
+            animation-delay: 1s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(var(--bg-primary-rgb), 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            color: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            padding-top: 100px;
+        }
+
+        .error-content {
+            text-align: center;
+            max-width: 600px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 404 Number Animation */
+        .error-number {
+            font-size: clamp(6rem, 15vw, 12rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .error-title {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            animation: slideInLeft 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .error-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            animation: slideInRight 0.8s ease-out 0.4s both;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Interactive Elements */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.8s ease-out 0.6s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Interactive SQL Terminal */
+        .interactive-terminal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+            animation: slideInUp 0.8s ease-out 0.8s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot.red { background: #ef4444; }
+        .dot.yellow { background: #f59e0b; }
+        .dot.green { background: #10b981; }
+
+        .terminal-content {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .sql-query {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .sql-result {
+            color: var(--success-color);
+            margin-bottom: 1rem;
+        }
+
+        .typing-animation {
+            border-right: 2px solid var(--primary-color);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { border-color: var(--primary-color); }
+            51%, 100% { border-color: transparent; }
+        }
+
+        /* Fun Facts Section */
+        .fun-facts {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            animation: fadeIn 0.8s ease-out 1s both;
+        }
+
+        .fun-facts h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .fact-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .fact-item:hover {
+            transform: translateX(5px);
+            background: var(--bg-hover);
+        }
+
+        .fact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 1rem;
+                padding-top: 80px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+
+            .interactive-terminal,
+            .fun-facts {
+                padding: 1rem;
+            }
+
+            .terminal-content {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Easter Egg - Konami Code */
+        .easter-egg {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-primary);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            z-index: 10000;
+            display: none;
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">KodeSQL</a>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span class="material-icons">dark_mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-number">404</div>
+            <h1 class="error-title">Oops! Page Not Found</h1>
+            <p class="error-description">
+                The page you're looking for seems to have vanished into the digital void.
+                Don't worry, even the best SQL queries sometimes return empty results!
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="/" class="btn btn-primary">
+                    <span class="material-icons">home</span>
+                    Go Home
+                </a>
+                <a href="/challenges/" class="btn btn-secondary">
+                    <span class="material-icons">code</span>
+                    Practice SQL
+                </a>
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <span class="material-icons">dashboard</span>
+                    Dashboard
+                </a>
+                <button class="btn btn-secondary" onclick="goBack()">
+                    <span class="material-icons">arrow_back</span>
+                    Go Back
+                </button>
+            </div>
+
+            <!-- Interactive SQL Terminal -->
+            <div class="interactive-terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green"></div>
+                    </div>
+                    <span>KodeSQL Terminal</span>
+                </div>
+                <div class="terminal-content">
+                    <div class="sql-query">SELECT * FROM pages WHERE url = '/this-page';</div>
+                    <div class="sql-result">0 rows returned</div>
+                    <div class="sql-query">SELECT suggestion FROM navigation WHERE helpful = true;</div>
+                    <div class="sql-result" id="typing-result">
+                        <span id="typed-text"></span><span class="typing-animation"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fun Facts -->
+            <div class="fun-facts">
+                <h3>
+                    <span class="material-icons">lightbulb</span>
+                    Did You Know?
+                </h3>
+                <div class="fact-item" onclick="showFact(1)">
+                    🔍 HTTP 404 was named after room 404 at CERN where the web was invented
+                </div>
+                <div class="fact-item" onclick="showFact(2)">
+                    💡 The first 404 error was probably seen in 1993
+                </div>
+                <div class="fact-item" onclick="showFact(3)">
+                    🎯 SQL was first developed in the 1970s by IBM
+                </div>
+                <div class="fact-item" onclick="showFact(4)">
+                    🚀 Click here for a surprise! (Try the Konami Code: ↑↑↓↓←→←→BA)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Easter Egg -->
+    <div class="easter-egg" id="easterEgg">
+        <h3>🎉 You found the secret!</h3>
+        <p>Congratulations! You're a true developer at heart.</p>
+        <p>Here's a special SQL tip: Always use EXPLAIN to optimize your queries!</p>
+        <button class="btn btn-primary" onclick="closeEasterEgg()">Awesome!</button>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update theme toggle icon
+            const themeIcon = document.querySelector('.theme-toggle .material-icons');
+            themeIcon.textContent = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
+        }
+
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const themeIcon = document.querySelector('.theme-toggle .material-icons');
+            themeIcon.textContent = savedTheme === 'dark' ? 'light_mode' : 'dark_mode';
+        }
+
+        // Go back function
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        // Typing animation for terminal
+        function typeText() {
+            const suggestions = [
+                "Try going to the homepage",
+                "Check out our SQL challenges",
+                "Visit your dashboard",
+                "Practice with our SQL editor"
+            ];
+
+            const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+            const typedTextElement = document.getElementById('typed-text');
+            let i = 0;
+
+            function type() {
+                if (i < randomSuggestion.length) {
+                    typedTextElement.textContent += randomSuggestion.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                }
+            }
+
+            type();
+        }
+
+        // Fun facts interaction
+        function showFact(factNumber) {
+            const facts = {
+                1: "The 404 error code was actually NOT named after a room at CERN - that's a myth! It's simply the HTTP status code for 'Not Found'.",
+                2: "The 404 error has become so iconic that it's often used creatively in web design and has spawned countless memes!",
+                3: "SQL stands for Structured Query Language and is one of the most enduring programming languages, still widely used after 50+ years!",
+                4: "You clicked on the Konami Code hint! Try entering: ↑↑↓↓←→←→BA on your keyboard!"
+            };
+
+            alert(facts[factNumber]);
+        }
+
+        // Konami Code Easter Egg
+        let konamiCode = [];
+        const konamiSequence = [
+            'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+            'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+            'KeyB', 'KeyA'
+        ];
+
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.code);
+
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+
+            if (konamiCode.length === konamiSequence.length &&
+                konamiCode.every((code, index) => code === konamiSequence[index])) {
+                showEasterEgg();
+                konamiCode = [];
+            }
+        });
+
+        function showEasterEgg() {
+            document.getElementById('easterEgg').style.display = 'block';
+        }
+
+        function closeEasterEgg() {
+            document.getElementById('easterEgg').style.display = 'none';
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            setTimeout(typeText, 1000);
+        });
+
+        // Add some interactive hover effects
+        document.querySelectorAll('.shape').forEach((shape, index) => {
+            shape.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.2) rotate(45deg)';
+                this.style.opacity = '0.3';
+            });
+
+            shape.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+                this.style.opacity = '0.1';
+            });
+        });
+    </script>
+</body>
+</html>

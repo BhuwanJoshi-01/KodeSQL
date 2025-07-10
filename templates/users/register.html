@@ -1,90 +1,737 @@
-{% extends "users/auth_base.html" %}
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KodeSQL - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
 
-{% block content %}
-<div class="auth-title">Create Account</div>
-<div class="auth-subtitle">Join SQL Playground and start learning SQL today</div>
+        .register-container {
+            width: 400px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            margin: 20px auto;
+        }
 
-<form method="post" class="auth-form" id="register-form">
-    {% csrf_token %}
-    
-    <div class="form-group">
-        <label class="form-label" for="id_username">Username</label>
-        <input type="text" id="id_username" name="username" class="form-input" placeholder="Choose a username" autofocus required>
-    </div>
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 24px;
+            justify-content: center;
+        }
 
-    <div class="form-group">
-        <label class="form-label" for="id_email">Email Address</label>
-        <input type="email" id="id_email" name="email" class="form-input" placeholder="Enter your email address" required>
-    </div>
 
-    <div class="form-group">
-        <label class="form-label" for="id_password1">Password</label>
-        <input type="password" id="id_password1" name="password1" class="form-input" placeholder="Create a password" required>
-    </div>
 
-    <div class="form-group">
-        <label class="form-label" for="id_password2">Confirm Password</label>
-        <input type="password" id="id_password2" name="password2" class="form-input" placeholder="Confirm your password" required>
-    </div>
-    
-    <div class="form-group">
-        <label class="checkbox-label">
-            <input type="checkbox" id="terms-agreement" required>
-            <span class="checkmark"></span>
-            I agree to the <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a>
-        </label>
-    </div>
-    
-    <button type="submit" class="auth-submit">
-        Create Account
+        /* Enhanced Theme Toggle */
+        .theme-toggle {
+            background: rgba(var(--bg-secondary-rgb), 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 50%;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(180deg);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .theme-toggle:hover::before {
+            opacity: 1;
+        }
+
+        .theme-toggle .material-icons {
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            text-decoration: none;
+        }
+
+
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent-color), #7c3aed);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-google {
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .btn-google:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .btn-google {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .btn-google:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .google-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider span {
+            margin: 0 10px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-input.error {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
+
+        .field-error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        .name-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .password-requirements {
+            margin-top: 6px;
+            padding: 6px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .requirement-item {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .requirement-item::before {
+            content: "•";
+            color: var(--text-secondary);
+            margin-right: 3px;
+        }
+
+        .requirement-item.valid {
+            color: #16a34a;
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        [data-theme="dark"] .requirement-item.valid {
+            background: #052e16;
+            border-color: #166534;
+        }
+
+        .requirement-item.valid::before {
+            content: "✓";
+            color: #16a34a;
+        }
+
+        .terms {
+            margin: 16px 0;
+        }
+
+        .terms input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            margin-top: 2px;
+        }
+
+        .terms label {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .terms a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .terms a:hover {
+            text-decoration: underline;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .register-link a:hover {
+            color: #6366f1;
+        }
+
+        .error-messages {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success-messages {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .warning-messages {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        [data-theme="dark"] .error-messages {
+            background: #450a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        [data-theme="dark"] .success-messages {
+            background: #064e3b;
+            border-color: #065f46;
+            color: #6ee7b7;
+        }
+
+        [data-theme="dark"] .warning-messages {
+            background: #451a03;
+            border-color: #92400e;
+            color: #fbbf24;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px;
+            }
+
+            .register-container {
+                width: 100%;
+                padding: 24px 20px;
+                margin: 10px auto;
+            }
+
+            .name-fields {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .password-requirements {
+                gap: 3px;
+                padding: 4px;
+            }
+
+            .requirement-item {
+                font-size: 10px;
+                padding: 1px 4px;
+            }
+        }
+
+        /* Theme Variables */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-primary-rgb: 255, 255, 255;
+            --bg-secondary: rgba(255, 255, 255, 0.98);
+            --bg-secondary-rgb: 248, 250, 252;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent-color: #4f46e5;
+            --primary-color: #3b82f6;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-primary-rgb: 15, 23, 42;
+            --bg-secondary: rgba(15, 23, 42, 0.98);
+            --bg-secondary-rgb: 30, 41, 59;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --accent-color: #6366f1;
+            --primary-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span class="material-icons">dark_mode</span>
     </button>
-</form>
-{% endblock %}
 
-{% block auth_footer %}
-<p>Already have an account? <a href="{% url 'users:login' %}" class="auth-link">Sign in here</a></p>
-{% endblock %}
+    <div class="register-container">
+        <div class="logo">KodeSQL</div>
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('register-form');
-    const submitBtn = form.querySelector('.auth-submit');
-    const password1 = form.querySelector('#id_password1');
-    const password2 = form.querySelector('#id_password2');
-    
-    // Password confirmation validation
-    password2.addEventListener('input', function() {
-        if (password1.value !== password2.value) {
-            password2.setCustomValidity('Passwords do not match');
-        } else {
-            password2.setCustomValidity('');
+        <!-- Social Login -->
+        <div class="social-login">
+            <a href="/accounts/google/login/" class="btn btn-google">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </a>
+        </div>
+
+        <div class="divider">
+            <span>or register with email</span>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}success-messages{% elif message.tags == 'warning' %}warning-messages{% else %}error-messages{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" id="registerForm">
+            {% csrf_token %}
+            <div class="name-fields">
+                <div class="form-group">
+                    <label class="form-label" for="firstName">First name</label>
+                    <input type="text" id="firstName" name="first_name" class="form-input" placeholder="Enter your first name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="lastName">Last name</label>
+                    <input type="text" id="lastName" name="last_name" class="form-input" placeholder="Enter your last name" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
+                <div class="error-message">Please enter a valid email address.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-input" placeholder="Choose a username" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password1">Password</label>
+                <input type="password" id="password1" name="password1" class="form-input" placeholder="Create a password" required>
+                <div class="password-requirements">
+                    <span class="requirement-item">8+ chars</span>
+                    <span class="requirement-item">0-9</span>
+                    <span class="requirement-item">!@#$</span>
+                    <span class="requirement-item">Aa-Zz</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password2">Confirm Password</label>
+                <input type="password" id="password2" name="password2" class="form-input" placeholder="Confirm your password" required>
+            </div>
+
+            <div class="terms">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    I agree to KodeSQL's <a href="{% url 'core:terms_of_service' %}" target="_blank">Terms of Service</a> and <a href="{% url 'core:privacy_policy' %}" target="_blank">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Create account
+            </button>
+        </form>
+
+        <div class="register-link">
+            Already have an account? <a href="{% url 'users:login' %}">Sign in</a>
+        </div>
+    </div>
+
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update theme toggle icon
+            const themeToggle = document.querySelector('.theme-toggle .material-icons');
+            themeToggle.textContent = newTheme === 'dark' ? 'dark_mode' : 'light_mode';
         }
-    });
-    
-    form.addEventListener('submit', function(e) {
-        if (!validateForm(form)) {
-            e.preventDefault();
-            return;
+
+        // Initialize theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // Update theme toggle icon
+            const themeToggle = document.querySelector('.theme-toggle .material-icons');
+            themeToggle.textContent = savedTheme === 'dark' ? 'dark_mode' : 'light_mode';
+        });
+
+        // Password validation
+        const password = document.getElementById('password1');
+        const requirements = document.querySelectorAll('.requirement-item');
+
+        password.addEventListener('input', function() {
+            const value = this.value;
+
+            // Length check
+            if(value.length >= 8) {
+                requirements[0].classList.add('valid');
+            } else {
+                requirements[0].classList.remove('valid');
+            }
+
+            // Number check
+            if(/\d/.test(value)) {
+                requirements[1].classList.add('valid');
+            } else {
+                requirements[1].classList.remove('valid');
+            }
+
+            // Special character check
+            if(/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+                requirements[2].classList.add('valid');
+            } else {
+                requirements[2].classList.remove('valid');
+            }
+
+            // Upper and lowercase check
+            if(/[a-z]/.test(value) && /[A-Z]/.test(value)) {
+                requirements[3].classList.add('valid');
+            } else {
+                requirements[3].classList.remove('valid');
+            }
+        });
+
+        // Form validation
+        const form = document.getElementById('registerForm');
+        const email = document.getElementById('email');
+        const emailError = email.nextElementSibling;
+        const password2 = document.getElementById('password2');
+
+        // Password confirmation validation
+        password2.addEventListener('input', function() {
+            if (password.value !== password2.value) {
+                password2.setCustomValidity('Passwords do not match');
+            } else {
+                password2.setCustomValidity('');
+            }
+        });
+
+        // Name validation function
+        function validateName(input, fieldName) {
+            const value = input.value.trim();
+            const errorContainer = input.parentElement.querySelector('.field-error');
+
+            // Remove existing error
+            if (errorContainer) {
+                errorContainer.remove();
+            }
+            input.classList.remove('error');
+
+            if (!value) {
+                showNameError(input, `${fieldName} is required.`);
+                return false;
+            }
+
+            // Check for spaces (only one word allowed)
+            if (value.includes(' ')) {
+                showNameError(input, `${fieldName} must be a single word without spaces.`);
+                return false;
+            }
+
+            // Check for valid characters (letters only)
+            const namePattern = /^[a-zA-ZÀ-ÿĀ-žА-я\u4e00-\u9fff]+$/;
+            if (!namePattern.test(value)) {
+                showNameError(input, `${fieldName} can only contain letters.`);
+                return false;
+            }
+
+            // Check length
+            if (value.length < 2) {
+                showNameError(input, `${fieldName} must be at least 2 characters long.`);
+                return false;
+            }
+
+            if (value.length > 30) {
+                showNameError(input, `${fieldName} cannot exceed 30 characters.`);
+                return false;
+            }
+
+            return true;
         }
-        
-        const termsCheckbox = document.getElementById('terms-agreement');
-        if (!termsCheckbox.checked) {
-            e.preventDefault();
-            showMessage('Please agree to the Terms of Service and Privacy Policy', 'error');
-            return;
+
+        function showNameError(input, message) {
+            input.classList.add('error');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error';
+            errorDiv.textContent = message;
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '0.875rem';
+            errorDiv.style.marginTop = '0.25rem';
+            input.parentElement.appendChild(errorDiv);
         }
-        
-        setLoading(submitBtn, true);
-    });
-    
-    // Auto-focus first input
-    const firstInput = form.querySelector('input');
-    if (firstInput) {
-        firstInput.focus();
-    }
-});
-</script>
-{% endblock %}
+
+        // Setup name validation
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+
+        if (firstNameInput) {
+            firstNameInput.addEventListener('blur', function() {
+                validateName(this, 'First name');
+            });
+
+            firstNameInput.addEventListener('input', function() {
+                // Remove spaces as user types
+                this.value = this.value.replace(/\s/g, '');
+            });
+        }
+
+        if (lastNameInput) {
+            lastNameInput.addEventListener('blur', function() {
+                validateName(this, 'Last name');
+            });
+
+            lastNameInput.addEventListener('input', function() {
+                // Remove spaces as user types
+                this.value = this.value.replace(/\s/g, '');
+            });
+        }
+
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Name validation
+            if (firstNameInput && !validateName(firstNameInput, 'First name')) {
+                isValid = false;
+            }
+
+            if (lastNameInput && !validateName(lastNameInput, 'Last name')) {
+                isValid = false;
+            }
+
+            // Email validation
+            if (!email.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                e.preventDefault();
+                emailError.style.display = 'block';
+                isValid = false;
+            } else {
+                emailError.style.display = 'none';
+            }
+
+            // Password requirements check
+            let allRequirementsMet = true;
+            requirements.forEach(req => {
+                if (!req.classList.contains('valid')) {
+                    allRequirementsMet = false;
+                }
+            });
+
+            if (!allRequirementsMet) {
+                e.preventDefault();
+                alert('Please meet all password requirements');
+                isValid = false;
+            }
+
+            // Password confirmation check
+            if (password.value !== password2.value) {
+                e.preventDefault();
+                alert('Passwords do not match');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

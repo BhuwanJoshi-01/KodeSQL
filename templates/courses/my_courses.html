@@ -246,15 +246,26 @@
 
 {% block extra_js %}
 <script>
+// Store active timers to prevent multiple animations on same element
+const activeTimers = new Map();
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize course filtering and search
     initializeCourseFiltering();
-    
+
     // Load recommended courses
     loadRecommendedCourses();
-    
+
     // Initialize filter dropdown
     initializeFilterDropdown();
+
+    // Cleanup timers on page unload
+    window.addEventListener('beforeunload', function() {
+        if (typeof activeTimers !== 'undefined') {
+            activeTimers.forEach(timer => clearInterval(timer));
+            activeTimers.clear();
+        }
+    });
 });
 
 function initializeCourseFiltering() {
@@ -323,32 +334,72 @@ function initializeCourseFiltering() {
 
     function updateStats() {
         const visibleCards = Array.from(courseCards).filter(card => card.style.display !== 'none');
-        const totalVisible = visibleCards.length;
-        const inProgressVisible = visibleCards.filter(card => card.dataset.status === 'in-progress').length;
-        const completedVisible = visibleCards.filter(card => card.dataset.status === 'completed').length;
+        const totalVisible = Math.max(0, visibleCards.length);
+        const inProgressVisible = Math.max(0, visibleCards.filter(card => card.dataset.status === 'in-progress').length);
+        const completedVisible = Math.max(0, visibleCards.filter(card => card.dataset.status === 'completed').length);
+        const notStartedVisible = Math.max(0, visibleCards.filter(card => card.dataset.status === 'not-started').length);
 
+        // Animate the numbers with safeguards
         animateNumber('totalCourses', totalVisible);
         animateNumber('inProgressCourses', inProgressVisible);
         animateNumber('completedCourses', completedVisible);
+
+        // Update certificates count if element exists (it should remain static during filtering)
+        const certificatesElement = document.getElementById('certificatesEarned');
+        if (certificatesElement && !certificatesElement.dataset.originalValue) {
+            // Store original value on first run
+            certificatesElement.dataset.originalValue = certificatesElement.textContent;
+        }
     }
 
     function animateNumber(elementId, targetNumber) {
         const element = document.getElementById(elementId);
+        if (!element) return;
+
+        // Clear any existing timer for this element
+        if (activeTimers.has(elementId)) {
+            clearInterval(activeTimers.get(elementId));
+            activeTimers.delete(elementId);
+        }
+
         const currentNumber = parseInt(element.textContent) || 0;
+
+        // Ensure target number is not negative
+        targetNumber = Math.max(0, targetNumber);
+
+        // If already at target, no animation needed
+        if (currentNumber === targetNumber) {
+            element.textContent = targetNumber;
+            return;
+        }
+
         const increment = targetNumber > currentNumber ? 1 : -1;
         const duration = 300;
         const steps = Math.abs(targetNumber - currentNumber);
-        const stepDuration = steps > 0 ? duration / steps : 0;
+        const stepDuration = steps > 0 ? Math.max(10, duration / steps) : 0;
 
         let current = currentNumber;
         const timer = setInterval(() => {
             current += increment;
+
+            // Ensure we don't overshoot the target
+            if ((increment > 0 && current >= targetNumber) ||
+                (increment < 0 && current <= targetNumber)) {
+                current = targetNumber;
+            }
+
+            // Ensure current is never negative
+            current = Math.max(0, current);
             element.textContent = current;
 
             if (current === targetNumber) {
                 clearInterval(timer);
+                activeTimers.delete(elementId);
             }
         }, stepDuration);
+
+        // Store the timer
+        activeTimers.set(elementId, timer);
     }
 }
 

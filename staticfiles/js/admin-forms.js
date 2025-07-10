@@ -166,7 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Auto-run debug in development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.includes('localhost')) {
         setTimeout(function() {
             console.log('Admin Forms JS loaded. Run debugEditorVisibility() to check editor visibility.');
         }, 1000);

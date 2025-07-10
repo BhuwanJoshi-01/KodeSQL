@@ -6,199 +6,716 @@
 {{ block.super }}
 {{ form.media.css }}
 <style>
-.json-editor {
-    font-family: 'Courier New', monospace;
-    background: var(--bg-primary, #ffffff) !important;
-    color: var(--text-primary, #1e293b) !important;
-    border: 2px solid var(--border-color, #e2e8f0) !important;
-    border-radius: 8px;
-    padding: 1rem;
-    min-height: 200px;
-    transition: all 0.3s ease;
-}
+    /* Override admin form max-width constraint for challenge form */
+    .admin-form {
+        max-width: none !important;
+        width: 100% !important;
+    }
 
-.json-editor:focus {
-    border-color: var(--primary-color, #2563eb) !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-    outline: none !important;
-}
+    /* Ensure form sections use full width */
+    .form-group,
+    .field-wrapper,
+    .database-table-section {
+        width: 100% !important;
+        max-width: none !important;
+    }
 
-.json-preview {
-    background: var(--bg-secondary, #f8fafc);
-    color: var(--text-primary, #1e293b);
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: 8px;
-    padding: 1rem;
-    max-height: 300px;
-    overflow-y: auto;
-    font-family: 'Courier New', monospace;
-    white-space: pre-wrap;
-}
+    /* Make multi-table container use full width */
+    #database-tables-container {
+        width: 100% !important;
+        max-width: none !important;
+    }
 
-/* Dark theme support for JSON editor */
-[data-theme="dark"] .json-editor {
-    background: var(--bg-primary, #0f172a) !important;
-    color: var(--text-primary, #f8fafc) !important;
-    border-color: var(--border-color, #334155) !important;
-}
+    /* Ensure textareas and inputs use available space efficiently */
+    .form-group textarea,
+    .form-group input[type="text"] {
+        width: 100% !important;
+        max-width: none !important;
+    }
 
-[data-theme="dark"] .json-preview {
-    background: var(--bg-secondary, #1e293b);
-    color: var(--text-primary, #f8fafc);
-    border-color: var(--border-color, #334155);
-}
+    /* Additional override to ensure no width constraints */
+    .admin-container .admin-form {
+        max-width: none !important;
+        width: 100% !important;
+    }
 
-/* Checkbox group styling */
-.checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: 6px;
-    background: var(--bg-secondary, #f8fafc);
-}
+    /* Make sure the main content area uses full width */
+    .admin-content {
+        max-width: none !important;
+        width: 100% !important;
+    }
 
-.checkbox-group label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: normal;
-    margin: 0;
-    cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
+    .json-editor {
+        font-family: 'Courier New', monospace;
+        background: var(--bg-primary, #ffffff) !important;
+        color: var(--text-primary, #1e293b) !important;
+        border: 2px solid var(--border-color, #e2e8f0) !important;
+        border-radius: 8px;
+        padding: 1rem;
+        min-height: 200px;
+        transition: all 0.3s ease;
+    }
 
-.checkbox-group label:hover {
-    background: var(--bg-hover, rgba(59, 130, 246, 0.1));
-}
+    .json-editor:focus {
+        border-color: var(--primary-color, #2563eb) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        outline: none !important;
+    }
 
-.checkbox-group input[type="checkbox"] {
-    margin: 0;
-}
+    .json-preview {
+        background: var(--bg-secondary, #f8fafc);
+        color: var(--text-primary, #1e293b);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 8px;
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        white-space: pre-wrap;
+    }
 
-[data-theme="dark"] .checkbox-group {
-    background: var(--bg-secondary, #1e293b);
-    border-color: var(--border-color, #334155);
-}
+    /* Dark theme support for JSON editor */
+    [data-theme="dark"] .json-editor {
+        background: var(--bg-primary, #0f172a) !important;
+        color: var(--text-primary, #f8fafc) !important;
+        border-color: var(--border-color, #334155) !important;
+    }
 
-/* Info boxes */
-.engine-sql-info {
-    background: var(--bg-secondary, #f8fafc);
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: 6px;
-    padding: 1rem;
-    margin-top: 0.5rem;
-}
+    [data-theme="dark"] .json-preview {
+        background: var(--bg-secondary, #1e293b);
+        color: var(--text-primary, #f8fafc);
+        border-color: var(--border-color, #334155);
+    }
 
-[data-theme="dark"] .engine-sql-info {
-    background: var(--bg-secondary, #1e293b);
-    border-color: var(--border-color, #334155);
-}
+    /* Checkbox group styling */
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 6px;
+        background: var(--bg-secondary, #f8fafc);
+    }
 
-.difficulty-preview {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: normal;
+        margin: 0;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
 
-.sample-data-info {
-    background: var(--info-bg);
-    border: 1px solid var(--info-color);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-top: 1rem;
-    color: var(--info-text);
-}
+    .checkbox-group label:hover {
+        background: var(--bg-hover, rgba(59, 130, 246, 0.1));
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        margin: 0;
+    }
+
+    [data-theme="dark"] .checkbox-group {
+        background: var(--bg-secondary, #1e293b);
+        border-color: var(--border-color, #334155);
+    }
+
+    /* Info boxes */
+    .engine-sql-info {
+        background: var(--bg-secondary, #f8fafc);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    [data-theme="dark"] .engine-sql-info {
+        background: var(--bg-secondary, #1e293b);
+        border-color: var(--border-color, #334155);
+    }
+
+    .difficulty-preview {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .sample-data-info {
+        background: var(--info-bg);
+        border: 1px solid var(--info-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        color: var(--info-text);
+    }
+
+    /* Tag selection styling */
+    .tag-selection-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 8px;
+        background: var(--bg-secondary, #f8fafc);
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .tag-selection-container label {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 6px;
+        background: var(--bg-primary, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .tag-selection-container label:hover {
+        background: var(--bg-hover, rgba(59, 130, 246, 0.05));
+        border-color: var(--primary-color, #2563eb);
+    }
+
+    .tag-selection-container input[type="checkbox"] {
+        margin: 0;
+        margin-top: 0.1rem;
+        flex-shrink: 0;
+    }
+
+    .tag-selection-container input[type="checkbox"]:checked+span {
+        font-weight: 600;
+        color: var(--primary-color, #2563eb);
+    }
+
+    [data-theme="dark"] .tag-selection-container {
+        background: var(--bg-secondary, #1e293b);
+        border-color: var(--border-color, #334155);
+    }
+
+    [data-theme="dark"] .tag-selection-container label {
+        background: var(--bg-primary, #0f172a);
+        border-color: var(--border-color, #334155);
+    }
+
+    [data-theme="dark"] .tag-selection-container label:hover {
+        background: var(--bg-hover, rgba(59, 130, 246, 0.1));
+    }
+
+    /* SQL Editor styling */
+    .sql-editor {
+        font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+        background: var(--bg-primary, #ffffff) !important;
+        color: var(--text-primary, #1e293b) !important;
+        border: 2px solid var(--border-color, #e2e8f0) !important;
+        border-radius: 8px;
+        padding: 1rem;
+        line-height: 1.5;
+        transition: all 0.3s ease;
+    }
+
+    .sql-editor:focus {
+        border-color: var(--primary-color, #2563eb) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        outline: none !important;
+    }
+
+    [data-theme="dark"] .sql-editor {
+        background: var(--bg-primary, #0f172a) !important;
+        color: var(--text-primary, #f8fafc) !important;
+        border-color: var(--border-color, #334155) !important;
+    }
+
+    /* Dataset info styling */
+    .dataset-info {
+        font-size: 0.9rem;
+        border-left: 3px solid currentColor;
+    }
+
+    .schema-info {
+        background: var(--bg-secondary, #f8fafc);
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 6px;
+        padding: 0.75rem;
+    }
+
+    [data-theme="dark"] .schema-info {
+        background: var(--bg-secondary, #1e293b);
+        border-color: var(--border-color, #334155);
+    }
+
+    /* JSON Result Container styling */
+    .json-result-container {
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--bg-primary, #ffffff);
+    }
+
+    .json-preview {
+        max-height: 300px;
+        overflow-y: auto;
+        background: var(--bg-secondary, #f8fafc);
+        padding: 1rem;
+        margin: 0;
+    }
+
+    .json-preview pre {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border: none;
+        font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--text-primary, #1e293b);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .json-preview code {
+        background: transparent;
+        padding: 0;
+        border: none;
+        color: inherit;
+    }
+
+    .json-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: var(--bg-primary, #ffffff);
+        border-top: 1px solid var(--border-color, #e2e8f0);
+    }
+
+    .btn-copy,
+    .btn-format {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--primary-color, #2563eb);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-copy:hover,
+    .btn-format:hover {
+        background: var(--primary-hover, #1d4ed8);
+        transform: translateY(-1px);
+    }
+
+    .btn-format {
+        background: var(--secondary-color, #64748b);
+    }
+
+    .btn-format:hover {
+        background: var(--secondary-hover, #475569);
+    }
+
+    [data-theme="dark"] .json-result-container {
+        background: var(--bg-primary, #0f172a);
+        border-color: var(--border-color, #334155);
+    }
+
+    [data-theme="dark"] .json-preview {
+        background: var(--bg-secondary, #1e293b);
+    }
+
+    [data-theme="dark"] .json-preview pre {
+        color: var(--text-primary, #f8fafc);
+    }
+
+    [data-theme="dark"] .json-actions {
+        background: var(--bg-primary, #0f172a);
+        border-color: var(--border-color, #334155);
+    }
+
+    /* Hide CKEditor word count and character count */
+    .ck-word-count,
+    .ck-character-count,
+    .ck-word-count__words,
+    .ck-word-count__characters {
+        display: none !important;
+    }
+
+    /* Hide any "Rich text editor" labels */
+    .ck-editor__top .ck-sticky-panel__content,
+    .ck-editor__top .ck-toolbar__separator {
+        border: none !important;
+    }
+
+    /* Clean up CKEditor appearance */
+    .ck-editor__editable {
+        border-radius: 0 0 8px 8px !important;
+    }
+
+    .ck-editor__top {
+        border-radius: 8px 8px 0 0 !important;
+    }
+
+    /* Multi-Database System Dark Theme Support */
+    [data-theme="dark"] .database-table-form {
+        background: var(--bg-primary, #0f172a) !important;
+        border-color: var(--border-color, #334155) !important;
+        color: var(--text-primary, #f8fafc) !important;
+    }
+
+    [data-theme="dark"] .dataset-info {
+        color: var(--text-primary, #f8fafc) !important;
+    }
+
+    [data-theme="dark"] .add-database-section>div {
+        background: var(--bg-secondary, #1e293b) !important;
+        border-color: var(--primary-color, #2563eb) !important;
+    }
+
+    [data-theme="dark"] .add-database-section .material-icons {
+        color: var(--primary-color, #2563eb) !important;
+    }
+
+    /* Generate Output Button Styling */
+    #generate-output-btn:hover {
+        background: var(--primary-hover, #1d4ed8) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    [data-theme="dark"] .generate-output-section {
+        background: var(--bg-secondary, #1e293b) !important;
+        border-color: var(--primary-color, #2563eb) !important;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 {{ form.media.js }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // JSON validation and preview
-    const jsonField = document.getElementById('id_expected_result_text');
-    const jsonPreview = document.getElementById('json-preview');
-    
-    if (jsonField && jsonPreview) {
-        function updateJsonPreview() {
-            const value = jsonField.value.trim();
-            if (!value) {
-                jsonPreview.textContent = 'No expected result entered...';
-                jsonPreview.style.color = 'var(--text-tertiary)';
-                return;
+    document.addEventListener('DOMContentLoaded', function () {
+        // JSON validation and preview
+        const jsonField = document.getElementById('id_expected_result_text');
+        const jsonPreview = document.getElementById('json-preview');
+
+        if (jsonField && jsonPreview) {
+            function updateJsonPreview() {
+                const value = jsonField.value.trim();
+                if (!value) {
+                    jsonPreview.textContent = 'No expected result entered...';
+                    jsonPreview.style.color = 'var(--text-tertiary)';
+                    return;
+                }
+
+                try {
+                    const parsed = JSON.parse(value);
+                    jsonPreview.textContent = JSON.stringify(parsed, null, 2);
+                    jsonPreview.style.color = 'var(--success-color)';
+                    jsonField.style.borderColor = 'var(--success-color)';
+                } catch (e) {
+                    jsonPreview.textContent = `Invalid JSON: ${e.message}`;
+                    jsonPreview.style.color = 'var(--error-color)';
+                    jsonField.style.borderColor = 'var(--error-color)';
+                }
             }
 
-            try {
-                const parsed = JSON.parse(value);
-                jsonPreview.textContent = JSON.stringify(parsed, null, 2);
-                jsonPreview.style.color = 'var(--success-color)';
-                jsonField.style.borderColor = 'var(--success-color)';
-            } catch (e) {
-                jsonPreview.textContent = `Invalid JSON: ${e.message}`;
-                jsonPreview.style.color = 'var(--error-color)';
-                jsonField.style.borderColor = 'var(--error-color)';
+            jsonField.addEventListener('input', updateJsonPreview);
+            updateJsonPreview(); // Initial preview
+        }
+
+        // Difficulty preview
+        const difficultyField = document.getElementById('id_difficulty');
+        const difficultyPreview = document.getElementById('difficulty-preview');
+
+        if (difficultyField && difficultyPreview) {
+            function updateDifficultyPreview() {
+                const value = difficultyField.value;
+                const badges = {
+                    'easy': '<span class="status-badge difficulty-easy">Easy</span>',
+                    'medium': '<span class="status-badge difficulty-medium">Medium</span>',
+                    'hard': '<span class="status-badge difficulty-hard">Hard</span>',
+                    'extreme': '<span class="status-badge difficulty-extreme">Extreme Hard</span>'
+                };
+                difficultyPreview.innerHTML = badges[value] || '';
             }
+
+            difficultyField.addEventListener('change', updateDifficultyPreview);
+            updateDifficultyPreview(); // Initial preview
         }
-        
-        jsonField.addEventListener('input', updateJsonPreview);
-        updateJsonPreview(); // Initial preview
-    }
-    
-    // Difficulty preview
-    const difficultyField = document.getElementById('id_difficulty');
-    const difficultyPreview = document.getElementById('difficulty-preview');
-    
-    if (difficultyField && difficultyPreview) {
-        function updateDifficultyPreview() {
-            const value = difficultyField.value;
-            const badges = {
-                'easy': '<span class="status-badge difficulty-easy">Easy</span>',
-                'medium': '<span class="status-badge difficulty-medium">Medium</span>',
-                'hard': '<span class="status-badge difficulty-hard">Hard</span>'
-            };
-            difficultyPreview.innerHTML = badges[value] || '';
-        }
-        
-        difficultyField.addEventListener('change', updateDifficultyPreview);
-        updateDifficultyPreview(); // Initial preview
-    }
-    
-    // Auto-generate order
-    const orderField = document.getElementById('id_order');
-    if (orderField && !orderField.value) {
-        // Set a default order value
-        orderField.value = Math.floor(Date.now() / 1000); // Unix timestamp as default
-    }
-    
-    // File upload preview
-    const fileInput = document.getElementById('id_sample_data');
-    const filePreview = document.getElementById('file-preview');
-    
-    if (fileInput && filePreview) {
-        fileInput.addEventListener('change', function() {
-            const file = this.files|first;
-            if (file) {
-                const fileSize = (file.size / 1024).toFixed(1);
-                const fileType = file.name.split('.').pop().toLowerCase();
-                
-                filePreview.innerHTML = `
+
+
+
+        // File upload preview
+        const fileInput = document.getElementById('id_sample_data');
+        const filePreview = document.getElementById('file-preview');
+
+        if (fileInput && filePreview) {
+            fileInput.addEventListener('change', function () {
+                const file = this.files | first;
+                if (file) {
+                    const fileSize = (file.size / 1024).toFixed(1);
+                    const fileType = file.name.split('.').pop().toLowerCase();
+
+                    filePreview.innerHTML = `
                     <strong>Selected:</strong> ${file.name}<br>
                     <strong>Size:</strong> ${fileSize} KB<br>
                     <strong>Type:</strong> ${fileType.toUpperCase()}
                 `;
-                filePreview.style.color = 'var(--success-color)';
-            } else {
-                filePreview.innerHTML = 'No file selected';
-                filePreview.style.color = 'var(--text-tertiary)';
+                    filePreview.style.color = 'var(--success-color)';
+                } else {
+                    filePreview.innerHTML = 'No file selected';
+                    filePreview.style.color = 'var(--text-tertiary)';
+                }
+            });
+        }
+    });
+
+
+
+    // Enhanced SQL validation and schema file validation
+    document.addEventListener('DOMContentLoaded', function () {
+        const schemaFileInput = document.getElementById('id_mysql_schema_file');
+        if (schemaFileInput) {
+            schemaFileInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (file) {
+                    if (!file.name.toLowerCase().endsWith('.sql')) {
+                        alert('Please upload a .sql file');
+                        this.value = '';
+                        return;
+                    }
+
+                    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                        alert('File size must be less than 10MB');
+                        this.value = '';
+                        return;
+                    }
+
+                    console.log('Schema file selected:', file.name);
+                }
+            });
+        }
+
+        // Add real-time SQL validation
+        addSQLValidation();
+    });
+
+    function addSQLValidation() {
+        // Get SQL input fields
+        const sqlFields = [
+            { id: 'id_schema_sql', name: 'Schema SQL', type: 'schema' },
+            { id: 'id_run_dataset_sql', name: 'Run Dataset SQL', type: 'insert' },
+            { id: 'id_submit_dataset_sql', name: 'Submit Dataset SQL', type: 'insert' },
+            { id: 'id_reference_query', name: 'Solution Query', type: 'query' }
+        ];
+
+        sqlFields.forEach(field => {
+            const element = document.getElementById(field.id);
+            if (element) {
+                // Add validation on blur (when user leaves the field)
+                element.addEventListener('blur', function () {
+                    validateSQLField(this, field.name, field.type);
+                });
+
+                // Add visual feedback container
+                if (!element.nextElementSibling || !element.nextElementSibling.classList.contains('sql-validation-feedback')) {
+                    const feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = 'sql-validation-feedback';
+                    feedbackDiv.style.cssText = 'margin-top: 5px; font-size: 0.875rem; display: none;';
+                    element.parentNode.insertBefore(feedbackDiv, element.nextSibling);
+                }
             }
         });
     }
-});
+
+    function validateSQLField(element, fieldName, fieldType) {
+        const value = element.value.trim();
+        const feedbackDiv = element.nextElementSibling;
+
+        if (!value) {
+            hideFeedback(feedbackDiv);
+            return;
+        }
+
+        // Basic client-side validation
+        const validationResult = performBasicSQLValidation(value, fieldType);
+
+        if (validationResult.isValid) {
+            showSuccessFeedback(feedbackDiv, `${fieldName} syntax looks good!`);
+        } else {
+            showErrorFeedback(feedbackDiv, `${fieldName}: ${validationResult.error}`);
+        }
+    }
+
+    function performBasicSQLValidation(sql, type) {
+        // Enhanced client-side SQL validation
+        const sqlUpper = sql.toUpperCase().trim();
+
+        // Check for obvious syntax issues
+        if (sql.split('(').length !== sql.split(')').length) {
+            return { isValid: false, error: 'Unmatched parentheses detected' };
+        }
+
+        // Type-specific validation
+        if (type === 'schema') {
+            if (!sqlUpper.includes('CREATE TABLE')) {
+                return { isValid: false, error: 'Schema SQL should contain CREATE TABLE statements' };
+            }
+
+            // Primary key is now optional - removed mandatory check
+            // Users can add PRIMARY KEY if needed for their specific challenge
+
+            // Check for proper data types
+            const hasDataType = /\b(INT|INTEGER|VARCHAR|CHAR|TEXT|DECIMAL|FLOAT|DOUBLE|DATE|DATETIME|TIMESTAMP|BOOLEAN|BOOL)\b/i.test(sql);
+            if (!hasDataType) {
+                return { isValid: false, error: 'Schema SQL should include proper data types (INT, VARCHAR, etc.)' };
+            }
+
+        } else if (type === 'insert') {
+            if (!sqlUpper.includes('INSERT INTO')) {
+                return { isValid: false, error: 'Dataset SQL should contain INSERT INTO statements' };
+            }
+
+            // Check for VALUES clause
+            if (!sqlUpper.includes('VALUES')) {
+                return { isValid: false, error: 'INSERT statements should include VALUES clause' };
+            }
+
+            // Basic check for column list
+            const hasColumnList = /INSERT\s+INTO\s+\w+\s*\([^)]+\)\s+VALUES/i.test(sql);
+            if (!hasColumnList) {
+                return { isValid: false, error: 'INSERT statements should specify column names: INSERT INTO table (col1, col2) VALUES (...)' };
+            }
+
+            // Enhanced data validation for INSERT statements
+            const dataValidation = validateInsertDataContent(sql);
+            if (!dataValidation.isValid) {
+                return dataValidation;
+            }
+        }
+
+        // Check for common SQL injection patterns (basic)
+        const suspiciousPatterns = [
+            /;\s*DROP\s+/i,
+            /;\s*DELETE\s+FROM\s+/i,
+            /;\s*UPDATE\s+.*SET\s+/i,
+            /UNION\s+SELECT/i
+        ];
+
+        for (let pattern of suspiciousPatterns) {
+            if (pattern.test(sql)) {
+                return { isValid: false, error: 'Potentially unsafe SQL detected' };
+            }
+        }
+
+        return { isValid: true, error: '' };
+    }
+
+    function validateInsertDataContent(sql) {
+        // Enhanced client-side validation for INSERT data content
+        try {
+            // Extract VALUES section
+            const valuesMatch = sql.match(/VALUES\s*(.+)/i);
+            if (!valuesMatch) {
+                return { isValid: true, error: '' }; // Already checked in basic validation
+            }
+
+            const valuesSection = valuesMatch[1].trim();
+
+            // Extract value groups
+            const valueGroups = valuesSection.match(/\(([^)]+)\)/g);
+            if (!valueGroups) {
+                return { isValid: false, error: 'Malformed VALUES clause' };
+            }
+
+            // Check each value group
+            for (let i = 0; i < valueGroups.length; i++) {
+                const groupContent = valueGroups[i].slice(1, -1); // Remove parentheses
+                const values = groupContent.split(',').map(v => v.trim());
+
+                // Check for NULL values (basic detection)
+                for (let j = 0; j < values.length; j++) {
+                    const value = values[j].trim();
+
+                    // Check for NULL values
+                    if (value.toUpperCase() === 'NULL') {
+                        return {
+                            isValid: false,
+                            error: `Row ${i + 1}, Column ${j + 1}: NULL values may not be allowed in NOT NULL columns`
+                        };
+                    }
+
+                    // Check for empty values
+                    if (!value || value === '') {
+                        return {
+                            isValid: false,
+                            error: `Row ${i + 1}, Column ${j + 1}: Missing value detected`
+                        };
+                    }
+
+                    // Enhanced data type validation
+
+                    // Check for text in what should be numeric values
+                    if (value.match(/^['"].*[a-zA-Z].*['"]$/)) {
+                        const textContent = value.slice(1, -1); // Remove quotes
+                        if (textContent.match(/\b(thousand|million|hundred|zero|one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/i)) {
+                            return {
+                                isValid: false,
+                                error: `Row ${i + 1}, Column ${j + 1}: Text numbers like '${textContent}' should be numeric (e.g., 80000.00 instead of 'eighty thousand')`
+                            };
+                        }
+                    }
+
+                    // Check for unquoted string values (basic detection)
+                    if (value.match(/^[a-zA-Z]/) && !value.match(/^['"]/) && value.toUpperCase() !== 'NULL') {
+                        return {
+                            isValid: false,
+                            error: `Row ${i + 1}, Column ${j + 1}: String values should be quoted: '${value}'`
+                        };
+                    }
+
+                    // Check for quoted numeric values (potential type mismatch)
+                    if (value.match(/^['"][0-9.]+['"]$/)) {
+                        return {
+                            isValid: false,
+                            error: `Row ${i + 1}, Column ${j + 1}: Numeric values should not be quoted: ${value.slice(1, -1)} instead of ${value}`
+                        };
+                    }
+                }
+            }
+
+            return { isValid: true, error: '' };
+
+        } catch (e) {
+            return { isValid: false, error: 'Error validating INSERT data content' };
+        }
+    }
+
+    function showSuccessFeedback(element, message) {
+        element.style.display = 'block';
+        element.style.color = '#10b981';
+        element.innerHTML = `<i class="material-icons" style="font-size: 16px; vertical-align: middle;">check_circle</i> ${message}`;
+    }
+
+    function showErrorFeedback(element, message) {
+        element.style.display = 'block';
+        element.style.color = '#ef4444';
+        element.innerHTML = `<i class="material-icons" style="font-size: 16px; vertical-align: middle;">error</i> ${message}`;
+    }
+
+    function hideFeedback(element) {
+        element.style.display = 'none';
+    }
 </script>
 {% endblock %}
 
@@ -216,307 +733,326 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+{% if validation_error %}
+<div class="alert alert-warning alert-dismissible fade show mb-3" role="alert"
+    style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Validation Failed:</strong> Your form data has been preserved. Please fix the errors below and try again.
+    <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'" aria-label="Close"
+        style="background: none; border: none; font-size: 1.2rem; cursor: pointer; float: right;">&times;</button>
+</div>
+{% endif %}
+
 <form method="post" enctype="multipart/form-data" class="admin-form">
     {% csrf_token %}
-    
-    <div class="admin-card">
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">info</span>
-                Basic Information
-            </h4>
-            
-            <div class="form-group">
-                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                {{ form.title }}
-                {% if form.title.help_text %}
-                    <div class="help-text">{{ form.title.help_text }}</div>
-                {% endif %}
-                {% if form.title.errors %}
-                    <div class="error-text">{{ form.title.errors.0 }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-                {{ form.description }}
-                {% if form.description.help_text %}
-                    <div class="help-text">{{ form.description.help_text }}</div>
-                {% endif %}
-                {% if form.description.errors %}
-                    <div class="error-text">{{ form.description.errors.0 }}</div>
-                {% endif %}
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
-                    {{ form.difficulty }}
-                    <div id="difficulty-preview" class="difficulty-preview"></div>
-                    {% if form.difficulty.errors %}
-                        <div class="error-text">{{ form.difficulty.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
-                    {{ form.order }}
-                    {% if form.order.help_text %}
-                        <div class="help-text">{{ form.order.help_text }}</div>
-                    {% endif %}
-                    {% if form.order.errors %}
-                        <div class="error-text">{{ form.order.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
-                    <div class="form-check" style="margin-top: 2rem;">
-                        {{ form.is_active }}
-                        <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
-                    </div>
-                    {% if form.is_active.errors %}
-                        <div class="error-text">{{ form.is_active.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">help</span>
-                Challenge Content
-            </h4>
-            
-            <div class="form-group">
-                <label for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
-                {{ form.question }}
-                {% if form.question.help_text %}
-                    <div class="help-text">{{ form.question.help_text }}</div>
-                {% endif %}
-                {% if form.question.errors %}
-                    <div class="error-text">{{ form.question.errors.0 }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.hint.id_for_label }}">{{ form.hint.label }}</label>
-                {{ form.hint }}
-                {% if form.hint.help_text %}
-                    <div class="help-text">{{ form.hint.help_text }}</div>
-                {% endif %}
-                {% if form.hint.errors %}
-                    <div class="error-text">{{ form.hint.errors.0 }}</div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">code</span>
-                Solution & Expected Results
-            </h4>
-            
-            <div class="form-group">
-                <label for="{{ form.expected_query.id_for_label }}">{{ form.expected_query.label }}</label>
-                {{ form.expected_query }}
-                {% if form.expected_query.help_text %}
-                    <div class="help-text">{{ form.expected_query.help_text }}</div>
-                {% endif %}
-                {% if form.expected_query.errors %}
-                    <div class="error-text">{{ form.expected_query.errors.0 }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.expected_result_text.id_for_label }}">{{ form.expected_result_text.label }}</label>
-                {{ form.expected_result_text }}
-                {% if form.expected_result_text.help_text %}
-                    <div class="help-text">{{ form.expected_result_text.help_text }}</div>
-                {% endif %}
-                {% if form.expected_result_text.errors %}
-                    <div class="error-text">{{ form.expected_result_text.errors.0 }}</div>
-                {% endif %}
-                
-                <div style="margin-top: 1rem;">
-                    <strong>JSON Preview:</strong>
-                    <div id="json-preview" class="json-preview">
-                        No expected result entered...
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Subscription & Categorization Section -->
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">category</span>
-                Subscription & Categorization
-            </h4>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label for="{{ form.subscription_type.id_for_label }}">{{ form.subscription_type.label }}</label>
-                    {{ form.subscription_type }}
-                    {% if form.subscription_type.help_text %}
-                        <div class="help-text">{{ form.subscription_type.help_text }}</div>
-                    {% endif %}
-                    {% if form.subscription_type.errors %}
-                        <div class="error-text">{{ form.subscription_type.errors.0 }}</div>
-                    {% endif %}
-                </div>
+    <div class="form-section">
+        <h4>
+            <span class="material-icons">info</span>
+            Basic Information
+        </h4>
 
-                <div class="form-group">
-                    <label for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>
-                    {{ form.company }}
-                    {% if form.company.help_text %}
-                        <div class="help-text">{{ form.company.help_text }}</div>
-                    {% endif %}
-                    {% if form.company.errors %}
-                        <div class="error-text">{{ form.company.errors.0 }}</div>
-                    {% endif %}
-                </div>
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.help_text %}
+            <div class="help-text">{{ form.title.help_text }}</div>
+            {% endif %}
+            {% if form.title.errors %}
+            <div class="error-text">{{ form.title.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.help_text %}
+            <div class="help-text">{{ form.description.help_text }}</div>
+            {% endif %}
+            {% if form.description.errors %}
+            <div class="error-text">{{ form.description.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
+                {{ form.difficulty }}
+                <div id="difficulty-preview" class="difficulty-preview"></div>
+                {% if form.difficulty.errors %}
+                <div class="error-text">{{ form.difficulty.errors.0 }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
-                <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}</label>
-                {{ form.tags }}
-                {% if form.tags.help_text %}
-                    <div class="help-text">{{ form.tags.help_text }}</div>
-                {% endif %}
-                {% if form.tags.errors %}
-                    <div class="error-text">{{ form.tags.errors.0 }}</div>
+                <div class="form-check" style="margin-top: 2rem;">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                </div>
+                {% if form.is_active.errors %}
+                <div class="error-text">{{ form.is_active.errors.0 }}</div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Database Configuration Section -->
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">storage</span>
-                Database Configuration
-            </h4>
 
-            <div class="form-group">
-                <label for="{{ form.database_schema_type.id_for_label }}">{{ form.database_schema_type.label }}</label>
-                {{ form.database_schema_type }}
-                {% if form.database_schema_type.help_text %}
-                    <div class="help-text">{{ form.database_schema_type.help_text }}</div>
-                {% endif %}
-                {% if form.database_schema_type.errors %}
-                    <div class="error-text">{{ form.database_schema_type.errors.0 }}</div>
-                {% endif %}
+    </div>
 
-                <div class="schema-info" style="margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
-                    <h5 style="margin: 0 0 0.5rem 0;">Available Database Schemas:</h5>
-                    <ul style="margin: 0; padding-left: 1.5rem;">
-                        <li><strong>Employee Database:</strong> Standard employee table with departments and salaries</li>
-                        <li><strong>E-commerce Database:</strong> Orders and returns tables for e-commerce challenges</li>
-                        <li><strong>Student Database:</strong> Students, courses, and enrollments tables for academic challenges</li>
-                        <li><strong>Custom Schema:</strong> Define your own database schema and initialization SQL</li>
-                    </ul>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9em; color: var(--text-secondary);">
-                        <strong>Note:</strong> Predefined schemas are configured in settings.py with sample data for all supported database engines.
-                    </p>
-                </div>
-            </div>
+    <div class="form-section">
+        <h4>
+            <span class="material-icons">help</span>
+            Challenge Content
+        </h4>
 
-            <!-- Custom Schema Fields (only shown when custom is selected) -->
-            <div id="custom-schema-fields" style="display: none;">
-                <div class="form-group">
-                    <label for="{{ form.custom_initialization_sql.id_for_label }}">{{ form.custom_initialization_sql.label }}</label>
-                    {{ form.custom_initialization_sql }}
-                    {% if form.custom_initialization_sql.help_text %}
-                        <div class="help-text">{{ form.custom_initialization_sql.help_text }}</div>
-                    {% endif %}
-                    {% if form.custom_initialization_sql.errors %}
-                        <div class="error-text">{{ form.custom_initialization_sql.errors.0 }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.custom_database_schema_text.id_for_label }}">{{ form.custom_database_schema_text.label }}</label>
-                    {{ form.custom_database_schema_text }}
-                    {% if form.custom_database_schema_text.help_text %}
-                        <div class="help-text">{{ form.custom_database_schema_text.help_text }}</div>
-                    {% endif %}
-                    {% if form.custom_database_schema_text.errors %}
-                        <div class="error-text">{{ form.custom_database_schema_text.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="form-group">
+            <label for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
+            {{ form.question }}
+            {% if form.question.help_text %}
+            <div class="help-text">{{ form.question.help_text }}</div>
+            {% endif %}
+            {% if form.question.errors %}
+            <div class="error-text">{{ form.question.errors.0 }}</div>
+            {% endif %}
         </div>
 
-        <!-- Multi-Engine Support Section -->
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">dns</span>
-                Multi-Database Engine Support
-            </h4>
-
-            <div class="form-group">
-                <label for="{{ form.supported_engines.id_for_label }}">{{ form.supported_engines.label }}</label>
-                <div class="checkbox-group">
-                    {{ form.supported_engines }}
-                </div>
-                {% if form.supported_engines.help_text %}
-                    <div class="help-text">{{ form.supported_engines.help_text }}</div>
-                {% endif %}
-                {% if form.supported_engines.errors %}
-                    <div class="error-text">{{ form.supported_engines.errors.0 }}</div>
-                {% endif %}
-
-                <div class="engine-info" style="margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
-                    <h5 style="margin: 0 0 0.5rem 0;">Supported Database Engines:</h5>
-                    <ul style="margin: 0; padding-left: 1.5rem;">
-                        <li><strong>SQLite:</strong> File-based database, great for development and testing</li>
-                        <li><strong>PostgreSQL:</strong> Advanced open-source database with rich features</li>
-                        <li><strong>MySQL:</strong> Popular open-source database, widely used in web applications</li>
-                    </ul>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9em; color: var(--text-secondary);">
-                        <strong>Note:</strong> Database schemas are now predefined in settings.py for consistency across all challenges.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h4>
-                <span class="material-icons">upload_file</span>
-                Sample Data
-            </h4>
-            
-            <div class="form-group">
-                <label for="{{ form.sample_data.id_for_label }}">{{ form.sample_data.label }}</label>
-                <div class="media-upload-area">
-                    {{ form.sample_data }}
-                    <div id="file-preview" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-muted);">
-                        {% if form.sample_data.value %}
-                            <strong>Current:</strong> {{ form.sample_data.value }}
-                        {% else %}
-                            No file selected
-                        {% endif %}
-                    </div>
-                </div>
-                {% if form.sample_data.help_text %}
-                    <div class="help-text">{{ form.sample_data.help_text }}</div>
-                {% endif %}
-                {% if form.sample_data.errors %}
-                    <div class="error-text">{{ form.sample_data.errors.0 }}</div>
-                {% endif %}
-                
-                <div class="sample-data-info">
-                    <h5 style="margin: 0 0 0.5rem 0;">Sample Data Guidelines:</h5>
-                    <ul style="margin: 0; padding-left: 1.5rem;">
-                        <li><strong>CSV files:</strong> First row should contain column headers</li>
-                        <li><strong>SQL files:</strong> Should contain INSERT statements with sample data</li>
-                        <li><strong>File size:</strong> Keep under 1MB for optimal performance</li>
-                        <li><strong>Data quality:</strong> Ensure data is relevant to the challenge</li>
-                    </ul>
-                </div>
-            </div>
+        <div class="form-group">
+            <label for="{{ form.hint.id_for_label }}">{{ form.hint.label }}</label>
+            {{ form.hint }}
+            {% if form.hint.help_text %}
+            <div class="help-text">{{ form.hint.help_text }}</div>
+            {% endif %}
+            {% if form.hint.errors %}
+            <div class="error-text">{{ form.hint.errors.0 }}</div>
+            {% endif %}
         </div>
     </div>
-    
+
+    <!-- Multi-Database System Section -->
+    <div class="form-section">
+        <h4>
+            <span class="material-icons">storage</span>
+            🗄️ Multi-Database Challenge System
+        </h4>
+
+        <div class="help-text"
+            style="background: var(--bg-secondary, #f8fafc); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color, #e2e8f0);">
+            <strong>Multi-Table Challenges:</strong> Add multiple database tables for complex SQL scenarios.
+        </div>
+
+        <!-- Dynamic Multi-Table Container -->
+        <div id="database-tables-container">
+            <!-- Tables will be dynamically added here -->
+        </div>
+
+        <!-- Prominent Add Another Database Button -->
+        <div class="add-database-section" style="margin: 2rem 0; text-align: center;">
+            <div
+                style="background: var(--bg-secondary, #f8fafc); padding: 2rem; border: 3px dashed var(--primary-color, #2563eb); border-radius: 15px; position: relative; animation: pulse-border 3s infinite;">
+                <div
+                    style="font-size: 20px; font-weight: bold; color: var(--text-primary, #1e293b); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+                    🗄️ ADD ANOTHER DATABASE TABLE
+                </div>
+                <button type="button" id="add-database-btn" class="btn btn-primary" style="
+                        background: var(--primary-color, #2563eb);
+                        color: white;
+                        padding: 18px 36px;
+                        border-radius: 50px;
+                        border: none;
+                        font-weight: bold;
+                        font-size: 16px;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                    ">
+                    ➕ ADD DATABASE TABLE
+                </button>
+                <div style="font-size: 12px; color: var(--text-secondary, #64748b); margin-top: 1rem; opacity: 0.8;">
+                    Click to add table schema, run dataset & submit dataset
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes pulse-border {
+                0% {
+                    border-color: var(--primary-color, #2563eb);
+                }
+
+                50% {
+                    border-color: var(--accent-color, #8b5cf6);
+                }
+
+                100% {
+                    border-color: var(--primary-color, #2563eb);
+                }
+            }
+
+            #add-database-btn:hover {
+                background: var(--primary-hover, #1d4ed8) !important;
+                transform: translateY(-3px) scale(1.05);
+                box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5);
+            }
+        </style>
+
+        <!-- Legacy Single-Table Fields (Hidden by default, for backward compatibility) -->
+        <div id="legacy-fields" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.run_dataset_sql.id_for_label }}">{{ form.run_dataset_sql.label }}</label>
+                    {{ form.run_dataset_sql }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.submit_dataset_sql.id_for_label }}">{{ form.submit_dataset_sql.label }}</label>
+                    {{ form.submit_dataset_sql }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="{{ form.schema_sql.id_for_label }}">{{ form.schema_sql.label }}</label>
+                {{ form.schema_sql }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.reference_query.id_for_label }}">{{ form.reference_query.label }}</label>
+            {{ form.reference_query }}
+            {% if form.reference_query.help_text %}
+            <div class="help-text">{{ form.reference_query.help_text }}</div>
+            {% endif %}
+            {% if form.reference_query.errors %}
+            <div class="error-text">{{ form.reference_query.errors.0 }}</div>
+            {% endif %}
+
+
+
+
+        </div>
+
+        {% if challenge.expected_result_json %}
+        <div class="form-group">
+            <label>Generated Expected Result (JSON)</label>
+            <div class="json-result-container">
+                <div class="json-preview" id="jsonPreview">
+                    <pre><code>{% if challenge.expected_result_json %}{{ challenge.expected_result_json|safe }}{% else %}[]{% endif %}</code></pre>
+                </div>
+                <div class="json-actions">
+                    <button type="button" class="btn-copy" onclick="copyJsonResult()">
+                        <span class="material-icons">content_copy</span>
+                        Copy JSON
+                    </button>
+                    <button type="button" class="btn-format" onclick="formatJsonResult()">
+                        <span class="material-icons">code</span>
+                        Format
+                    </button>
+                </div>
+            </div>
+            <div class="help-text">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">check_circle</span>
+                This JSON result was auto-generated by executing your reference query on the submit dataset.
+                Users' query results will be compared against this exact JSON structure.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+
+
+
+
+
+
+
+    <!-- Subscription & Categorization Section -->
+    <div class="form-section">
+        <h4>
+            <span class="material-icons">category</span>
+            Subscription & Categorization
+        </h4>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.subscription_type.id_for_label }}">{{ form.subscription_type.label }}</label>
+                {{ form.subscription_type }}
+                {% if form.subscription_type.help_text %}
+                <div class="help-text">{{ form.subscription_type.help_text }}</div>
+                {% endif %}
+                {% if form.subscription_type.errors %}
+                <div class="error-text">{{ form.subscription_type.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>
+                {{ form.company }}
+                {% if form.company.help_text %}
+                <div class="help-text">{{ form.company.help_text }}</div>
+                {% endif %}
+                {% if form.company.errors %}
+                <div class="error-text">{{ form.company.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.xp.id_for_label }}">
+                    <span class="material-icons"
+                        style="font-size: 16px; vertical-align: middle; color: var(--primary-color, #2563eb);">stars</span>
+                    {{ form.xp.label }}
+                </label>
+                {{ form.xp }}
+                {% if form.xp.help_text %}
+                <div class="help-text">{{ form.xp.help_text }}</div>
+                {% endif %}
+                {% if form.xp.errors %}
+                <div class="error-text">{{ form.xp.errors.0 }}</div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}</label>
+            <div class="help-text" style="margin-bottom: 1rem;">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">help</span>
+                Select the SQL concepts and techniques that are used in this challenge. This helps users find challenges
+                that match their learning goals.
+            </div>
+
+            <div class="tag-selection-container">
+                {{ form.tags }}
+            </div>
+
+            {% if form.tags.errors %}
+            <div class="error-text">{{ form.tags.errors.0 }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+
+
+    <!-- Database Engine Support Section -->
+    <div class="form-section">
+        <h4>
+            <span class="material-icons">dns</span>
+            Database Engine Support
+        </h4>
+
+        <div class="form-group">
+            <label for="{{ form.supported_engines.id_for_label }}">{{ form.supported_engines.label }}</label>
+            <div class="checkbox-group">
+                {{ form.supported_engines }}
+            </div>
+            {% if form.supported_engines.help_text %}
+            <div class="help-text">{{ form.supported_engines.help_text }}</div>
+            {% endif %}
+            {% if form.supported_engines.errors %}
+            <div class="error-text">{{ form.supported_engines.errors.0 }}</div>
+            {% endif %}
+
+
+        </div>
+    </div>
+
     <div class="admin-actions" style="margin-top: 2rem;">
         <button type="submit" class="btn btn-primary">
             <span class="material-icons">save</span>
@@ -527,30 +1063,394 @@ document.addEventListener('DOMContentLoaded', function() {
             Cancel
         </a>
     </div>
+
+    
 </form>
 
 <script>
-// Toggle custom schema fields based on database schema type selection
-function toggleCustomSchemaFields(schemaType) {
-    const customFields = document.getElementById('custom-schema-fields');
-    if (customFields) {
-        if (schemaType === 'custom') {
-            customFields.style.display = 'block';
-        } else {
-            customFields.style.display = 'none';
+
+
+    // JSON Result functionality
+    function copyJsonResult() {
+        const jsonPreview = document.querySelector('#jsonPreview pre code');
+        if (jsonPreview) {
+            const text = jsonPreview.textContent;
+            navigator.clipboard.writeText(text).then(function () {
+                // Show success feedback
+                const button = event.target.closest('.btn-copy');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="material-icons">check</span>Copied!';
+                button.style.background = '#10b981';
+
+                setTimeout(function () {
+                    button.innerHTML = originalText;
+                    button.style.background = '';
+                }, 2000);
+            }).catch(function (err) {
+                console.error('Failed to copy JSON: ', err);
+                alert('Failed to copy JSON to clipboard');
+            });
         }
     }
-}
 
-// Initialize custom schema fields visibility on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const schemaTypeField = document.querySelector('select[name="database_schema_type"]');
-    if (schemaTypeField) {
-        toggleCustomSchemaFields(schemaTypeField.value);
-        schemaTypeField.addEventListener('change', function() {
-            toggleCustomSchemaFields(this.value);
-        });
+    function formatJsonResult() {
+        const jsonPreview = document.querySelector('#jsonPreview pre code');
+        if (jsonPreview) {
+            try {
+                const jsonText = jsonPreview.textContent;
+                const parsed = JSON.parse(jsonText);
+                const formatted = JSON.stringify(parsed, null, 2);
+                jsonPreview.textContent = formatted;
+
+                // Show success feedback
+                const button = event.target.closest('.btn-format');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="material-icons">check</span>Formatted!';
+                button.style.background = '#10b981';
+
+                setTimeout(function () {
+                    button.innerHTML = originalText;
+                    button.style.background = '';
+                }, 2000);
+            } catch (e) {
+                console.error('Failed to format JSON: ', e);
+                alert('Invalid JSON format - cannot format');
+            }
+        }
     }
-});
+
+    // Note: Manual JSON generation has been replaced with automatic generation
+    // JSON results are now automatically generated when challenges are saved with reference queries
+
+    // Schema file validation and initialization
+    document.addEventListener('DOMContentLoaded', function () {
+        const schemaFileInput = document.getElementById('id_mysql_schema_file');
+        if (schemaFileInput) {
+            schemaFileInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (file) {
+                    if (!file.name.toLowerCase().endsWith('.sql')) {
+                        alert('Please upload a .sql file');
+                        this.value = '';
+                        return;
+                    }
+
+                    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                        alert('File size must be less than 10MB');
+                        this.value = '';
+                        return;
+                    }
+
+                    console.log('Schema file selected:', file.name);
+                }
+            });
+        }
+
+        // Auto-format JSON on page load if present
+        const jsonPreview = document.querySelector('#jsonPreview pre code');
+        if (jsonPreview && jsonPreview.textContent.trim()) {
+            try {
+                const jsonText = jsonPreview.textContent;
+                const parsed = JSON.parse(jsonText);
+                const formatted = JSON.stringify(parsed, null, 2);
+                jsonPreview.textContent = formatted;
+            } catch (e) {
+                // If JSON is invalid, leave it as is
+                console.log('JSON auto-format skipped - invalid format');
+            }
+        }
+
+        // Initialize Multi-Database System
+        initializeMultiDatabaseSystem();
+
+        console.log('Challenge form initialized');
+    });
+
+    // Multi-Database System JavaScript
+    let tableCounter = 0;
+
+    function initializeMultiDatabaseSystem() {
+        console.log('Initializing Multi-Database System...');
+
+        // Add event listener to the "Add Database" button
+        const addDatabaseBtn = document.getElementById('add-database-btn');
+        if (addDatabaseBtn) {
+            addDatabaseBtn.addEventListener('click', addDatabaseTable);
+        }
+
+        // Load existing tables if editing
+        {% if is_edit and existing_tables %}
+        {% for table in existing_tables %}
+        loadExistingTable({
+            table_name: '{{ table.table_name|escapejs }}',
+            schema_sql: `{{ table.schema_sql|escapejs }}`,
+            run_dataset_sql: `{{ table.run_dataset_sql|escapejs }}`,
+            submit_dataset_sql: `{{ table.submit_dataset_sql|escapejs }}`
+        });
+        {% endfor %}
+        {% elif preserved_table_data %}
+        // Load preserved table data if validation failed
+        {% for table_id, table_data in preserved_table_data.items %}
+        loadExistingTable({
+            table_name: '{{ table_data.table_name|default:""|escapejs }}',
+            schema_sql: `{{ table_data.schema_sql|default:""|escapejs }}`,
+            run_dataset_sql: `{{ table_data.run_dataset_sql|default:""|escapejs }}`,
+            submit_dataset_sql: `{{ table_data.submit_dataset_sql|default:""|escapejs }}`
+        });
+        {% endfor %}
+        {% else %}
+        // Add initial table if none exist
+        if (tableCounter === 0) {
+            addDatabaseTable();
+        }
+        {% endif %}
+    }
+
+    function addDatabaseTable() {
+        tableCounter++;
+
+        const container = document.getElementById('database-tables-container');
+        if (!container) return;
+
+        // Show loading state on button
+        const addBtn = document.getElementById('add-database-btn');
+        const originalText = addBtn.innerHTML;
+        addBtn.innerHTML = '⏳ ADDING DATABASE TABLE...';
+        addBtn.style.opacity = '0.7';
+        addBtn.disabled = true;
+
+        // Create table form HTML
+        const tableHtml = `
+        <div class="database-table-form" id="table-${tableCounter}" style="
+            background: var(--bg-primary, #ffffff);
+            border: 2px solid var(--border-color, #e2e8f0);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h5 style="margin: 0; color: var(--primary-color, #2563eb); display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="material-icons">table_chart</span>
+                    Database Table #${tableCounter}
+                </h5>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeDatabaseTable(${tableCounter})" style="
+                    background: var(--error-color, #ef4444);
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 6px;
+                    color: white;
+                    font-size: 12px;
+                ">
+                    🗑️ Remove
+                </button>
+            </div>
+
+            <!-- Hidden table name field (auto-extracted from schema) -->
+            <input type="hidden" id="table_name_${tableCounter}" name="tables[${tableCounter}][table_name]" value="">
+
+            <div class="form-group">
+                <label for="schema_sql_${tableCounter}">
+                    Schema SQL (CREATE TABLE)
+                    <span id="table_name_display_${tableCounter}" style="
+                        background: var(--primary-color, #2563eb);
+                        color: white;
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 4px;
+                        font-size: 0.8rem;
+                        margin-left: 0.5rem;
+                        display: inline-block;
+                    ">Table name will be auto-detected</span>
+                </label>
+                <textarea id="schema_sql_${tableCounter}" name="tables[${tableCounter}][schema_sql]"
+                          class="form-control sql-editor" rows="6" required
+                          placeholder="CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    department VARCHAR(100),
+    salary DECIMAL(10,2)
+);"
+                          onkeyup="extractTableName(${tableCounter})"
+                          onchange="extractTableName(${tableCounter})"
+                          onblur="validateMultiTableSQL(this, 'Schema SQL', 'schema')"></textarea>
+                <div class="sql-validation-feedback" style="margin-top: 5px; font-size: 0.875rem; display: none;"></div>
+
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="run_dataset_sql_${tableCounter}">Run Dataset SQL (Test Data)</label>
+                    <textarea id="run_dataset_sql_${tableCounter}" name="tables[${tableCounter}][run_dataset_sql]"
+                              class="form-control sql-editor" rows="5" required
+                              placeholder="INSERT INTO employees (id, name, department, salary) VALUES
+(1, 'John Doe', 'Engineering', 75000.00),
+(2, 'Jane Smith', 'Marketing', 65000.00);"
+                              style="background: var(--warning-bg, #fef3c7); border-color: var(--warning-color, #f59e0b); color: var(--text-primary, #1e293b);"
+                              onblur="validateMultiTableSQL(this, 'Run Dataset SQL', 'insert')"></textarea>
+                    <div class="sql-validation-feedback" style="margin-top: 5px; font-size: 0.875rem; display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="submit_dataset_sql_${tableCounter}">Submit Dataset SQL (Validation Data)</label>
+                    <textarea id="submit_dataset_sql_${tableCounter}" name="tables[${tableCounter}][submit_dataset_sql]"
+                              class="form-control sql-editor" rows="5" required
+                              placeholder="INSERT INTO employees (id, name, department, salary) VALUES
+(1, 'John Doe', 'Engineering', 75000.00),
+(2, 'Jane Smith', 'Marketing', 65000.00),
+(3, 'Bob Johnson', 'Engineering', 80000.00);"
+                              style="background: var(--info-bg, #dbeafe); border-color: var(--info-color, #3b82f6); color: var(--text-primary, #1e293b);"
+                              onblur="validateMultiTableSQL(this, 'Submit Dataset SQL', 'insert')"></textarea>
+                    <div class="sql-validation-feedback" style="margin-top: 5px; font-size: 0.875rem; display: none;"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Add the new table form
+        container.insertAdjacentHTML('beforeend', tableHtml);
+
+        // Highlight the new form
+        setTimeout(() => {
+            const newForm = document.getElementById(`table-${tableCounter}`);
+            if (newForm) {
+                newForm.style.border = '3px solid var(--success-color, #10b981)';
+                newForm.style.background = 'var(--success-bg, #ecfdf5)';
+                newForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                setTimeout(() => {
+                    newForm.style.border = '2px solid var(--border-color, #e2e8f0)';
+                    newForm.style.background = 'var(--bg-primary, #ffffff)';
+                }, 3000);
+            }
+        }, 100);
+
+        // Restore button state
+        setTimeout(() => {
+            addBtn.innerHTML = '✅ DATABASE TABLE ADDED!';
+            addBtn.style.background = 'linear-gradient(135deg, #4caf50, #388e3c)';
+
+            setTimeout(() => {
+                addBtn.innerHTML = originalText;
+                addBtn.style.opacity = '1';
+                addBtn.style.background = '';
+                addBtn.disabled = false;
+            }, 1500);
+        }, 800);
+    }
+
+    function loadExistingTable(tableData) {
+        tableCounter++;
+
+        const container = document.getElementById('database-tables-container');
+        if (!container) return;
+
+        // Create table form HTML with existing data
+        const tableHtml = `
+        <div class="database-table-form" id="table-${tableCounter}" style="
+            background: var(--bg-primary, #ffffff);
+            border: 2px solid var(--border-color, #e2e8f0);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h5 style="margin: 0; color: var(--primary-color, #2563eb); display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="material-icons">table_chart</span>
+                    Database Table #${tableCounter}
+                </h5>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeDatabaseTable(${tableCounter})" style="
+                    background: var(--error-color, #ef4444);
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 6px;
+                    color: white;
+                    font-size: 12px;
+                ">
+                    🗑️ Remove
+                </button>
+            </div>
+
+            <!-- Hidden table name field (auto-extracted from schema) -->
+            <input type="hidden" id="table_name_${tableCounter}" name="tables[${tableCounter}][table_name]" value="${tableData.table_name}">
+
+            <div class="form-group">
+                <label for="schema_sql_${tableCounter}">
+                    Schema SQL (CREATE TABLE)
+                    <span id="table_name_display_${tableCounter}" style="
+                        background: var(--primary-color, #2563eb);
+                        color: white;
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 4px;
+                        font-size: 0.8rem;
+                        margin-left: 0.5rem;
+                    ">${tableData.table_name}</span>
+                </label>
+                <textarea id="schema_sql_${tableCounter}" name="tables[${tableCounter}][schema_sql]"
+                          class="form-control sql-editor" rows="6" required
+                          onkeyup="extractTableName(${tableCounter})"
+                          onchange="extractTableName(${tableCounter})">${tableData.schema_sql}</textarea>
+
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="run_dataset_sql_${tableCounter}">Run Dataset SQL (Test Data)</label>
+                    <textarea id="run_dataset_sql_${tableCounter}" name="tables[${tableCounter}][run_dataset_sql]"
+                              class="form-control sql-editor" rows="5" required
+                              style="background: var(--warning-bg, #fef3c7); border-color: var(--warning-color, #f59e0b); color: var(--text-primary, #1e293b);">${tableData.run_dataset_sql}</textarea>
+
+                </div>
+
+                <div class="form-group">
+                    <label for="submit_dataset_sql_${tableCounter}">Submit Dataset SQL (Validation Data)</label>
+                    <textarea id="submit_dataset_sql_${tableCounter}" name="tables[${tableCounter}][submit_dataset_sql]"
+                              class="form-control sql-editor" rows="5" required
+                              style="background: var(--info-bg, #dbeafe); border-color: var(--info-color, #3b82f6); color: var(--text-primary, #1e293b);">${tableData.submit_dataset_sql}</textarea>
+
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Add the table form
+        container.insertAdjacentHTML('beforeend', tableHtml);
+    }
+
+    function validateMultiTableSQL(element, fieldName, fieldType) {
+        const value = element.value.trim();
+        const feedbackDiv = element.parentNode.querySelector('.sql-validation-feedback');
+
+        if (!value) {
+            hideFeedback(feedbackDiv);
+            return;
+        }
+
+        // Basic client-side validation for multi-table fields
+        const validationResult = performBasicSQLValidation(value, fieldType);
+
+        if (validationResult.isValid) {
+            showSuccessFeedback(feedbackDiv, `${fieldName} syntax looks good!`);
+        } else {
+            showErrorFeedback(feedbackDiv, `${fieldName}: ${validationResult.error}`);
+        }
+    }
+
+    function removeDatabaseTable(tableId) {
+        const tableForm = document.getElementById(`table-${tableId}`);
+        if (tableForm) {
+            if (confirm('Are you sure you want to remove this database table?')) {
+                tableForm.style.transition = 'all 0.3s ease';
+                tableForm.style.opacity = '0';
+                tableForm.style.transform = 'scale(0.95)';
+
+                setTimeout(() => {
+                    tableForm.remove();
+                }, 300);
+            }
+        }
+    }
 </script>
 {% endblock %}

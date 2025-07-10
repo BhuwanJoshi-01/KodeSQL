@@ -1,108 +1,1139 @@
-{% extends "base.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ profile.theme_preference|default:'dark' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} - KodeSQL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}">
-{% endblock %}
+        /* Theme-specific backgrounds matching dashboard */
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
 
-{% block content %}
-<div class="tile-wrap tile-wrap-md">
-    <div class="profile-container" style="padding: 2rem 0;">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">User Profile</h2>
-                <p class="card-subtitle">Manage your account settings</p>
-            </div>
+        [data-theme="light"] body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .profile-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
             
-            <div style="padding: 1.5rem;">
-                <div class="profile-info">
-                    <div class="profile-avatar">
-                        <div style="width: 80px; height: 80px; background-color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
-                            {{ request.user.email|first|upper }}
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), #8b5cf6, #06b6d4);
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.75rem 1.5rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .back-link {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .back-link:hover {
+            color: var(--primary-color);
+            transform: translateY(-2px) translateX(-5px);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle .material-icons {
+            font-size: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover .material-icons {
+            transform: rotate(180deg);
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .profile-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] .profile-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), #8b5cf6, #06b6d4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] .card-title {
+            border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .profile-picture-section {
+            text-align: center;
+        }
+
+        .profile-picture-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .profile-picture:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .default-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .default-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-info {
+            margin-bottom: 20px;
+        }
+
+        .user-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .user-email {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .xp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .form-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 8px 32px rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .form-input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-input.error {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1), 0 8px 32px rgba(220, 53, 69, 0.2);
+        }
+
+        .field-error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .field-error::before {
+            content: '⚠️';
+            font-size: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(107, 114, 128, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--accent-color);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: var(--accent-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Upload button styling */
+        #upload-btn {
+            opacity: 1;
+            cursor: pointer;
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        #upload-btn:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .field-error {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 30px;
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .message.info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #3b82f6;
+        }
+
+        /* Theme Variables */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: rgba(255, 255, 255, 0.98);
+            --bg-tertiary: #f8fafc;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --border-color: #e2e8f0;
+            --accent-color: #4f46e5;
+            --primary-color: #3b82f6;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: rgba(15, 23, 42, 0.98);
+            --bg-tertiary: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            --border-color: #334155;
+            --accent-color: #6366f1;
+            --primary-color: #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .profile-nav {
+                margin-bottom: 1.5rem;
+            }
+
+            .back-link {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .theme-toggle {
+                padding: 0.6rem;
+            }
+
+            .theme-toggle .material-icons {
+                font-size: 1.1rem;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .profile-card {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-nav">
+            <a href="{% url 'core:dashboard' %}" class="back-link">
+                ← Back to Dashboard
+            </a>
+
+            <!-- Theme Toggle Button -->
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <span class="material-icons">dark_mode</span>
+            </button>
+        </div>
+
+        <div class="profile-header">
+            <h1 class="page-title">My Profile</h1>
+            <p class="page-subtitle">Manage your account settings and profile information</p>
+        </div>
+
+        <!-- Messages Display -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="profile-grid">
+            <!-- Profile Picture Section -->
+            <div class="profile-card">
+                <h3 class="card-title">
+                    Profile Picture
+                </h3>
+
+                <div class="profile-picture-section">
+                    <div class="profile-picture-container">
+                        {% if profile.profile_picture %}
+                            <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture" id="current-picture">
+                        {% else %}
+                            <div class="default-avatar" id="default-avatar">
+                                {{ user.get_display_name|first|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="user-info">
+                        <div class="user-name">{{ user.get_full_name }}</div>
+                        <div class="user-email">{{ user.email }}</div>
+                        <div class="xp-badge">
+                            ⭐ {{ profile.total_xp }} XP
                         </div>
                     </div>
-                    
-                    <div class="profile-details">
-                        <h3>{% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %} {{ request.user.last_name|default:"" }}</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ request.user.email }}</p>
-                        
-                        <div class="profile-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                            <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">{{ request.user.query_history.count }}</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Queries Executed</div>
-                            </div>
-                            <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">{{ request.user.saved_queries.count }}</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Saved Queries</div>
-                            </div>
-                            <div style="text-align: center; padding: 1rem; background-color: var(--bg-tertiary); border-radius: 8px;">
-                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--warning-color);">{{ request.user.date_joined|date:"M Y" }}</div>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary);">Member Since</div>
-                            </div>
-                        </div>
-                        
-                        <div class="profile-actions" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <a href="{% url 'users:change_password' %}" class="btn btn-primary">
-                                <span class="material-icons">lock</span>
-                                Change Password
-                            </a>
-                            <button class="btn btn-secondary" onclick="toggleTheme()">
-                                <span class="material-icons">palette</span>
-                                Toggle Theme
+                </div>
+
+                <!-- Profile Picture Upload Form -->
+                <form method="post" enctype="multipart/form-data" id="picture-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_picture" value="1">
+
+                    <!-- Hidden file input -->
+                    <div style="display: none;">
+                        {{ picture_form.profile_picture }}
+                    </div>
+
+                    <div class="file-upload-area" id="upload-area">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Click to upload or drag and drop</div>
+                        <div class="upload-hint">JPG, PNG, WebP (max 5MB)</div>
+                    </div>
+
+                    <div id="preview-container" class="hidden">
+                        <img id="image-preview" class="image-preview" alt="Preview">
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary" id="upload-btn">
+                            📤 Upload Picture
+                        </button>
+                        {% if profile.profile_picture %}
+                            <button type="button" class="btn btn-danger" onclick="deleteProfilePicture()">
+                                🗑️ Remove Picture
                             </button>
-                            <a href="{% url 'core:dashboard' %}" class="btn btn-secondary">
-                                <span class="material-icons">dashboard</span>
-                                Dashboard
-                            </a>
-                        </div>
+                        {% endif %}
                     </div>
-                </div>
-                
-                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
-                    <h4 style="margin-bottom: 1rem;">Account Information</h4>
-                    <div style="display: grid; gap: 1rem;">
-                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
-                            <span style="font-weight: 500;">Username:</span>
-                            <span>{{ request.user.username }}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
-                            <span style="font-weight: 500;">Email:</span>
-                            <span>{{ request.user.email }}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
-                            <span style="font-weight: 500;">Email Verified:</span>
-                            <span style="color: {% if request.user.is_email_verified %}var(--success-color){% else %}var(--error-color){% endif %};">
-                                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">
-                                    {% if request.user.is_email_verified %}check_circle{% else %}cancel{% endif %}
-                                </span>
-                                {% if request.user.is_email_verified %}Yes{% else %}No{% endif %}
-                            </span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
-                            <span style="font-weight: 500;">Theme Preference:</span>
-                            <span style="text-transform: capitalize;">{{ profile.theme_preference }}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-tertiary); border-radius: 6px;">
-                            <span style="font-weight: 500;">Last Login:</span>
-                            <span>{% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}Never{% endif %}</span>
-                        </div>
+                </form>
+            </div>
+
+            <!-- Profile Information Section -->
+            <div class="profile-card">
+                <h3 class="card-title">
+                    👤 Profile Information
+                </h3>
+
+                <form method="post" id="profile-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_profile" value="1">
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ profile_form.username.id_for_label }}">Username</label>
+                        {{ profile_form.username }}
+                        {% if profile_form.username.errors %}
+                            {% for error in profile_form.username.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
-                </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ profile_form.first_name.id_for_label }}">First Name</label>
+                        {{ profile_form.first_name }}
+                        {% if profile_form.first_name.errors %}
+                            {% for error in profile_form.first_name.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="{{ profile_form.last_name.id_for_label }}">Last Name</label>
+                        {{ profile_form.last_name }}
+                        {% if profile_form.last_name.errors %}
+                            {% for error in profile_form.last_name.errors %}
+                                <div class="field-error">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" value="{{ user.email }}" disabled>
+                        <small style="color: var(--text-secondary); font-size: 12px;">Email cannot be changed for security reasons</small>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">
+                            💾 Save Changes
+                        </button>
+                        <a href="{% url 'users:change_password' %}" class="btn btn-secondary">
+                            🔒 Change Password
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Account Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ profile.total_xp }}</div>
+                <div class="stat-label">Total XP Earned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ user.date_joined|date:"M Y" }}</div>
+                <div class="stat-label">Member Since</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ user.last_login|date:"M d" }}</div>
+                <div class="stat-label">Last Login</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="theme-preference-display">{{ profile.theme_preference|title }}</div>
+                <div class="stat-label">Theme Preference</div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set user theme preference
-    {% if profile.theme_preference %}
-        setTheme('{{ profile.theme_preference }}');
-    {% endif %}
-});
-</script>
-{% endblock %}
+    <!-- Hidden form for deleting profile picture -->
+    <form id="delete-picture-form" method="post" action="{% url 'users:delete_profile_picture' %}" style="display: none;">
+        {% csrf_token %}
+    </form>
+
+    <script src="{% static 'js/base.js' %}"></script>
+    <script>
+        // CSRF Token Helper
+        function getCsrfToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
+
+        // Name validation function
+        function validateName(input, fieldName) {
+            const value = input.value.trim();
+            const errorContainer = input.parentElement.querySelector('.field-error');
+
+            // Remove existing error
+            if (errorContainer) {
+                errorContainer.remove();
+            }
+            input.classList.remove('error');
+
+            if (!value) {
+                showNameError(input, `${fieldName} is required.`);
+                return false;
+            }
+
+            // Check for spaces (only one word allowed)
+            if (value.includes(' ')) {
+                showNameError(input, `${fieldName} must be a single word without spaces.`);
+                return false;
+            }
+
+            // Check for valid characters (letters only)
+            const namePattern = /^[a-zA-ZÀ-ÿĀ-žА-я\u4e00-\u9fff]+$/;
+            if (!namePattern.test(value)) {
+                showNameError(input, `${fieldName} can only contain letters.`);
+                return false;
+            }
+
+            // Check length
+            if (value.length < 2) {
+                showNameError(input, `${fieldName} must be at least 2 characters long.`);
+                return false;
+            }
+
+            if (value.length > 30) {
+                showNameError(input, `${fieldName} cannot exceed 30 characters.`);
+                return false;
+            }
+
+            return true;
+        }
+
+        function showNameError(input, message) {
+            input.classList.add('error');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error';
+            errorDiv.textContent = message;
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '0.875rem';
+            errorDiv.style.marginTop = '0.25rem';
+            input.parentElement.appendChild(errorDiv);
+        }
+
+        function setupNameValidation() {
+            const firstNameInput = document.querySelector('input[name="first_name"]');
+            const lastNameInput = document.querySelector('input[name="last_name"]');
+
+            if (firstNameInput) {
+                firstNameInput.addEventListener('blur', function() {
+                    validateName(this, 'First name');
+                });
+
+                firstNameInput.addEventListener('input', function() {
+                    // Remove spaces as user types
+                    this.value = this.value.replace(/\s/g, '');
+                });
+            }
+
+            if (lastNameInput) {
+                lastNameInput.addEventListener('blur', function() {
+                    validateName(this, 'Last name');
+                });
+
+                lastNameInput.addEventListener('input', function() {
+                    // Remove spaces as user types
+                    this.value = this.value.replace(/\s/g, '');
+                });
+            }
+
+            // Validate on form submission
+            const profileForm = document.querySelector('form[method="post"]');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    let isValid = true;
+
+                    if (firstNameInput && !validateName(firstNameInput, 'First name')) {
+                        isValid = false;
+                    }
+
+                    if (lastNameInput && !validateName(lastNameInput, 'Last name')) {
+                        isValid = false;
+                    }
+
+                    if (!isValid) {
+                        e.preventDefault();
+                    }
+                });
+            }
+        }
+
+        // Enhanced theme toggle functionality for profile page
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            // Update theme
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update theme toggle icon
+            const themeToggle = document.querySelector('.theme-toggle .material-icons');
+            if (themeToggle) {
+                themeToggle.textContent = newTheme === 'dark' ? 'light_mode' : 'dark_mode';
+            }
+
+            // Update theme preference display
+            const themeDisplay = document.getElementById('theme-preference-display');
+            if (themeDisplay) {
+                themeDisplay.textContent = newTheme.charAt(0).toUpperCase() + newTheme.slice(1);
+            }
+
+            // Send theme preference to server
+            fetch('{% url "users:update_theme_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ theme: newTheme })
+            }).catch(console.error);
+        }
+
+        // Initialize theme
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+
+            // Update theme toggle icon based on current theme
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const themeToggle = document.querySelector('.theme-toggle .material-icons');
+            if (themeToggle) {
+                themeToggle.textContent = currentTheme === 'dark' ? 'light_mode' : 'dark_mode';
+            }
+
+            // Add name validation
+            setupNameValidation();
+
+            // Profile picture upload handling
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('profile-picture-input');
+            const uploadBtn = document.getElementById('upload-btn');
+            const previewContainer = document.getElementById('preview-container');
+            const imagePreview = document.getElementById('image-preview');
+
+            // Debug: Check if all elements are found
+            console.log('Upload elements found:', {
+                uploadArea: !!uploadArea,
+                fileInput: !!fileInput,
+                uploadBtn: !!uploadBtn,
+                previewContainer: !!previewContainer,
+                imagePreview: !!imagePreview
+            });
+
+            let isFileDialogOpen = false;
+
+            // Click to upload (only if all elements are found)
+            if (uploadArea && fileInput) {
+                uploadArea.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Prevent multiple file dialogs
+                    if (isFileDialogOpen) {
+                        return;
+                    }
+
+                    isFileDialogOpen = true;
+                    fileInput.click();
+
+                    // Reset flag after a short delay
+                    setTimeout(() => {
+                        isFileDialogOpen = false;
+                    }, 1000);
+                });
+            }
+
+            // Drag and drop (only if upload area exists)
+            if (uploadArea) {
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0 && fileInput) {
+                        fileInput.files = files;
+                        handleFileSelect();
+                    }
+                });
+            }
+
+            // File selection (only if file input exists)
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+
+            // Form submission validation
+            const pictureForm = document.getElementById('picture-form');
+            if (pictureForm) {
+                pictureForm.addEventListener('submit', (e) => {
+                    const file = fileInput.files[0];
+                    if (!file) {
+                        e.preventDefault();
+                        alert('Please select a file first.');
+                        return false;
+                    }
+
+                    // Validate file type
+                    if (!file.type.match('image.*')) {
+                        e.preventDefault();
+                        alert('Please select an image file (JPG, PNG, WebP).');
+                        return false;
+                    }
+
+                    // Validate file size
+                    if (file.size > 5 * 1024 * 1024) {
+                        e.preventDefault();
+                        alert('File size must be less than 5MB.');
+                        return false;
+                    }
+
+                    console.log('Form submitted with valid file');
+                    return true;
+                });
+            }
+
+            // Reset flag when user returns from file dialog
+            window.addEventListener('focus', () => {
+                setTimeout(() => {
+                    isFileDialogOpen = false;
+                }, 100);
+            });
+
+            function handleFileSelect() {
+                const file = fileInput.files[0];
+                if (file) {
+                    console.log('File selected:', file.name);
+
+                    // Show preview without validation (validate on submit instead)
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        previewContainer.classList.remove('hidden');
+                        console.log('Preview shown, button should be clickable');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // No file selected, hide preview
+                    previewContainer.classList.add('hidden');
+                }
+            }
+
+            // Auto-hide success messages
+            setTimeout(() => {
+                const successMessages = document.querySelectorAll('.message.success');
+                successMessages.forEach(msg => {
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-10px)';
+                    setTimeout(() => msg.remove(), 300);
+                });
+            }, 5000);
+        });
+
+        function deleteProfilePicture() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                document.getElementById('delete-picture-form').submit();
+            }
+        }
+    </script>
+</body>
+</html>

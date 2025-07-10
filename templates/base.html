@@ -9,7 +9,9 @@
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modern-header.css' %}">
     <link rel="stylesheet" href="{% static 'css/admin-dropdown-fix.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
     {% block extra_css %}{% endblock %}
     
     <!-- Monaco Editor -->
@@ -22,126 +24,108 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
+    <!-- Modern Header -->
+    <header class="header">
         <div class="tile-wrap">
-            <div class="nav-container">
-                <div class="nav-brand">
-                    <a href="{% url 'core:landing_page' %}" class="brand-link">
-                        <span class="material-icons">storage</span>
-                        <span class="brand-text">SQL Master</span>
-                    </a>
-                </div>
+            <!-- Logo -->
+            <a href="{% url 'core:landing_page' %}" class="logo">KodeSQL</a>
 
-            <div class="nav-menu">
-                <a href="{% url 'core:home' %}" class="nav-link">Editor</a>
-                <a href="{% url 'tutorials:tutorials_list' %}" class="nav-link">Tutorials</a>
-                <a href="{% url 'challenges:challenges_list' %}" class="nav-link">Challenges</a>
-                <a href="{% url 'courses:courses_list' %}" class="nav-link">Courses</a>
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
 
-                {% if request.user.is_authenticated %}
-                    {% if request.user.is_staff %}
-                        <div class="nav-dropdown">
-                            <button class="nav-dropdown-btn admin-btn">
-                                <span class="material-icons">admin_panel_settings</span>
-                                Admin
-                            </button>
-                            <div class="nav-dropdown-content">
-                                <a href="{% url 'tutorials:admin_tutorials_list' %}">
-                                    <span class="material-icons">school</span>
-                                    Manage Tutorials
-                                </a>
-                                <a href="{% url 'challenges:admin_challenges_list' %}">
-                                    <span class="material-icons">quiz</span>
-                                    Manage Challenges
-                                </a>
-                                {% if request.user.is_superuser %}
-                                <a href="{% url 'challenges:admin_subscription_plans_list' %}">
-                                    <span class="material-icons">card_membership</span>
-                                    Challenge Subscription Plans
-                                </a>
-                                <a href="{% url 'challenges:admin_subscriptions_list' %}">
-                                    <span class="material-icons">subscriptions</span>
-                                    Challenge Subscriptions
-                                </a>
-                                {% endif %}
-                                <a href="{% url 'courses:admin_courses_list' %}">
-                                    <span class="material-icons">video_library</span>
-                                    Manage Courses
-                                </a>
-                                <a href="{% url 'courses:admin_subscription_plans_list' %}">
-                                    <span class="material-icons">card_membership</span>
+            <!-- Navigation Items (Center) -->
+            <div class="nav-items" id="navItems">
+                <a href="{% url 'core:dashboard' %}" class="nav-item">Dashboard</a>
+                <a href="{% url 'challenges:challenges_list' %}" class="nav-item">Coding Problems</a>
+                {% if request.user.is_staff %}
+                    <div class="nav-dropdown">
+                        <button class="nav-item admin-nav-btn">
+                            Admin
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="admin-dropdown-content">
+                            <a href="{% url 'challenges:admin_challenges_list' %}" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                                Manage Challenges
+                            </a>
+                            <a href="{% url 'challenges:admin_challenge_create' %}" class="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Create Challenge
+                            </a>
+                            {% if request.user.is_superuser %}
+                                <a href="{% url 'challenges:admin_subscription_plans_list' %}" class="dropdown-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
                                     Manage Subscription Plans
                                 </a>
-                                <div class="dropdown-divider"></div>
-                                <a href="{% url 'tutorials:admin_tutorial_create' %}">
-                                    <span class="material-icons">add</span>
-                                    Create Tutorial
-                                </a>
-                                <a href="{% url 'challenges:admin_challenge_create' %}">
-                                    <span class="material-icons">add</span>
-                                    Create Challenge
-                                </a>
-                                <a href="{% url 'courses:admin_course_create' %}">
-                                    <span class="material-icons">add</span>
-                                    Create Course
-                                </a>
-                                <a href="{% url 'courses:admin_subscription_plan_create' %}">
-                                    <span class="material-icons">add</span>
-                                    Create Subscription Plan
-                                </a>
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    <div class="nav-dropdown">
-                        <button class="nav-dropdown-btn">
-                            <span class="material-icons">account_circle</span>
-                            {{ request.user.email }}
-                        </button>
-                        <div class="nav-dropdown-content">
-                            <a href="{% url 'core:dashboard' %}">
-                                <span class="material-icons">dashboard</span>
-                                Dashboard
-                            </a>
-                            <a href="{% url 'courses:my_courses' %}">
-                                <span class="material-icons">school</span>
-                                My Courses
-                            </a>
-                            <a href="{% url 'users:profile' %}">
-                                <span class="material-icons">person</span>
-                                Profile
-                            </a>
+                            {% endif %}
                             {% if request.user.is_staff %}
                                 <div class="dropdown-divider"></div>
-                                <a href="/admin/">
-                                    <span class="material-icons">admin_panel_settings</span>
+                                <a href="/admin/" class="dropdown-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 1l3 6 6 3-6 3-3 6-3-6-6-3 6-3z"/>
+                                    </svg>
                                     Django Admin
                                 </a>
                             {% endif %}
-                            <a href="{% url 'users:logout' %}">
-                                <span class="material-icons">logout</span>
-                                Logout
-                            </a>
                         </div>
                     </div>
-                {% else %}
-                    <a href="{% url 'users:login' %}" class="nav-link">Login</a>
-                    <a href="{% url 'users:register' %}" class="nav-link btn-primary">Sign Up</a>
                 {% endif %}
-                
+            </div>
+
+            <!-- User Menu (Right) -->
+            <div class="user-menu">
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'users:profile' %}" class="user-avatar-link">
+                        {% if request.user.profile.profile_picture %}
+                            <img src="{{ request.user.profile.profile_picture.url }}" alt="Profile Picture" class="user-avatar-image">
+                        {% else %}
+                            <div class="user-avatar">
+                                {% if request.user.first_name and request.user.last_name %}
+                                    {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                                {% elif request.user.first_name %}
+                                    {{ request.user.first_name|first|upper }}{{ request.user.first_name|slice:"1:2"|upper }}
+                                {% else %}
+                                    {{ request.user.email|first|upper }}{{ request.user.email|slice:"1:2"|upper }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'users:logout' %}" class="logout-btn" title="Logout">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </a>
+                {% else %}
+                    <div class="auth-buttons">
+                        <a href="{% url 'users:login' %}" class="nav-item">Login</a>
+                        <a href="{% url 'users:register' %}" class="nav-item btn-primary">Sign Up</a>
+                    </div>
+                {% endif %}
+
+                <!-- Theme Toggle -->
                 <button class="theme-toggle" onclick="toggleTheme()">
                     <span class="material-icons">dark_mode</span>
                 </button>
             </div>
-            
-                <!-- Mobile menu button -->
-                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                    <span class="material-icons">menu</span>
-                </button>
-            </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -169,108 +153,78 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="tile-wrap">
-            <div class="footer-content">
-                <!-- Brand Section -->
-                <div class="footer-section footer-brand">
-                    <div class="footer-logo">
-                        <span class="material-icons">storage</span>
-                        <h3>SQL Master</h3>
-                    </div>
-                    <p class="footer-description">Interactive SQL learning platform designed to help you master database skills through hands-on practice and real-world projects.</p>
-                    <div class="footer-social">
-                        <a href="#" class="social-link" aria-label="Twitter">
-                            <span class="material-icons">alternate_email</span>
-                        </a>
-                        <a href="#" class="social-link" aria-label="GitHub">
-                            <span class="material-icons">code</span>
-                        </a>
-                        <a href="#" class="social-link" aria-label="LinkedIn">
-                            <span class="material-icons">business</span>
-                        </a>
-                        <a href="#" class="social-link" aria-label="Discord">
-                            <span class="material-icons">forum</span>
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Learn Section -->
-                <div class="footer-section">
-                    <h4>Learn</h4>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'tutorials:tutorials_list' %}">Tutorials</a></li>
-                        <li><a href="{% url 'challenges:challenges_list' %}">Challenges</a></li>
-                        <li><a href="{% url 'courses:courses_list' %}">Courses</a></li>
-                        <li><a href="{% url 'core:home' %}">Practice Problems</a></li>
-                    </ul>
-                </div>
 
-                <!-- Tools Section -->
-                <div class="footer-section">
-                    <h4>Tools</h4>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'core:home' %}">SQL Editor</a></li>
-                        <li><a href="{% url 'core:home' %}">Query Builder</a></li>
-                        <li><a href="{% url 'core:home' %}">Database Designer</a></li>
-                        <li><a href="{% url 'core:home' %}">Performance Analyzer</a></li>
-                    </ul>
-                </div>
-
-                <!-- Community Section -->
-                <div class="footer-section">
-                    <h4>Community</h4>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'core:contribute' %}">Contribute</a></li>
-                        <li><a href="{% url 'core:about' %}">About Us</a></li>
-                        <li><a href="#" onclick="alert('Help Center coming soon!')">Help Center</a></li>
-                        <li><a href="#" onclick="alert('Blog coming soon!')">Blog</a></li>
-                    </ul>
-                </div>
-
-                <!-- Company Section -->
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul class="footer-links">
-                        <li><a href="#" onclick="alert('Careers page coming soon!')">Careers</a></li>
-                        <li><a href="#" onclick="alert('Contact page coming soon!')">Contact</a></li>
-                        <li><a href="#" onclick="alert('Privacy Policy coming soon!')">Privacy Policy</a></li>
-                        <li><a href="#" onclick="alert('Terms of Service coming soon!')">Terms of Service</a></li>
-                    </ul>
-                </div>
-
-                <!-- Newsletter Section -->
-                <div class="footer-section footer-newsletter">
-                    <h4>Stay Updated</h4>
-                    <p>Get the latest SQL tips, tutorials, and updates delivered to your inbox.</p>
-                    <form class="newsletter-form" onsubmit="handleNewsletterSubmit(event)">
-                        <div class="newsletter-input-group">
-                            <input type="email" placeholder="Enter your email" required class="newsletter-input">
-                            <button type="submit" class="newsletter-btn">
-                                <span class="material-icons">send</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Footer Bottom -->
-            <div class="footer-bottom">
-                <div class="footer-bottom-content">
-                    <p>&copy; 2025 SQL Master. All rights reserved.</p>
-                    <div class="footer-bottom-links">
-                        <a href="#" onclick="alert('Privacy Policy coming soon!')">Privacy</a>
-                        <a href="#" onclick="alert('Terms coming soon!')">Terms</a>
-                        <a href="#" onclick="alert('Cookies Policy coming soon!')">Cookies</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
 
     <!-- JavaScript -->
     <script src="{% static 'js/base.js' %}"></script>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        function toggleMobileMenu() {
+            const navItems = document.getElementById('navItems');
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+
+            navItems.classList.toggle('mobile-active');
+            mobileBtn.classList.toggle('active');
+        }
+
+        // Handle admin dropdown in mobile
+        function toggleMobileAdminDropdown(event) {
+            if (window.innerWidth <= 768) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const dropdown = event.currentTarget.closest('.nav-dropdown');
+                dropdown.classList.toggle('mobile-active');
+            }
+        }
+
+        // Add click event to admin button for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminBtn = document.querySelector('.admin-nav-btn');
+            if (adminBtn) {
+                adminBtn.addEventListener('click', toggleMobileAdminDropdown);
+            }
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navItems = document.getElementById('navItems');
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            const header = document.querySelector('.header');
+            const adminDropdown = document.querySelector('.nav-dropdown');
+
+            if (!header.contains(event.target) && navItems.classList.contains('mobile-active')) {
+                navItems.classList.remove('mobile-active');
+                mobileBtn.classList.remove('active');
+                if (adminDropdown) {
+                    adminDropdown.classList.remove('mobile-active');
+                }
+            }
+
+            // Close admin dropdown when clicking outside
+            if (adminDropdown && !adminDropdown.contains(event.target) && window.innerWidth <= 768) {
+                adminDropdown.classList.remove('mobile-active');
+            }
+        });
+
+        // Close mobile menu when window is resized to desktop
+        window.addEventListener('resize', function() {
+            const navItems = document.getElementById('navItems');
+            const mobileBtn = document.querySelector('.mobile-menu-btn');
+            const adminDropdown = document.querySelector('.nav-dropdown');
+
+            if (window.innerWidth > 768) {
+                navItems.classList.remove('mobile-active');
+                mobileBtn.classList.remove('active');
+                if (adminDropdown) {
+                    adminDropdown.classList.remove('mobile-active');
+                }
+            }
+        });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

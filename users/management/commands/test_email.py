@@ -32,8 +32,8 @@ class Command(BaseCommand):
         
         try:
             send_mail(
-                subject='SQL Playground - Test Email',
-                message='This is a test email from SQL Playground. If you received this, email sending is working correctly!',
+                subject='KodeSQL - Test Email',
+                message='This is a test email from KodeSQL. If you received this, email sending is working correctly!',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[to_email],
                 fail_silently=False,

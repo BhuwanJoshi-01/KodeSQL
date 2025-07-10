@@ -156,10 +156,10 @@
                             <div class="plan-pricing">
                                 <div class="price">
                                     {% if plan.has_discount %}
-                                        <span class="original-price">${{ plan.original_price }}</span>
-                                        <span class="current-price">${{ plan.price }}</span>
+                                        <span class="original-price">₹{{ plan.original_price }}</span>
+                                        <span class="current-price">₹{{ plan.price }}</span>
                                     {% else %}
-                                        <span class="current-price">${{ plan.price }}</span>
+                                        <span class="current-price">₹{{ plan.price }}</span>
                                     {% endif %}
                                 </div>
                             </div>

@@ -1,16 +1,18 @@
 {% extends 'admin_base.html' %}
 {% load static %}
+{% load timezone_filters %}
 
 {% block title %}Subscription: {{ subscription.user.email }} - Admin{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
 {% endblock %}
 
 {% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
-        <div class="admin-header-content">
+        <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>
                 <span class="material-icons">card_membership</span>
                 Challenge Subscription Details
@@ -30,144 +32,104 @@
 </div>
 
 <div class="tile-wrap">
-    <div class="admin-content-grid">
+    <div class="subscription-detail-grid">
         <!-- Subscription Details -->
         <div class="admin-content-main">
-        <!-- Subscription Information -->
+        <!-- User Information Card -->
+        <div class="subscription-info-card">
+            <div class="user-details">
+                <div class="user-avatar">
+                    {{ subscription.user.first_name|first|default:subscription.user.email|first|upper }}
+                </div>
+                <div class="user-info">
+                    <strong>{{ subscription.user.full_name_or_email }}</strong>
+                    <small>{{ subscription.user.email }}</small>
+                </div>
+            </div>
+
+            <div class="plan-details">
+                <div class="plan-header">
+                    <div class="plan-name">{{ subscription.plan.name }}</div>
+                    <div class="plan-price">₹{{ subscription.plan.price }}</div>
+                </div>
+
+                <div class="subscription-status">
+                    <div class="status-indicator {{ subscription.status }}"></div>
+                    <div class="status-text">{{ subscription.get_status_display }}</div>
+                </div>
+
+                <div class="amount-display">
+                    <div class="amount-label">Amount Paid</div>
+                    <div class="amount-value">₹{{ subscription.amount_paid|floatformat:2 }}</div>
+                </div>
+
+                <div class="date-info">
+                    <div class="date-item">
+                        <div class="date-label">Start Date</div>
+                        <div class="date-value">{{ subscription.start_date|format_indian_datetime:"M d, Y" }}</div>
+                    </div>
+                    <div class="date-item">
+                        <div class="date-label">End Date</div>
+                        <div class="date-value">
+                            {% if subscription.end_date %}
+                                {{ subscription.end_date|format_indian_datetime:"M d, Y" }}
+                            {% else %}
+                                <span class="unlimited">Unlimited</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if subscription.status == 'active' %}
+                <div class="subscription-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 75%"></div>
+                    </div>
+                    <div class="progress-text">{{ subscription.time_remaining }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Details -->
         <div class="admin-card">
             <div class="card-header">
                 <h3>
                     <span class="material-icons">info</span>
-                    Subscription Information
+                    Additional Information
                 </h3>
             </div>
             <div class="card-content">
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <label>User:</label>
-                        <div class="user-info">
-                            <strong>{{ subscription.user.full_name_or_email }}</strong>
-                            <small>{{ subscription.user.email }}</small>
-                        </div>
+                <div class="subscription-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Plan Duration:</span>
+                        <span class="summary-value">{{ subscription.plan.duration_display }}</span>
                     </div>
-                    <div class="detail-item">
-                        <label>Plan:</label>
-                        <div class="plan-info">
-                            <strong>{{ subscription.plan.name }}</strong>
-                            <small>{{ subscription.plan.duration_display }} - ${{ subscription.plan.price }}</small>
-                        </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Created:</span>
+                        <span class="summary-value">{{ subscription.created_at|format_indian_datetime:"M d, Y g:i A" }}</span>
                     </div>
-                    <div class="detail-item">
-                        <label>Status:</label>
-                        <span class="status-badge status-{{ subscription.status }}">
-                            {{ subscription.get_status_display }}
-                        </span>
+                    <div class="summary-item">
+                        <span class="summary-label">Last Updated:</span>
+                        <span class="summary-value">{{ subscription.updated_at|format_indian_datetime:"M d, Y g:i A" }}</span>
                     </div>
-                    <div class="detail-item">
-                        <label>Amount Paid:</label>
-                        <span class="amount">${{ subscription.amount_paid }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <label>Start Date:</label>
-                        <span>{{ subscription.start_date|date:"M d, Y g:i A" }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <label>End Date:</label>
-                        <span>
-                            {% if subscription.end_date %}
-                                {{ subscription.end_date|date:"M d, Y g:i A" }}
-                            {% else %}
-                                <span class="text-muted">Unlimited</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% if subscription.status == 'active' %}
-                    <div class="detail-item">
-                        <label>Time Remaining:</label>
-                        <span class="time-remaining">{{ subscription.time_remaining }}</span>
-                    </div>
-                    {% endif %}
                     {% if subscription.payment_reference %}
-                    <div class="detail-item">
-                        <label>Payment Reference:</label>
-                        <span class="payment-ref">{{ subscription.payment_reference }}</span>
+                    <div class="summary-item">
+                        <span class="summary-label">Payment Reference:</span>
+                        <span class="summary-value">{{ subscription.payment_reference }}</span>
                     </div>
                     {% endif %}
                     {% if subscription.stripe_payment_intent_id %}
-                    <div class="detail-item">
-                        <label>Stripe Payment ID:</label>
-                        <span class="payment-id">{{ subscription.stripe_payment_intent_id }}</span>
+                    <div class="summary-item">
+                        <span class="summary-label">Stripe Payment ID:</span>
+                        <span class="summary-value">{{ subscription.stripe_payment_intent_id }}</span>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Plan Details -->
-        <div class="admin-card">
-            <div class="card-header">
-                <h3>
-                    <span class="material-icons">description</span>
-                    Plan Details
-                </h3>
-            </div>
-            <div class="card-content">
-                <div class="plan-details">
-                    <h4>{{ subscription.plan.name }}</h4>
-                    <p>{{ subscription.plan.description }}</p>
-                    
-                    {% if subscription.plan.features %}
-                    <div class="plan-features">
-                        <h5>Features:</h5>
-                        <ul>
-                            {% for feature in subscription.plan.features %}
-                            <li>{{ feature }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="plan-pricing">
-                        <div class="price-info">
-                            <span class="current-price">${{ subscription.plan.price }}</span>
-                            {% if subscription.plan.original_price and subscription.plan.original_price > subscription.plan.price %}
-                            <span class="original-price">${{ subscription.plan.original_price }}</span>
-                            <span class="discount">{{ subscription.plan.discount_percentage }}% off</span>
-                            {% endif %}
-                        </div>
-                        <div class="duration">{{ subscription.plan.duration_display }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Timestamps -->
-        <div class="admin-card">
-            <div class="card-header">
-                <h3>
-                    <span class="material-icons">schedule</span>
-                    Timestamps
-                </h3>
-            </div>
-            <div class="card-content">
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <label>Created:</label>
-                        <span>{{ subscription.created_at|date:"M d, Y g:i A" }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <label>Last Updated:</label>
-                        <span>{{ subscription.updated_at|date:"M d, Y g:i A" }}</span>
-                    </div>
-                    {% if subscription.pending_expires_at %}
-                    <div class="detail-item">
-                        <label>Pending Expires:</label>
-                        <span>{{ subscription.pending_expires_at|date:"M d, Y g:i A" }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Sidebar -->
@@ -187,16 +149,16 @@
                         Edit Subscription
                     </a>
                     {% if subscription.status == 'active' %}
-                    <a href="{% url 'challenges:admin_subscription_cancel' subscription.id  %}"
+                    <a href="{% url 'challenges:admin_subscription_cancel' subscription.id %}" class="btn btn-warning">
                         <span class="material-icons">cancel</span>
                         Cancel Subscription
                     </a>
                     {% endif %}
-                    <a href="{% url 'challenges:admin_subscription_create' %}"
+                    <a href="{% url 'challenges:admin_subscription_create' %}" class="btn btn-primary">
                         <span class="material-icons">add</span>
                         Create New Subscription
                     </a>
-                    <a href="{% url 'challenges:admin_subscription_confirm_delete' subscription.id  %}"
+                    <a href="{% url 'challenges:admin_subscription_confirm_delete' subscription.id %}" class="btn btn-danger">
                         <span class="material-icons">delete</span>
                         Delete Subscription
                     </a>

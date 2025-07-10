@@ -125,7 +125,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'your-email@gmail.com'
 EMAIL_HOST_PASSWORD = 'your-app-password'
-DEFAULT_FROM_EMAIL = 'SQL Playground <your-email@gmail.com>'
+DEFAULT_FROM_EMAIL = 'KodeSQL <your-email@gmail.com>'
 ```
 
 ### Test Email Configuration

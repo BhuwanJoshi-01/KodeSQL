@@ -1,16 +1,18 @@
 {% extends 'admin_base.html' %}
 {% load static %}
+{% load timezone_filters %}
 
 {% block title %}Manage Challenge Subscriptions - Admin{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
 {% endblock %}
 
 {% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
-        <div class="admin-header-content">
+        <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>
                 <span class="material-icons">card_membership</span>
                 Manage Challenge Subscriptions
@@ -138,11 +140,11 @@
                                     {{ subscription.get_status_display }}
                                 </span>
                             </td>
-                            <td>${{ subscription.amount_paid }}</td>
-                            <td>{{ subscription.start_date|date:"M d, Y g:i A" }}</td>
+                            <td>₹{{ subscription.amount_paid }}</td>
+                            <td>{{ subscription.start_date|format_indian_datetime:"M d, Y g:i A" }}</td>
                             <td>
                                 {% if subscription.end_date %}
-                                    {{ subscription.end_date|date:"M d, Y g:i A" }}
+                                    {{ subscription.end_date|format_indian_datetime:"M d, Y g:i A" }}
                                 {% else %}
                                     <span class="text-muted">Unlimited</span>
                                 {% endif %}

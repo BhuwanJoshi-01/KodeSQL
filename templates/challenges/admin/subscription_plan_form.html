@@ -5,12 +5,123 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<style>
+/* Header Layout Fix - Position buttons on left */
+.admin-header .admin-header-content {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 2rem !important;
+    flex-wrap: wrap !important;
+}
+
+.admin-header .admin-actions {
+    display: flex !important;
+    gap: 1rem !important;
+    align-items: center !important;
+    margin-left: 0 !important;
+}
+
+/* Ensure title and buttons are on the same line on larger screens */
+@media (min-width: 769px) {
+    .admin-header .admin-header-content {
+        flex-wrap: nowrap !important;
+    }
+}
+
+/* On mobile, stack vertically */
+@media (max-width: 768px) {
+    .admin-header .admin-header-content {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1.5rem !important;
+    }
+
+    .admin-header .admin-actions {
+        width: 100% !important;
+        justify-content: flex-start !important;
+    }
+}
+
+/* Form Button Styling - Update Button */
+.form-actions .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 0.875rem 1.5rem !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    min-width: 120px !important;
+    text-align: center !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.form-actions .btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+    transition: left 0.5s ease !important;
+}
+
+.form-actions .btn:hover::before {
+    left: 100% !important;
+}
+
+.form-actions .btn .material-icons {
+    font-size: 1.2rem !important;
+}
+
+/* Primary Button - Update Plan */
+.form-actions .btn-primary {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    color: white !important;
+    border: 2px solid #475569 !important;
+}
+
+.form-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(30, 41, 59, 0.3) !important;
+    border-color: #64748b !important;
+}
+
+.form-actions .btn-primary:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(30, 41, 59, 0.2) !important;
+}
+
+/* Secondary Button - Cancel */
+.form-actions .btn-secondary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: white !important;
+    border: 2px solid #1d4ed8 !important;
+}
+
+.form-actions .btn-secondary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3) !important;
+    border-color: #1e40af !important;
+}
+</style>
 {% endblock %}
 
 {% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
-        <div class="admin-header-content">
+        <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>
                 <span class="material-icons">card_membership</span>
                 {% if plan %}Edit Challenge Subscription Plan{% else %}Create Challenge Subscription Plan{% endif %}
@@ -238,42 +349,7 @@
 
         <!-- Sidebar -->
         <div class="admin-content-sidebar">
-            <!-- Help Information -->
-            <div class="admin-card">
-                <div class="card-header">
-                    <h3>
-                        <span class="material-icons">help</span>
-                        Help & Tips
-                    </h3>
-                </div>
-                <div class="card-content">
-                    <div class="help-content">
-                        <h5>Creating Subscription Plans</h5>
-                        <ul>
-                            <li>Choose a clear, descriptive name for your plan</li>
-                            <li>Set competitive pricing based on value provided</li>
-                            <li>List key features that subscribers will get</li>
-                            <li>Use sort order to control plan display order</li>
-                            <li>Mark your best plan as "recommended"</li>
-                        </ul>
-
-                        <h5>Duration Options</h5>
-                        <ul>
-                            <li><strong>1 Month:</strong> Short-term access</li>
-                            <li><strong>3 Months:</strong> Medium-term commitment</li>
-                            <li><strong>6 Months:</strong> Extended access</li>
-                            <li><strong>Unlimited:</strong> Lifetime access</li>
-                        </ul>
-
-                        <h5>Features Format</h5>
-                        <p>Enter one feature per line. Use bullet points for better formatting:</p>
-                        <pre>• Access to all premium challenges
-• Priority support
-• Advanced analytics
-• Downloadable resources</pre>
-                    </div>
-                </div>
-            </div>
+            <!-- Sidebar content can be added here if needed -->
         </div>
     </div>
 </div>

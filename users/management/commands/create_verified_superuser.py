@@ -129,22 +129,22 @@ class Command(BaseCommand):
                 password=password
             )
             
-            # Mark email as verified
+            # Mark email as verified (superusers don't need email verification)
             user.is_email_verified = True
             user.save()
 
             # Create user profile if it doesn't exist
             from users.models import UserProfile, UserDatabase
-            
-            if not hasattr(user, 'profile'):
-                UserProfile.objects.create(user=user)
+
+            profile, profile_created = UserProfile.objects.get_or_create(user=user)
+            if profile_created:
                 self.stdout.write(
                     self.style.SUCCESS('✅ User profile created')
                 )
 
             # Create user database if it doesn't exist
-            if not hasattr(user, 'database'):
-                UserDatabase.objects.create(user=user)
+            database, database_created = UserDatabase.objects.get_or_create(user=user)
+            if database_created:
                 self.stdout.write(
                     self.style.SUCCESS('✅ User database created')
                 )

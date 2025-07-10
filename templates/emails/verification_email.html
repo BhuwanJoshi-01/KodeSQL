@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your KodeSQL Account</title>
+    <style>
+        /* Compact Light Theme Email CSS */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .email-container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 30px 25px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+            letter-spacing: -0.3px;
+        }
+
+        .tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            margin: 0;
+            font-weight: 400;
+        }
+        
+        .content {
+            padding: 30px 25px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .description {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white !important;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .verify-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+        
+        .features {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .features-title {
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .footer {
+            background: #f1f5f9;
+            padding: 20px 25px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            color: #64748b;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .footer-links {
+            margin-bottom: 10px;
+        }
+
+        .footer-link {
+            color: #3b82f6;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 12px;
+        }
+
+        .footer-link:hover {
+            color: #2563eb;
+        }
+        
+        .expiry-info {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .expiry-text {
+            color: #92400e;
+            font-size: 13px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .help-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .help-text {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+                margin: 10px !important;
+            }
+
+            .header, .content, .footer {
+                padding: 20px !important;
+            }
+
+            .verify-button {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .features {
+                padding: 15px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">KodeSQL</div>
+            <p class="tagline">Interactive SQL Learning Platform</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <h1 class="title">Verify Your Email</h1>
+
+            <p class="description">
+                Hi <strong>{{ user.first_name|default:user.username }}</strong>, click the button below to verify your email and start learning SQL.
+            </p>
+
+            <div style="text-align: center;">
+                <a href="{{ verification_url }}" class="verify-button">
+                    Verify Email Address
+                </a>
+            </div>
+
+            <div class="expiry-info">
+                <p class="expiry-text">Link expires in 24 hours</p>
+            </div>
+
+            <!-- Features -->
+            <div class="features">
+                <h3 class="features-title">What's included:</h3>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <div class="feature-icon">✓</div>
+                        Interactive SQL challenges
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">✓</div>
+                        MySQL, PostgreSQL & SQLite
+                    </li>
+                    <li class="feature-item">
+                        <div class="feature-icon">✓</div>
+                        Progress tracking
+                    </li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <p class="help-text">
+                    Need help? Contact our support team at <a href="mailto:kodesql@gmail.com" style="color: #3b82f6; text-decoration: none;">kodesql@gmail.com</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Help</a>
+                <a href="#" class="footer-link">Privacy</a>
+                <a href="#" class="footer-link">Terms</a>
+            </div>
+
+            <p class="footer-text">
+                © 2025 KodeSQL. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

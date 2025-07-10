@@ -52,7 +52,7 @@ urlpatterns = [
     path('payment/<int:payment_id>/', views.payment_page, name='payment_page'),
     path('payment/success/', views.payment_success, name='payment_success'),
     path('payment/failed/', views.payment_failed, name='payment_failed'),
-    path('webhook/stripe/', views.stripe_webhook, name='stripe_webhook'),
+    path('webhook/razorpay/', views.razorpay_webhook, name='razorpay_webhook'),
 
     # API endpoints
     path('api/my-courses/', views.api_my_courses, name='api_my_courses'),

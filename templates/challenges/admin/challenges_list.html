@@ -1,11 +1,235 @@
 {% extends "admin_base.html" %}
 {% load static %}
+{% load timezone_filters %}
+{# Updated: Fixed table columns - removed Sample Data column #}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}?v=2.0">
+<style>
+/* Fix header layout to push button to the right */
+.admin-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.admin-header-content h1 {
+    margin: 0;
+    flex: 1;
+}
+
+.admin-actions {
+    flex-shrink: 0;
+}
+
+/* Compact Statistics Cards - Override default styling */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 2px solid var(--border-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-content h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.stat-content p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Enhanced Pagination Styling */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 3rem 0;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.page-link:hover::before {
+    left: 100%;
+}
+
+.page-link:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.page-link.current {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    border-color: var(--primary-color);
+    color: white;
+    cursor: default;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.page-link.current:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.page-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.page-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 1rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--border-color);
+}
+
+.page-text {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.total-text {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+    .admin-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .admin-actions {
+        width: 100%;
+    }
+
+    .admin-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .pagination {
+        padding: 0.75rem 1rem;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link {
+        min-width: 36px;
+        height: 36px;
+        font-size: 0.85rem;
+    }
+
+    .page-info {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        padding-left: 0;
+        border-left: none;
+        border-top: 2px solid var(--border-color);
+        padding-top: 0.5rem;
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
 {% endblock %}
 
 {% block admin_content %}
@@ -91,18 +315,18 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th class="title-col">Title</th>
-                        <th class="difficulty-col">Difficulty</th>
-                        <th class="status-col">Status</th>
-                        <th class="file-col">Sample Data</th>
-                        <th class="date-col">Created</th>
-                        <th class="actions-col">Actions</th>
+                        <th style="width:0%;"></th>
+                        <th>Title</th>
+                        <th>Difficulty</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for challenge in challenges %}
                         <tr class="challenge-row {% if not challenge.is_active %}inactive{% endif %}">
-                            <td class="title-cell">
+                            <td>
                                 <div class="challenge-title">
                                     <a href="{% url 'challenges:admin_challenge_detail' challenge.id %}" class="title-link">
                                         {{ challenge.title }}
@@ -112,12 +336,12 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="difficulty-cell">
+                            <td>
                                 <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
                                     {{ challenge.get_difficulty_display }}
                                 </span>
                             </td>
-                            <td class="status-cell">
+                            <td>
                                 {% if challenge.is_active %}
                                     <span class="status-badge active">
                                         <span class="material-icons">check_circle</span>
@@ -130,24 +354,11 @@
                                     </span>
                                 {% endif %}
                             </td>
-                            <td class="file-cell">
-                                {% if challenge.sample_data %}
-                                    <div class="file-info">
-                                        <span class="material-icons">attach_file</span>
-                                        <span class="file-name">{{ challenge.sample_data.name|truncatechars:20 }}</span>
-                                    </div>
-                                {% else %}
-                                    <span class="no-file">
-                                        <span class="material-icons">description</span>
-                                        No file
-                                    </span>
-                                {% endif %}
+                            <td>
+                                <span class="date-text">{{ challenge.created_at|format_indian_datetime:"M d, Y" }}</span>
+                                <span class="time-text">{{ challenge.created_at|format_indian_datetime:"g:i A" }}</span>
                             </td>
-                            <td class="date-cell">
-                                <span class="date-text">{{ challenge.created_at|date:"M d, Y" }}</span>
-                                <span class="time-text">{{ challenge.created_at|date:"g:i A" }}</span>
-                            </td>
-                            <td class="actions-cell">
+                            <td>
                                 <div class="action-buttons">
                                     <a href="{% url 'challenges:admin_challenge_detail' challenge.id %}" class="btn btn-sm btn-secondary" title="View Challenge">
                                         <span class="material-icons">visibility</span>
@@ -166,25 +377,56 @@
             </table>
         </div>
         
-        <!-- Pagination -->
+        <!-- Enhanced Pagination -->
         {% if challenges.has_other_pages %}
             <div class="pagination-wrapper">
                 <div class="pagination">
+                    <!-- First Page -->
+                    {% if challenges.number > 1 %}
+                        <a href="?page=1{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link" title="First Page">
+                            <span class="material-icons">first_page</span>
+                        </a>
+                    {% endif %}
+
+                    <!-- Previous Page -->
                     {% if challenges.has_previous %}
-                        <a href="?page={{ challenges.previous_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">
+                        <a href="?page={{ challenges.previous_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link" title="Previous Page">
                             <span class="material-icons">chevron_left</span>
                         </a>
                     {% endif %}
 
-                    <span class="page-info">
-                        Page {{ challenges.number }} of {{ challenges.paginator.num_pages }}
-                    </span>
+                    <!-- Page Numbers -->
+                    {% for page_num in challenges.paginator.page_range %}
+                        {% if page_num == challenges.number %}
+                            <span class="page-link current">{{ page_num }}</span>
+                        {% elif page_num >= challenges.number|add:'-2' and page_num <= challenges.number|add:'2' %}
+                            <a href="?page={{ page_num }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">{{ page_num }}</a>
+                        {% elif page_num == 1 or page_num == challenges.paginator.num_pages %}
+                            <a href="?page={{ page_num }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">{{ page_num }}</a>
+                        {% elif page_num == challenges.number|add:'-3' or page_num == challenges.number|add:'3' %}
+                            <span class="page-ellipsis">...</span>
+                        {% endif %}
+                    {% endfor %}
 
+                    <!-- Next Page -->
                     {% if challenges.has_next %}
-                        <a href="?page={{ challenges.next_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">
+                        <a href="?page={{ challenges.next_page_number }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link" title="Next Page">
                             <span class="material-icons">chevron_right</span>
                         </a>
                     {% endif %}
+
+                    <!-- Last Page -->
+                    {% if challenges.number < challenges.paginator.num_pages %}
+                        <a href="?page={{ challenges.paginator.num_pages }}{% if request.GET.difficulty %}&difficulty={{ request.GET.difficulty }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link" title="Last Page">
+                            <span class="material-icons">last_page</span>
+                        </a>
+                    {% endif %}
+
+                    <!-- Page Info -->
+                    <div class="page-info">
+                        <span class="page-text">Page {{ challenges.number }} of {{ challenges.paginator.num_pages }}</span>
+                        <span class="total-text">({{ challenges.paginator.count }} total)</span>
+                    </div>
                 </div>
             </div>
         {% endif %}

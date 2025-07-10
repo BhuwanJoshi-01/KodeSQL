@@ -1,4 +1,4 @@
-/* Base CSS for SQL Playground */
+/* Enhanced Base CSS for SQL Playground */
 
 /* Reset and Base Styles */
 * {
@@ -10,14 +10,42 @@
 html {
     font-size: 16px;
     scroll-behavior: smooth;
+    height: 100%;
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
     color: var(--text-primary);
-    background-color: var(--bg-primary);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background: var(--bg-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Enhanced background with subtle patterns */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.7;
+}
+
+[data-theme="dark"] body::before {
+    background:
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
 }
 
 /* Responsive Breakpoints */
@@ -30,13 +58,19 @@ body {
     --breakpoint-2xl: 1536px;
 }
 
-/* Tile Wrap System - Responsive Container */
+/* Enhanced Adaptive Tile Wrap System */
 .tile-wrap {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 1rem;
     position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Adaptive container sizes with smooth transitions */
+.tile-wrap-xs {
+    max-width: 480px;
 }
 
 .tile-wrap-sm {
@@ -63,16 +97,74 @@ body {
     max-width: none;
 }
 
-/* Responsive Padding for Tile Wrap */
+/* Adaptive padding based on content type */
+.tile-wrap-compact {
+    padding: 0 0.75rem;
+}
+
+.tile-wrap-spacious {
+    padding: 0 2rem;
+}
+
+/* Content-aware adaptive containers */
+.tile-wrap-form {
+    max-width: 600px;
+    padding: 0 1.5rem;
+}
+
+.tile-wrap-dashboard {
+    max-width: 1600px;
+    padding: 0 1.25rem;
+}
+
+.tile-wrap-content {
+    max-width: 900px;
+    padding: 0 1.5rem;
+}
+
+/* Fluid container that adapts to viewport */
+.tile-wrap-fluid {
+    max-width: 95vw;
+    padding: 0 clamp(1rem, 3vw, 3rem);
+}
+
+/* Enhanced Responsive Padding for Tile Wrap System */
 @media (min-width: 480px) {
     .tile-wrap {
         padding: 0 1.5rem;
     }
-}ons
 
+    .tile-wrap-compact {
+        padding: 0 1rem;
+    }
+
+    .tile-wrap-spacious {
+        padding: 0 2.5rem;
+    }
+}
 
 @media (min-width: 768px) {
     .tile-wrap {
+        padding: 0 2rem;
+    }
+
+    .tile-wrap-compact {
+        padding: 0 1.25rem;
+    }
+
+    .tile-wrap-spacious {
+        padding: 0 3rem;
+    }
+
+    .tile-wrap-form {
+        padding: 0 2rem;
+    }
+
+    .tile-wrap-dashboard {
+        padding: 0 1.75rem;
+    }
+
+    .tile-wrap-content {
         padding: 0 2rem;
     }
 }
@@ -81,21 +173,106 @@ body {
     .tile-wrap {
         padding: 0 2.5rem;
     }
+
+    .tile-wrap-compact {
+        padding: 0 1.5rem;
+    }
+
+    .tile-wrap-spacious {
+        padding: 0 3.5rem;
+    }
+
+    .tile-wrap-form {
+        padding: 0 2.5rem;
+    }
+
+    .tile-wrap-dashboard {
+        padding: 0 2.25rem;
+    }
+
+    .tile-wrap-content {
+        padding: 0 2.5rem;
+    }
 }
 
 @media (min-width: 1280px) {
     .tile-wrap {
         padding: 0 3rem;
     }
+
+    .tile-wrap-compact {
+        padding: 0 2rem;
+    }
+
+    .tile-wrap-spacious {
+        padding: 0 4rem;
+    }
+
+    .tile-wrap-form {
+        padding: 0 3rem;
+    }
+
+    .tile-wrap-dashboard {
+        padding: 0 2.75rem;
+    }
+
+    .tile-wrap-content {
+        padding: 0 3rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    .tile-wrap {
+        padding: 0 3.5rem;
+    }
+
+    .tile-wrap-compact {
+        padding: 0 2.5rem;
+    }
+
+    .tile-wrap-spacious {
+        padding: 0 5rem;
+    }
+
+    .tile-wrap-form {
+        padding: 0 3.5rem;
+    }
+
+    .tile-wrap-dashboard {
+        padding: 0 3.25rem;
+    }
+
+    .tile-wrap-content {
+        padding: 0 3.5rem;
+    }
 }
 
 
 
 
-/* Layout */
+/* Enhanced Layout */
 .main-content {
     min-height: calc(100vh - 120px);
-    padding-top: 80px;
+    /*padding-top: 90px;*/
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+/* Add subtle animations to main content */
+.main-content {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Navigation */
@@ -345,24 +522,41 @@ body {
     padding: 0.5rem;
 }
 
-/* Messages */
+/* Enhanced Messages */
 .messages {
     position: fixed;
-    top: 80px;
-    right: 1rem;
+    top: 100px;
+    right: 1.5rem;
     z-index: 1001;
-    max-width: 400px;
+    max-width: 420px;
 }
 
 .message {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: 8px;
-    box-shadow: var(--shadow-md);
-    animation: slideIn 0.3s ease;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 16px;
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.15),
+        0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: currentColor;
+    opacity: 0.8;
 }
 
 .message-success {
@@ -1000,7 +1194,18 @@ body {
     }
 }
 
-/* Animations */
+/* Enhanced Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
 @keyframes slideIn {
     from {
         transform: translateX(100%);
@@ -1010,6 +1215,35 @@ body {
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+/* Add floating animation for interactive elements */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+}
+
+.floating {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Smooth scale animation */
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Gradient shift animation */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 /* Responsive Design */
@@ -1051,4 +1285,95 @@ body {
 @media (max-width: 640px) {}
 
 /* xs */
-@media (max-width: 475px) {}
+@media (max-width: 475px) {
+    .header {
+        padding: 1rem 0.75rem;
+    }
+
+    .nav-items {
+        gap: 1rem;
+        padding: 0.25rem 1rem;
+    }
+
+    .nav-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 0.75rem;
+    }
+
+    .messages {
+        right: 0.75rem;
+        left: 0.75rem;
+        max-width: none;
+    }
+
+    .message {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+}
+
+/* Modern Utility Classes */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .glass-effect {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+}
+
+.shadow-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.border-gradient {
+    border: 2px solid transparent;
+    background: linear-gradient(var(--bg-primary), var(--bg-primary)) padding-box,
+                linear-gradient(135deg, var(--primary-color), var(--accent-color)) border-box;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease,
+                transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Selection styles */
+::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: var(--text-primary);
+}
+
+::-moz-selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: var(--text-primary);
+}

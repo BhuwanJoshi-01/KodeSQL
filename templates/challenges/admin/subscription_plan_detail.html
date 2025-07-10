@@ -5,12 +5,72 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/courses.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+<style>
+/* Force badge visibility with internal CSS - only style the badge spans */
+.admin-header h1 span.badge,
+.admin-header h1 span.badge-recommended,
+.admin-header h1 span.badge-inactive {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 15px !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-left: 0.75rem !important;
+    white-space: nowrap !important;
+    color: white !important;
+    text-shadow: none !important;
+    z-index: 999 !important;
+    position: relative !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    -webkit-background-clip: border-box !important;
+    -webkit-text-fill-color: white !important;
+    background-clip: border-box !important;
+    vertical-align: middle !important;
+}
+
+.admin-header h1 span.badge-recommended {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+.admin-header h1 span.badge-inactive {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Ensure the h1 title text remains white without affecting badges */
+.admin-header h1 {
+    color: white !important;
+    -webkit-text-fill-color: white !important;
+    background: transparent !important;
+}
+
+/* Ensure badge text is white and not affected by parent styles */
+.admin-header h1 span.badge,
+.admin-header h1 span.badge-recommended,
+.admin-header h1 span.badge-inactive {
+    -webkit-text-fill-color: white !important;
+    color: white !important;
+    text-decoration: none !important;
+    background-clip: padding-box !important;
+    -webkit-background-clip: padding-box !important;
+}
+</style>
 {% endblock %}
 
 {% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
-        <div class="admin-header-content">
+        <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>
                 <span class="material-icons">card_membership</span>
                 {{ plan.name }}
@@ -70,7 +130,7 @@
                 <span class="material-icons">attach_money</span>
             </div>
             <div class="stat-content">
-                <h3>${{ total_revenue }}</h3>
+                <h3>₹{{ total_revenue|floatformat:2 }}</h3>
                 <p>Total Revenue</p>
             </div>
         </div>
@@ -99,9 +159,9 @@
                         <div class="detail-item">
                             <label>Price:</label>
                             <span>
-                                ${{ plan.price }}
+                                ₹{{ plan.price }}
                                 {% if plan.original_price and plan.original_price > plan.price %}
-                                    <span class="original-price">(was ${{ plan.original_price }})</span>
+                                    <span class="original-price">(was ₹{{ plan.original_price }})</span>
                                 {% endif %}
                             </span>
                         </div>
@@ -193,7 +253,7 @@
                                             {{ subscription.get_status_display }}
                                         </span>
                                     </td>
-                                    <td>${{ subscription.amount_paid }}</td>
+                                    <td>₹{{ subscription.amount_paid }}</td>
                                     <td>{{ subscription.start_date|date:"M d, Y" }}</td>
                                     <td>
                                         {% if subscription.end_date %}
@@ -282,12 +342,12 @@
                         </div>
                         <div class="stat-item">
                             <label>Total Revenue:</label>
-                            <span>${{ total_revenue }}</span>
+                            <span>₹{{ total_revenue|floatformat:2 }}</span>
                         </div>
                         {% if active_subscriptions > 0 %}
                         <div class="stat-item">
                             <label>Average Revenue per User:</label>
-                            <span>${{ average_revenue_per_user|floatformat:2 }}</span>
+                            <span>₹{{ average_revenue_per_user|floatformat:2 }}</span>
                         </div>
                         {% endif %}
                     </div>

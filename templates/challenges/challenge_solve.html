@@ -4,6 +4,8 @@
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
+<!-- Split.js for resizable panels -->
+<script src="https://unpkg.com/split.js/dist/split.min.js"></script>
 <style>
 /* Challenge Solve Page CSS - Based on Reference SQLeditor_htmlLayout.html */
 
@@ -21,6 +23,53 @@
     right: 0;
     bottom: 0;
     overflow: hidden;
+}
+
+/* Mobile content wrapper adjustments */
+@media (max-width: 768px) {
+    .content-wrapper {
+        top: 60px; /* Smaller nav on mobile */
+        position: fixed;
+        height: calc(100vh - 60px);
+    }
+}
+
+@media (max-width: 480px) {
+    .content-wrapper {
+        top: 55px; /* Even smaller nav on small mobile */
+        height: calc(100vh - 55px);
+    }
+
+    /* Small mobile table improvements */
+    .result-table {
+        font-size: 11px;
+    }
+
+    .result-table th,
+    .result-table td {
+        padding: 6px 8px;
+        font-size: 11px;
+        min-width: 60px;
+        max-width: 100px;
+    }
+
+    .table-wrapper {
+        margin: 8px 0;
+        border-radius: 6px;
+    }
+
+    /* Ultra compact table for very small screens */
+    .expected-output-section .result-table th,
+    .expected-output-section .result-table td {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 50px;
+        max-width: 80px;
+    }
+
+    .expected-output-section .result-table {
+        min-width: 350px;
+    }
 }
 
 /* Override base template styles for full-screen challenge interface */
@@ -83,12 +132,101 @@ body {
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Responsive challenge action bar improvements */
+@media (max-width: 1200px) {
+    .challenge-action-bar {
+        padding: 12px 20px;
+    }
+
+    .challenge-info {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .challenge-action-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .challenge-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .challenge-title-compact {
+        font-size: 14px;
+        line-height: 1.2;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .action-buttons {
+        justify-content: flex-end;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .action-buttons .btn {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-height: 32px;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .challenge-action-bar {
+        padding: 6px 10px;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+    .challenge-info {
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .challenge-title-compact {
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .action-buttons {
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .action-buttons .btn {
+        padding: 5px 8px;
+        font-size: 11px;
+        min-height: 28px;
+        white-space: nowrap;
+        min-width: 60px;
+    }
 }
 
 /* Old header styles removed - using challenge action bar instead */
 
 .btn {
-    padding: 8px 16px;
+    padding: 10px 18px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -98,7 +236,14 @@ body {
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    line-height: 1.4;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .btn-primary {
@@ -129,6 +274,23 @@ body {
     transform: translateY(-1px);
 }
 
+.btn-outline-primary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
 .main-layout {
     flex: 1;
     display: flex;
@@ -143,6 +305,7 @@ body {
     border-right: 1px solid var(--border-color);
     min-width: 300px;
     max-width: 60%;
+    overflow-y: auto;
 }
 
 [data-theme="dark"] .left-panel {
@@ -161,40 +324,48 @@ body {
     background: var(--bg-primary);
 }
 
-.resizer {
-    width: 6px;
+/* Split.js gutter styling */
+.gutter {
     background: linear-gradient(45deg, #4f46e5, #7c3aed);
-    cursor: col-resize;
-    position: relative;
     opacity: 0.3;
     transition: opacity 0.3s ease;
+    position: relative;
+    z-index: 10;
 }
 
-.resizer:hover {
+.gutter:hover {
     opacity: 1;
 }
 
-.resizer::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px;
-    height: 40px;
-    background: rgba(79, 70, 229, 0.1);
-    border-radius: 10px;
+.gutter.gutter-horizontal {
+    cursor: col-resize;
+    width: 6px;
+}
+
+.gutter.gutter-vertical {
+    cursor: row-resize;
+    height: 6px;
+}
+
+/* Split.js container styling */
+.split {
+    display: flex;
+    flex-direction: row;
+}
+
+.split.split-vertical {
+    flex-direction: column;
 }
 
 .question-section {
     padding: 25px;
-    border-bottom: 1px solid var(--border-color);
+    flex: 1;
+    overflow-y: auto;
     background: var(--bg-secondary);
 }
 
 [data-theme="dark"] .question-section {
     background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
 }
 
 .question-header {
@@ -204,38 +375,121 @@ body {
     margin-bottom: 20px;
 }
 
+.badges-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
 .question-title {
     font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 10px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.4;
 }
 
 .difficulty-badge {
-    display: inline-block;
-    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    background: linear-gradient(45deg, #f59e0b, #d97706);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
     color: white;
-    margin-bottom: 15px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .difficulty-badge.difficulty-easy {
-    background: linear-gradient(45deg, #10b981, #059669);
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .difficulty-badge.difficulty-medium {
-    background: linear-gradient(45deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .difficulty-badge.difficulty-hard {
-    background: linear-gradient(45deg, #ef4444, #dc2626);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .difficulty-badge.difficulty-extreme {
-    background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, #7c2d12, #991b1b);
+    box-shadow: 0 2px 8px rgba(124, 45, 18, 0.4);
+    border: 1px solid #7c2d12;
+}
+
+.xp-badge-solve {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.xp-badge-solve .material-icons {
+    font-size: 16px;
+}
+
+/* Responsive badge improvements */
+@media (max-width: 768px) {
+    .badges-container {
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .difficulty-badge {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .xp-badge-solve {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        gap: 0.25rem;
+    }
+
+    .xp-badge-solve .material-icons {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .badges-container {
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .difficulty-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .xp-badge-solve {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .xp-badge-solve .material-icons {
+        font-size: 12px;
+    }
 }
 
 .question-content {
@@ -270,7 +524,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0;
+    min-height: 300px;
+    height: 100%;
 }
 
 .editor-header {
@@ -298,23 +553,117 @@ body {
 }
 
 .database-selector {
-    padding: 6px 12px;
+    padding: 10px 14px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--bg-primary);
     color: var(--text-primary);
     font-size: 14px;
+    min-height: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.database-selector:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.database-selector:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
 }
 
 [data-theme="dark"] .database-selector {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
 }
 
 .editor-container {
     flex: 1;
     position: relative;
     background: var(--bg-secondary);
+    min-height: 200px;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Monaco wrapper for better resize control */
+.monaco-wrapper {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    transition: height 0.1s ease;
+    min-height: 200px;
+}
+
+/* Monaco Editor responsive container */
+#challenge-editor {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 200px;
+}
+
+/* Monaco Editor mobile optimizations */
+@media (max-width: 768px) {
+    .editor-container {
+        min-height: 180px;
+        flex: 1;
+        height: 100%;
+    }
+
+    #challenge-editor {
+        min-height: 180px;
+        height: 100%;
+    }
+
+    /* Hide Monaco's context menu on mobile for better UX */
+    .monaco-menu-container {
+        display: none !important;
+    }
+
+    /* Improve Monaco scrollbars on mobile */
+    .monaco-scrollable-element .scrollbar {
+        width: 12px !important;
+        height: 12px !important;
+    }
+
+    /* Better touch scrolling for Monaco */
+    .monaco-scrollable-element {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .editor-container {
+        min-height: 160px;
+        flex: 1;
+        height: 100%;
+    }
+
+    #challenge-editor {
+        min-height: 160px;
+        height: 100%;
+    }
 }
 
 [data-theme="dark"] .editor-container {
@@ -371,12 +720,20 @@ body {
 }
 
 .tab {
-    padding: 12px 20px;
+    padding: 14px 24px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     font-weight: 500;
     color: var(--text-secondary);
     transition: all 0.3s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    border-radius: 8px 8px 0 0;
 }
 
 .tab.active {
@@ -423,6 +780,8 @@ body {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    table-layout: auto;
+    min-width: 100%;
 }
 
 [data-theme="dark"] .result-table {
@@ -434,16 +793,25 @@ body {
     background: linear-gradient(45deg, #4f46e5, #7c3aed);
     color: white;
     padding: 12px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     font-size: 14px;
+    white-space: nowrap;
+    min-width: 80px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .result-table td {
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color);
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
     font-size: 14px;
     color: var(--text-primary);
+    text-align: center;
+    white-space: nowrap;
+    min-width: 80px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .result-table tr:hover {
@@ -465,17 +833,54 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-.vertical-resizer {
-    height: 6px;
-    background: linear-gradient(45deg, #4f46e5, #7c3aed);
-    cursor: row-resize;
-    opacity: 0.3;
-    transition: opacity 0.3s ease;
-    position: relative;
+/* Split.js responsive gutter styling */
+@media (max-width: 1024px) {
+    .gutter.gutter-vertical {
+        height: 12px;
+        background: var(--border-color);
+        opacity: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: row-resize;
+        touch-action: none;
+    }
+
+    .gutter.gutter-vertical::after {
+        content: '⋯';
+        font-size: 18px;
+        color: var(--text-tertiary);
+        letter-spacing: 3px;
+        transform: rotate(90deg);
+        transition: color 0.2s ease;
+    }
+
+    .gutter.gutter-vertical:hover::after,
+    .gutter.gutter-vertical:active::after {
+        color: var(--primary-color);
+    }
 }
 
-.vertical-resizer:hover {
-    opacity: 1;
+/* Touch-friendly gutter for mobile/tablet */
+@media (max-width: 1024px) {
+    .gutter.gutter-vertical {
+        height: 16px;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+        user-select: none;
+        transition: background-color 0.2s ease;
+    }
+
+    .gutter.gutter-vertical:hover,
+    .gutter.gutter-vertical:active {
+        background: var(--bg-hover);
+    }
 }
 
 .placeholder-content {
@@ -512,6 +917,7 @@ body {
     border: 1px solid var(--success-color);
     border-radius: 8px;
     padding: 15px;
+    overflow: hidden; /* Prevent content from overflowing */
 }
 
 [data-theme="dark"] .expected-output-section {
@@ -522,6 +928,90 @@ body {
 .expected-output-title {
     margin-bottom: 15px;
     color: var(--text-primary);
+}
+
+/* Expected output table wrapper */
+.expected-output-section .table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    max-height: 400px; /* Limit height to prevent excessive scrolling */
+}
+
+/* Custom scrollbar styling for all table wrappers */
+.table-wrapper::-webkit-scrollbar,
+.expected-output-section .table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track,
+.expected-output-section .table-wrapper::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb,
+.expected-output-section .table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover,
+.expected-output-section .table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+.table-wrapper::-webkit-scrollbar-corner,
+.expected-output-section .table-wrapper::-webkit-scrollbar-corner {
+    background: var(--bg-secondary);
+}
+
+/* Additional scrollbar styling for tab content areas */
+.tab-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+.tab-content::-webkit-scrollbar-corner {
+    background: var(--bg-secondary);
+}
+
+.expected-output-section .result-table {
+    margin: 0;
+    width: 100%;
+    min-width: 100%;
+    background: var(--bg-primary);
+}
+
+/* Ensure table cells don't break layout */
+.expected-output-section .result-table th,
+.expected-output-section .result-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    min-width: 80px;
 }
 
 /* Status Bar */
@@ -557,7 +1047,47 @@ body {
     color: var(--error-text);
 }
 
-@media (max-width: 1024px) {
+/* Responsive Design - Comprehensive Breakpoints */
+
+/* Large Desktop (1440px+) - Enhanced spacing and larger elements */
+@media (min-width: 1440px) {
+    .challenge-action-bar {
+        padding: 20px 30px;
+    }
+
+    .question-section {
+        padding: 25px;
+    }
+
+    .editor-header {
+        padding: 15px 25px;
+    }
+}
+
+/* Desktop (1024px+) - Default layout */
+@media (min-width: 1024px) {
+    .main-layout {
+        flex-direction: row;
+    }
+
+    .left-panel {
+        width: 45%;
+        height: auto;
+        max-width: 60%;
+        min-width: 300px;
+    }
+
+    .gutter.gutter-horizontal {
+        display: block;
+    }
+
+    .gutter.gutter-vertical {
+        display: block;
+    }
+}
+
+/* Tablet (768px-1024px) - Vertical layout with optimized spacing */
+@media (max-width: 1024px) and (min-width: 768px) {
     .main-layout {
         flex-direction: column;
     }
@@ -565,34 +1095,676 @@ body {
     .left-panel {
         width: 100%;
         max-width: none;
-        height: 50%;
+        height: 45%;
+        min-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
     }
 
-    .resizer {
+    .gutter.gutter-horizontal {
         display: none;
     }
 
-    .vertical-resizer {
+    .gutter.gutter-vertical {
         display: block;
-    }
-}
-
-@media (max-width: 768px) {
-    .header {
-        padding: 10px 15px;
+        height: 6px;
+        width: 100%;
+        cursor: row-resize;
     }
 
-    .nav-items {
-        display: none;
+    .challenge-action-bar {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .challenge-info {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
     }
 
     .question-section {
-        padding: 15px;
+        padding: 20px;
     }
 
     .editor-header {
-        padding: 10px 15px;
+        padding: 12px 20px;
     }
+
+    /* Ensure buttons are touch-friendly on tablet */
+    .btn {
+        min-height: 44px;
+        padding: 12px 20px;
+        font-size: 15px;
+    }
+
+    .database-selector {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+}
+
+/* Mobile (480px-768px) - Optimized mobile layout */
+@media (max-width: 768px) {
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        max-width: none;
+        height: 35%;
+        min-height: 200px;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .gutter.gutter-horizontal {
+        display: none;
+    }
+
+    .gutter.gutter-vertical {
+        display: block;
+        height: 16px;
+        width: 100%;
+        cursor: row-resize;
+        background: var(--bg-secondary);
+        border-top: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+        user-select: none;
+        transition: background-color 0.2s ease;
+    }
+
+    .gutter.gutter-vertical::after {
+        content: '⋯';
+        font-size: 18px;
+        color: var(--text-tertiary);
+        letter-spacing: 3px;
+        transform: rotate(90deg);
+        transition: color 0.2s ease;
+    }
+
+    .gutter.gutter-vertical:hover,
+    .gutter.gutter-vertical:active {
+        background: var(--bg-hover);
+    }
+
+    .gutter.gutter-vertical:hover::after,
+    .gutter.gutter-vertical:active::after {
+        color: var(--primary-color);
+    }
+
+    .challenge-action-bar {
+        padding: 8px 12px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .challenge-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .challenge-title-compact {
+        font-size: 14px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .action-buttons {
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .question-section {
+        padding: 12px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        height: 100%;
+    }
+
+    /* Compact question content for mobile */
+    .question-content {
+        margin-bottom: 12px;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .question-content h3 {
+        font-size: 15px;
+        margin-bottom: 6px;
+        color: var(--text-primary);
+    }
+
+    /* Expected output section mobile improvements */
+    .expected-output-section {
+        margin-top: 12px;
+        padding: 10px;
+    }
+
+    .expected-output-title {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .editor-header {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: auto;
+    }
+
+    .editor-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+    }
+
+    /* Right panel improvements for mobile */
+    .right-panel {
+        display: flex;
+        flex-direction: column;
+        height: 65%; /* Give more space to right panel */
+        background: var(--bg-primary);
+    }
+
+    .editor-section {
+        flex: 1; /* Take remaining space after output section */
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-primary);
+        overflow: hidden;
+    }
+
+    .output-section {
+        height: 40%; /* Fixed height, same as desktop */
+        min-height: 200px;
+        max-height: 60%;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    /* Output header improvements */
+    .output-header {
+        padding: 8px 12px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+        z-index: 10;
+    }
+
+    /* Tab content improvements for mobile */
+    .tab-content {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px;
+        background: var(--bg-primary);
+    }
+
+    /* Touch-friendly controls */
+    .btn {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 16px;
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .database-selector {
+        min-height: 44px;
+        padding: 12px 16px;
+        font-size: 16px;
+        flex: 1;
+    }
+
+    /* Tab navigation improvements */
+    .tab {
+        min-height: 48px;
+        padding: 12px 20px;
+        font-size: 14px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-secondary);
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .tab.active {
+        background: var(--bg-primary);
+        border-bottom: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .tab:hover {
+        background: var(--bg-hover);
+    }
+
+    /* Table responsiveness - Fix text overflow */
+    .result-table {
+        font-size: 12px;
+        border-radius: 6px;
+        width: auto;
+        min-width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+
+    .result-table th,
+    .result-table td {
+        padding: 8px 12px;
+        font-size: 12px;
+        white-space: nowrap;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        min-width: 80px;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .result-table th {
+        background: linear-gradient(45deg, #4f46e5, #7c3aed);
+        color: white;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    /* Wrapper for horizontal scroll */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 10px 0;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        max-width: 100%;
+    }
+
+    /* Question content improvements */
+    .question-content h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .table-schema {
+        margin-bottom: 15px;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+
+    .table-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .table-schema pre {
+        font-size: 13px;
+        line-height: 1.4;
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+}
+
+/* Small Mobile (320px-480px) - Maximum touch optimization */
+@media (max-width: 480px) {
+    .content-wrapper {
+        top: 60px; /* Smaller nav on mobile */
+    }
+
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        height: 30%;
+        min-height: 180px;
+        max-height: 250px;
+    }
+
+    .challenge-action-bar {
+        padding: 6px 10px;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+    .challenge-info {
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .challenge-title-compact {
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .action-buttons {
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .action-buttons .btn {
+        padding: 5px 8px;
+        font-size: 11px;
+        min-height: 28px;
+        min-width: 60px;
+    }
+
+    .difficulty-badge {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .xp-badge-solve {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .question-section {
+        padding: 12px;
+    }
+
+    .editor-header {
+        padding: 6px 10px;
+       
+    }
+
+    .editor-title {
+        font-size: 13px;
+    }
+
+    /* Small mobile right panel layout */
+    .right-panel {
+        height: 70%; /* More space for editor and output */
+    }
+
+    .editor-section {
+        flex: 1; /* Take remaining space after output section */
+        min-height: 180px;
+        overflow: hidden;
+    }
+
+    .output-section {
+        height: 40%; /* Fixed height, consistent approach */
+        min-height: 180px;
+        max-height: 60%;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-primary);
+    }
+
+    .output-header {
+        padding: 6px 10px;
+        min-height: 44px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .tab-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    /* Maximum touch targets */
+    .btn {
+        min-height: 48px;
+        padding: 14px 16px;
+        font-size: 16px;
+        width: 100%;
+        margin: 4px 0;
+    }
+
+    .database-selector {
+        min-height: 48px;
+        padding: 14px 16px;
+        font-size: 16px;
+        width: 100%;
+        margin: 4px 0;
+    }
+
+    .tab-nav button {
+        min-height: 48px;
+        font-size: 16px;
+    }
+
+    /* Compact spacing */
+    .question-content {
+        margin-bottom: 15px;
+    }
+
+    .table-schema {
+        margin-bottom: 15px;
+    }
+
+    .expected-output-section {
+        margin-top: 15px;
+        padding: 12px;
+    }
+
+    /* Status bar adjustments */
+    .status-bar {
+        padding: 8px 12px;
+        font-size: 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* Additional responsive improvements */
+
+/* Mobile tab content scrolling */
+@media (max-width: 768px) {
+    .tab-content {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px;
+    }
+
+    .tab-panel {
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    /* Ensure output tables are properly contained */
+    .tab-panel .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 8px 0;
+    }
+
+    .tab-panel .result-table {
+        min-width: 400px; /* Ensure table has minimum width for scrolling */
+    }
+
+    /* Mobile table header improvements */
+    .result-table th {
+        white-space: nowrap;
+        font-size: 11px;
+        padding: 6px 10px;
+        min-width: 70px;
+        text-align: center;
+    }
+
+    .result-table td {
+        font-size: 11px;
+        padding: 6px 10px;
+        text-align: center;
+        min-width: 70px;
+    }
+
+    /* Expected output section mobile specific */
+    .expected-output-section .table-wrapper {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .expected-output-section .result-table {
+        margin: 0;
+        min-width: 400px;
+        background: var(--bg-primary);
+    }
+}
+
+/* Improve focus states for accessibility */
+.btn:focus,
+.database-selector:focus,
+.tab:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Better loading states */
+.loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive typography improvements */
+@media (max-width: 768px) {
+    .question-title {
+        font-size: 18px;
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+
+    .expected-output-title {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .question-title {
+        font-size: 16px;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        line-height: 1.3;
+    }
+
+    .expected-output-title {
+        font-size: 14px;
+    }
+
+    /* Improve content readability */
+    .question-content {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .question-content p {
+        margin-bottom: 12px;
+    }
+}
+
+/* Touch improvements for better mobile UX */
+@media (hover: none) and (pointer: coarse) {
+    /* This targets touch devices */
+    .btn:hover {
+        transform: none;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+    }
+
+    .tab:hover {
+        background: var(--bg-hover);
+    }
+
+    .gutter:hover {
+        opacity: 1;
+    }
+}
+
+/* Disable right-click and text selection */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Disable text selection on all elements */
+* {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Allow text selection only in Monaco editor */
+.monaco-editor,
+.monaco-editor *,
+#challenge-editor,
+#challenge-editor * {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+}
+
+/* Disable context menu styling */
+.no-context-menu {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 </style>
 {% endblock %}
@@ -600,47 +1772,29 @@ body {
 {% block content %}
 <div class="content-wrapper">
 <div class="container">
-    <!-- Challenge Action Bar -->
-    <div class="challenge-action-bar">
-        <div class="challenge-info">
-            <h1 class="challenge-title-compact">{{ challenge.title }}</h1>
-            <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
-                {{ challenge.get_difficulty_display }}
-                {% if challenge.is_premium %}
-                    - Premium
-                {% endif %}
-            </span>
-        </div>
-        <div class="action-buttons">
-            {% if user_progress and user_progress.is_completed %}
-                <span class="btn btn-primary" style="background: var(--success-color);">
-                    <span class="material-icons" style="font-size: 16px;">check_circle</span>
-                    Completed
-                </span>
-            {% else %}
-                <button id="submit-solution-btn" class="btn btn-primary" disabled>
-                    <span class="material-icons" style="font-size: 16px;">send</span>
-                    Submit Solution
-                </button>
-            {% endif %}
-        </div>
-    </div>
 
-    <div class="main-layout">
+
+    <div class="main-layout" id="mainLayout">
         <div class="left-panel" id="leftPanel">
             <div class="question-section">
                 <div class="question-header">
                     <div>
                         <h2 class="question-title">{{ challenge.title }}</h2>
-                        <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
-                            {{ challenge.get_difficulty_display }}
-                            {% if challenge.is_premium %}
-                                - Premium
-                            {% endif %}
-                        </span>
+                        <div class="badges-container">
+                            <span class="difficulty-badge difficulty-{{ challenge.difficulty }}">
+                                {{ challenge.get_difficulty_display }}
+                                {% if challenge.is_premium %}
+                                    - Premium
+                                {% endif %}
+                            </span>
+                            <span class="xp-badge-solve">
+                                <span class="material-icons">stars</span>
+                                {{ challenge.xp }} XP
+                            </span>
+                        </div>
                     </div>
                 </div>
-                
+
                 <div class="question-content">
                     {{ challenge.description|safe }}
                 </div>
@@ -659,24 +1813,52 @@ body {
                         </div>
                     {% endfor %}
                 {% endif %}
+
+                <!-- Expected Output Section moved to left panel -->
+                <div class="expected-output-section" style="margin-top: 20px;">
+                    <h3 class="expected-output-title">📋 Expected Output</h3>
+                    {% if challenge.expected_result %}
+                        <div class="table-wrapper">
+                            <table class="result-table">
+                                <thead>
+                                    <tr>
+                                        {% for key in challenge.expected_result.0.keys %}
+                                            <th>{{ key }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in challenge.expected_result %}
+                                        <tr>
+                                            {% for value in row.values %}
+                                                <td>{{ value }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>Expected output will be shown after you submit your solution.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <div class="resizer" id="resizer"></div>
-
-        <div class="right-panel">
-            <div class="editor-section">
+        <div class="right-panel" id="rightPanel">
+            <div class="editor-section" id="editorSection">
                 <div class="editor-header">
                     <div class="editor-title">SQL Editor</div>
                     <div class="editor-actions">
                         <select class="database-selector" id="databaseSelector" onchange="onDatabaseEngineChange()">
                             {% for engine in challenge.get_supported_engines %}
-                                <option value="{{ engine }}">
-                                    {% if engine == 'sqlite' %}SQLite
-                                    {% elif engine == 'postgresql' %}PostgreSQL
-                                    {% elif engine == 'mysql' %}MySQL
-                                    {% endif %}
-                                </option>
+                                {% if engine != 'sqlite' %}
+                                    <option value="{{ engine }}" {% if engine == 'mysql' %}selected{% endif %}>
+                                        {% if engine == 'postgresql' %}PostgreSQL
+                                        {% elif engine == 'mysql' %}MySQL
+                                        {% endif %}
+                                    </option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                         <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
@@ -684,15 +1866,28 @@ body {
                             <span id="runText">Run Code</span>
                             <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
                         </button>
+
+                        <!-- Submit/Practice buttons moved here -->
+                        {% if user_progress and user_progress.is_completed %}
+                            <button id="submit-solution-btn" class="btn btn-outline-primary" disabled>
+                                <span class="material-icons" style="font-size: 16px;">refresh</span>
+                                Practice
+                            </button>
+                        {% else %}
+                            <button id="submit-solution-btn" class="btn btn-primary" disabled>
+                                <span class="material-icons" style="font-size: 16px;">send</span>
+                                Submit
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
-                
+
                 <div class="editor-container">
-                    <div id="challenge-editor" style="height: 100%;"></div>
+                    <div class="monaco-wrapper" id="monacoWrapper">
+                        <div id="challenge-editor" style="height: 100%;"></div>
+                    </div>
                 </div>
             </div>
-
-            <div class="vertical-resizer" id="verticalResizer"></div>
 
             <div class="output-section" id="outputSection">
                 <div class="output-header">
@@ -700,9 +1895,8 @@ body {
                     {% if challenge.hint %}
                         <div class="tab" onclick="switchTab('hints')">Hints</div>
                     {% endif %}
-                    <div class="tab" onclick="switchTab('expected')">Expected Output</div>
                 </div>
-                
+
                 <div class="tab-content">
                     <div class="tab-panel active" id="outputPanel">
                         <div class="placeholder-content" style="text-align: center; color: #94a3b8; margin-top: 40px;">
@@ -710,7 +1904,7 @@ body {
                             <p>Run your SQL query to see results here</p>
                         </div>
                     </div>
-                    
+
                     {% if challenge.hint %}
                         <div class="tab-panel" id="hintsPanel">
                             <div class="hints-content">
@@ -721,34 +1915,6 @@ body {
                             </div>
                         </div>
                     {% endif %}
-                    
-                    <div class="tab-panel" id="expectedPanel">
-                        <div class="expected-output-section">
-                            <h3 class="expected-output-title">📋 Expected Output</h3>
-                            {% if challenge.expected_result %}
-                                <table class="result-table">
-                                    <thead>
-                                        <tr>
-                                            {% for key in challenge.expected_result.0.keys %}
-                                                <th>{{ key }}</th>
-                                            {% endfor %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for row in challenge.expected_result %}
-                                            <tr>
-                                                {% for value in row.values %}
-                                                    <td>{{ value }}</td>
-                                                {% endfor %}
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            {% else %}
-                                <p>Expected output will be shown after you submit your solution.</p>
-                            {% endif %}
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -775,31 +1941,86 @@ body {
 <script>
 // Global variables
 let editor;
-let isResizing = false;
-let isVerticalResizing = false;
+let horizontalSplit;
+let verticalSplit;
 let currentChallenge = {{ challenge.id }};
 let isSubmitting = false;
-let selectedEngine = 'sqlite'; // Default to SQLite
+let selectedEngine = 'mysql'; // Default to MySQL (our configured database)
+
+// Responsive Monaco Editor Configuration
+function getResponsiveEditorConfig() {
+    const width = window.innerWidth;
+    let fontSize = 14;
+    let lineHeight = 1.5;
+    let minimap = { enabled: false };
+    let lineNumbers = 'on';
+    let wordWrap = 'off';
+
+    // Responsive font sizing and features
+    if (width <= 480) {
+        // Small mobile
+        fontSize = 16;
+        lineHeight = 1.6;
+        lineNumbers = 'off';
+        wordWrap = 'on';
+    } else if (width <= 768) {
+        // Mobile
+        fontSize = 15;
+        lineHeight = 1.5;
+        lineNumbers = 'off';
+        wordWrap = 'on';
+    } else if (width <= 1024) {
+        // Tablet
+        fontSize = 14;
+        lineHeight = 1.5;
+        lineNumbers = 'on';
+        wordWrap = 'off';
+    }
+
+    return {
+        fontSize,
+        lineHeight,
+        minimap,
+        lineNumbers,
+        wordWrap
+    };
+}
 
 // Initialize Monaco Editor
 require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.34.1/min/vs' } });
 require(['vs/editor/editor.main'], function () {
     // Get theme from base template
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const responsiveConfig = getResponsiveEditorConfig();
+
     editor = monaco.editor.create(document.getElementById('challenge-editor'), {
         value: '',
         language: 'sql',
         theme: currentTheme === 'dark' ? 'vs-dark' : 'vs',
         automaticLayout: true,
-        minimap: { enabled: false },
+        minimap: responsiveConfig.minimap,
         scrollBeyondLastLine: false,
-        fontSize: 14,
-        lineNumbers: 'on',
+        fontSize: responsiveConfig.fontSize,
+        lineHeight: responsiveConfig.lineHeight,
+        lineNumbers: responsiveConfig.lineNumbers,
+        wordWrap: responsiveConfig.wordWrap,
         roundedSelection: false,
         scrollbar: {
             vertical: 'auto',
-            horizontal: 'auto'
-        }
+            horizontal: 'auto',
+            verticalScrollbarSize: window.innerWidth <= 768 ? 8 : 10,
+            horizontalScrollbarSize: window.innerWidth <= 768 ? 8 : 10
+        },
+        // Mobile-friendly options
+        selectOnLineNumbers: window.innerWidth > 768,
+        glyphMargin: window.innerWidth > 768,
+        folding: window.innerWidth > 768,
+        links: true,
+        colorDecorators: true,
+        contextmenu: window.innerWidth > 768,
+        mouseWheelZoom: false,
+        multiCursorModifier: 'ctrlCmd',
+        accessibilitySupport: 'auto'
     });
 
     // Listen for theme changes from base template
@@ -821,60 +2042,230 @@ require(['vs/editor/editor.main'], function () {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function () {
         runQuery();
     });
+
+    // Initialize Monaco wrapper height immediately
+    const monacoWrapper = document.getElementById('monacoWrapper');
+    if (monacoWrapper) {
+        // Set initial height to fill available space
+        updateMonacoHeight();
+        editor.layout();
+    }
+
+    // Initialize Split.js immediately after Monaco setup
+    initializeSplitPanes();
+
+    // Force layout update after a short delay to ensure everything is rendered
+    setTimeout(function() {
+        updateMonacoHeight();
+        if (editor) {
+            editor.layout();
+        }
+    }, 50);
+
+    // Handle responsive editor updates on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            if (editor) {
+                const newConfig = getResponsiveEditorConfig();
+                editor.updateOptions({
+                    fontSize: newConfig.fontSize,
+                    lineHeight: newConfig.lineHeight,
+                    lineNumbers: newConfig.lineNumbers,
+                    wordWrap: newConfig.wordWrap,
+                    minimap: newConfig.minimap,
+                    scrollbar: {
+                        vertical: 'auto',
+                        horizontal: 'auto',
+                        verticalScrollbarSize: window.innerWidth <= 768 ? 8 : 10,
+                        horizontalScrollbarSize: window.innerWidth <= 768 ? 8 : 10
+                    },
+                    selectOnLineNumbers: window.innerWidth > 768,
+                    glyphMargin: window.innerWidth > 768,
+                    folding: window.innerWidth > 768,
+                    contextmenu: window.innerWidth > 768
+                });
+
+                // Handle responsive splits
+                handleResponsiveSplits();
+
+                // Update Monaco wrapper height on window resize
+                updateMonacoHeight();
+                editor.layout();
+            }
+        }, 250);
+    });
 });
 
-// Resizer functionality
-const resizer = document.getElementById('resizer');
-const leftPanel = document.getElementById('leftPanel');
-const verticalResizer = document.getElementById('verticalResizer');
-const outputSection = document.getElementById('outputSection');
+// Initialize Split.js for resizable panels
+function initializeSplitPanes() {
+    console.log('Initializing Split.js panes...');
 
-// Horizontal resizer
-resizer.addEventListener('mousedown', (e) => {
-    isResizing = true;
-    document.addEventListener('mousemove', handleHorizontalResize);
-    document.addEventListener('mouseup', stopResize);
-});
+    // Check if Split.js is available
+    if (typeof Split === 'undefined') {
+        console.error('Split.js is not loaded!');
+        return;
+    }
 
-// Vertical resizer
-verticalResizer.addEventListener('mousedown', (e) => {
-    isVerticalResizing = true;
-    document.addEventListener('mousemove', handleVerticalResize);
-    document.addEventListener('mouseup', stopVerticalResize);
-});
+    // Ensure DOM elements exist before creating splits
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+    const editorSection = document.getElementById('editorSection');
+    const outputSection = document.getElementById('outputSection');
 
-function handleHorizontalResize(e) {
-    if (!isResizing) return;
+    if (!editorSection || !outputSection) {
+        console.error('Required elements for Split.js not found');
+        return;
+    }
 
-    const containerRect = document.querySelector('.main-layout').getBoundingClientRect();
-    const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    // Check if we're on desktop (horizontal split) or mobile/tablet (vertical only)
+    const isDesktop = window.innerWidth >= 1024;
+    console.log('Is desktop:', isDesktop);
 
-    if (newWidth > 20 && newWidth < 70) {
-        leftPanel.style.width = newWidth + '%';
+    if (isDesktop && leftPanel && rightPanel) {
+        // Desktop: horizontal split between left and right panels
+        console.log('Creating horizontal split...');
+        horizontalSplit = Split(['#leftPanel', '#rightPanel'], {
+            sizes: [45, 55],
+            minSize: [300, 400],
+            gutterSize: 6,
+            cursor: 'col-resize',
+            onDragStart: function() {
+                console.log('Horizontal split drag started');
+            },
+            onDragEnd: function() {
+                console.log('Horizontal split drag ended');
+                // Update Monaco height and layout after horizontal split
+                setTimeout(() => {
+                    updateMonacoHeight();
+                    if (window.editor) {
+                        window.editor.layout();
+                    }
+                }, 10);
+            }
+        });
+        console.log('Horizontal split created:', horizontalSplit);
+    }
+
+    // Vertical split between editor and output (for all screen sizes)
+    console.log('Creating vertical split...');
+    verticalSplit = Split(['#editorSection', '#outputSection'], {
+        direction: 'vertical',
+        sizes: [60, 40],
+        minSize: [200, 150],
+        gutterSize: window.innerWidth <= 768 ? 16 : 6,
+        cursor: 'row-resize',
+        onDragStart: function() {
+            console.log('Vertical split drag started');
+        },
+        onDragEnd: function() {
+            console.log('Vertical split drag ended');
+            // Update Monaco wrapper height after vertical split
+            setTimeout(() => {
+                updateMonacoHeight();
+                if (window.editor) {
+                    window.editor.layout();
+                }
+            }, 10);
+        }
+    });
+    console.log('Vertical split created:', verticalSplit);
+
+    // Force initial layout update
+    setTimeout(() => {
+        updateMonacoHeight();
+        if (window.editor) {
+            window.editor.layout();
+        }
+    }, 100);
+}
+
+// Function to update Monaco editor height
+function updateMonacoHeight() {
+    const monacoWrapper = document.getElementById('monacoWrapper');
+    if (monacoWrapper) {
+        const editorSection = document.querySelector('.editor-section');
+        const editorHeader = document.querySelector('.editor-header');
+
+        if (editorSection && editorHeader) {
+            // Force a reflow to get accurate measurements
+            editorSection.offsetHeight;
+
+            const sectionHeight = editorSection.offsetHeight || editorSection.clientHeight;
+            const headerHeight = editorHeader.offsetHeight || editorHeader.clientHeight;
+            const availableHeight = Math.max(200, sectionHeight - headerHeight);
+
+            console.log('Monaco height calculation:', {
+                sectionHeight,
+                headerHeight,
+                availableHeight
+            });
+
+            monacoWrapper.style.height = availableHeight + 'px';
+
+            // Also ensure the editor container has the right height
+            const editorContainer = document.querySelector('.editor-container');
+            if (editorContainer) {
+                editorContainer.style.height = availableHeight + 'px';
+            }
+        } else {
+            // Fallback: use viewport-based calculation
+            const viewportHeight = window.innerHeight;
+            const fallbackHeight = Math.max(300, Math.floor(viewportHeight * 0.4));
+            monacoWrapper.style.height = fallbackHeight + 'px';
+            console.log('Using fallback height:', fallbackHeight);
+        }
     }
 }
 
-function handleVerticalResize(e) {
-    if (!isVerticalResizing) return;
+// Function to destroy and recreate splits on window resize
+function handleResponsiveSplits() {
+    console.log('Handling responsive splits...');
+    const isDesktop = window.innerWidth >= 1024;
+    console.log('Is desktop (resize):', isDesktop);
 
-    const rightPanelRect = document.querySelector('.right-panel').getBoundingClientRect();
-    const newHeight = ((e.clientY - rightPanelRect.top) / rightPanelRect.height) * 100;
-
-    if (newHeight > 30 && newHeight < 80) {
-        outputSection.style.height = (100 - newHeight) + '%';
+    // Destroy existing horizontal split if it exists
+    if (horizontalSplit) {
+        console.log('Destroying horizontal split...');
+        horizontalSplit.destroy();
+        horizontalSplit = null;
     }
-}
 
-function stopResize() {
-    isResizing = false;
-    document.removeEventListener('mousemove', handleHorizontalResize);
-    document.removeEventListener('mouseup', stopResize);
-}
+    // Recreate horizontal split only on desktop
+    if (isDesktop) {
+        console.log('Recreating horizontal split...');
+        horizontalSplit = Split(['#leftPanel', '#rightPanel'], {
+            sizes: [45, 55],
+            minSize: [300, 400],
+            gutterSize: 6,
+            cursor: 'col-resize',
+            onDragEnd: function() {
+                if (window.editor) {
+                    setTimeout(() => window.editor.layout(), 50);
+                }
+            }
+        });
+    }
 
-function stopVerticalResize() {
-    isVerticalResizing = false;
-    document.removeEventListener('mousemove', handleVerticalResize);
-    document.removeEventListener('mouseup', stopVerticalResize);
+    // Update vertical split gutter size for mobile
+    if (verticalSplit) {
+        console.log('Recreating vertical split...');
+        verticalSplit.destroy();
+        verticalSplit = Split(['#editorSection', '#outputSection'], {
+            direction: 'vertical',
+            sizes: [60, 40],
+            minSize: [200, 150],
+            gutterSize: window.innerWidth <= 768 ? 16 : 6,
+            cursor: 'row-resize',
+            onDragEnd: function() {
+                updateMonacoHeight();
+                if (window.editor) {
+                    setTimeout(() => window.editor.layout(), 50);
+                }
+            }
+        });
+    }
 }
 
 // Database engine selection
@@ -920,6 +2311,9 @@ async function runQuery() {
     document.querySelector('.tab').click();
 
     try {
+        console.log('Executing query with engine:', selectedEngine);
+        console.log('Query:', query);
+
         const response = await fetch(`/challenges/api/execute/{{ challenge.id }}/`, {
             method: 'POST',
             headers: {
@@ -932,7 +2326,9 @@ async function runQuery() {
             })
         });
 
+        console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (data.success) {
             displayResults(data.results, data.columns);
@@ -944,6 +2340,7 @@ async function runQuery() {
             displayError(data.error);
         }
     } catch (error) {
+        console.error('Query execution error:', error);
         displayError('Network error: ' + error.message);
     } finally {
         // Hide loading state
@@ -960,7 +2357,7 @@ function displayResults(results, columns) {
         return;
     }
 
-    let tableHTML = '<table class="result-table"><thead><tr>';
+    let tableHTML = '<div class="table-wrapper"><table class="result-table"><thead><tr>';
 
     // Add column headers
     columns.forEach(column => {
@@ -978,7 +2375,7 @@ function displayResults(results, columns) {
         tableHTML += '</tr>';
     });
 
-    tableHTML += '</tbody></table>';
+    tableHTML += '</tbody></table></div>';
     outputPanel.innerHTML = tableHTML;
 }
 
@@ -1063,6 +2460,10 @@ document.getElementById('submit-solution-btn').addEventListener('click', async f
         return;
     }
 
+    // Check if this is a practice submission (challenge already completed)
+    const isPractice = this.textContent.includes('Practice');
+    const originalText = this.innerHTML;
+
     this.disabled = true;
     this.innerHTML = '<span class="material-icons" style="font-size: 16px;">hourglass_empty</span> Submitting...';
 
@@ -1080,24 +2481,30 @@ document.getElementById('submit-solution-btn').addEventListener('click', async f
 
         if (data.success) {
             if (data.correct) {
-                alert('🎉 Congratulations! Your solution is correct!');
-                this.innerHTML = '<span class="material-icons" style="font-size: 16px;">check_circle</span> Completed';
-                this.style.background = '#10b981';
-                location.reload(); // Reload to show completion status
+                if (isPractice) {
+                    alert('🎉 Excellent! Your solution is correct!\n\n✨ This is practice mode - no XP awarded.');
+                    this.disabled = false;
+                    this.innerHTML = originalText;
+                } else {
+                    alert('🎉 Congratulations! Your solution is correct!');
+                    this.innerHTML = '<span class="material-icons" style="font-size: 16px;">check_circle</span> Completed';
+                    this.style.background = '#10b981';
+                    location.reload(); // Reload to show completion status
+                }
             } else {
                 alert(`❌ ${data.message}\n\nAttempts: ${data.attempts}`);
                 this.disabled = false;
-                this.innerHTML = '<span class="material-icons" style="font-size: 16px;">send</span> Submit Solution';
+                this.innerHTML = originalText;
             }
         } else {
             alert('Error: ' + data.error);
             this.disabled = false;
-            this.innerHTML = '<span class="material-icons" style="font-size: 16px;">send</span> Submit Solution';
+            this.innerHTML = originalText;
         }
     } catch (error) {
         alert('Network error: ' + error.message);
         this.disabled = false;
-        this.innerHTML = '<span class="material-icons" style="font-size: 16px;">send</span> Submit Solution';
+        this.innerHTML = originalText;
     }
 });
 
@@ -1119,6 +2526,14 @@ function getCookie(name) {
 
 // Listen for theme changes from navigation bar
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize database selector
+    const selector = document.getElementById('databaseSelector');
+    if (selector && selector.options.length > 0) {
+        // Set the first available option as selected
+        selectedEngine = selector.value;
+        console.log('Initialized database engine:', selectedEngine);
+    }
+
     // Update Monaco editor theme when theme changes
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -1142,6 +2557,145 @@ document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 'Enter') {
         runQuery();
     }
+});
+
+// Touch handling improvements for mobile devices
+if ('ontouchstart' in window) {
+    // Add touch feedback for buttons
+    document.querySelectorAll('.btn, .tab, .database-selector').forEach(element => {
+        element.addEventListener('touchstart', function() {
+            this.style.opacity = '0.8';
+        }, { passive: true });
+
+        element.addEventListener('touchend', function() {
+            this.style.opacity = '1';
+        }, { passive: true });
+
+        element.addEventListener('touchcancel', function() {
+            this.style.opacity = '1';
+        }, { passive: true });
+    });
+
+    // Split.js handles all resizing functionality - no custom resizer code needed
+}
+
+// Responsive layout adjustments on orientation change
+window.addEventListener('orientationchange', function() {
+    setTimeout(function() {
+        if (editor) {
+            editor.layout();
+        }
+        // Trigger resize event to update responsive configurations
+        window.dispatchEvent(new Event('resize'));
+    }, 100);
+});
+
+// Prevent zoom on double tap for better mobile UX
+document.addEventListener('touchend', function(e) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
+
+let lastTouchEnd = 0;
+
+// Disable right-click context menu
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+});
+
+// Disable text selection with mouse
+document.addEventListener('selectstart', function(e) {
+    // Allow text selection only in Monaco editor
+    if (e.target.closest('.monaco-editor') || e.target.closest('#challenge-editor')) {
+        return true;
+    }
+    e.preventDefault();
+    return false;
+});
+
+// Disable drag and drop
+document.addEventListener('dragstart', function(e) {
+    // Allow drag in Monaco editor
+    if (e.target.closest('.monaco-editor') || e.target.closest('#challenge-editor')) {
+        return true;
+    }
+    e.preventDefault();
+    return false;
+});
+
+// Disable F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S and other developer shortcuts
+document.addEventListener('keydown', function(e) {
+    // F12 key
+    if (e.keyCode === 123) {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+Shift+I (Developer Tools)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+Shift+C (Inspect Element)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+U (View Source)
+    if (e.ctrlKey && e.keyCode === 85) {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+S (Save Page)
+    if (e.ctrlKey && e.keyCode === 83) {
+        e.preventDefault();
+        return false;
+    }
+
+    // Ctrl+A (Select All) - except in Monaco editor
+    if (e.ctrlKey && e.keyCode === 65) {
+        if (!e.target.closest('.monaco-editor') && !e.target.closest('#challenge-editor')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+
+    // Ctrl+P (Print)
+    if (e.ctrlKey && e.keyCode === 80) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+// Disable right-click on images and other elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable right-click on all images
+    const images = document.querySelectorAll('img');
+    images.forEach(function(img) {
+        img.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+    });
+
+    // Add no-context-menu class to body
+    document.body.classList.add('no-context-menu');
+
+    // Disable text selection on specific elements
+    const elementsToDisable = document.querySelectorAll('.challenge-action-bar, .question-section, .output-section, .status-bar');
+    elementsToDisable.forEach(function(element) {
+        element.style.webkitUserSelect = 'none';
+        element.style.mozUserSelect = 'none';
+        element.style.msUserSelect = 'none';
+        element.style.userSelect = 'none';
+    });
 });
 </script>
 {% endblock %}

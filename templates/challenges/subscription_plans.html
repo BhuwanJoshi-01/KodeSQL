@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load timezone_filters %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
@@ -35,8 +36,8 @@
         <div class="pending-subscription-item">
             <div class="pending-info">
                 <h3>{{ pending.plan.name }}</h3>
-                <p>Amount: ${{ pending.amount_paid }}</p>
-                <p>Expires: {{ pending.pending_expires_at|date:"M d, Y g:i A" }}</p>
+                <p>Amount: ₹{{ pending.amount_paid }}</p>
+                <p>Expires: {{ pending.pending_expires_at|format_indian_datetime:"M d, Y g:i A" }}</p>
             </div>
             <div class="pending-actions">
                 <a href="{% url 'challenges:subscription_checkout' pending.plan.id %}" class="btn btn-primary">
@@ -71,11 +72,11 @@
                 
                 <div class="plan-pricing">
                     {% if plan.has_discount %}
-                        <div class="original-price">${{ plan.original_price }}</div>
+                        <div class="original-price">{{ plan.formatted_original_price }}</div>
                         <div class="discount-badge">{{ plan.discount_percentage }}% OFF</div>
                     {% endif %}
                     <div class="current-price">
-                        ${{ plan.effective_price }}
+                        {{ plan.formatted_price }}
                         {% if plan.duration != 'unlimited' %}
                             <span class="price-period">/ {{ plan.get_duration_display|lower }}</span>
                         {% endif %}
@@ -136,32 +137,7 @@
             </div>
         {% endfor %}
     </div>
-    
-    <div class="subscription-benefits">
-        <h2>Why Subscribe to Premium Challenges?</h2>
-        <div class="benefits-grid">
-            <div class="benefit-item">
-                <span class="material-icons">psychology</span>
-                <h3>Advanced Challenges</h3>
-                <p>Access complex SQL problems from top tech companies</p>
-            </div>
-            <div class="benefit-item">
-                <span class="material-icons">lightbulb</span>
-                <h3>Detailed Solutions</h3>
-                <p>Learn from comprehensive explanations and multiple approaches</p>
-            </div>
-            <div class="benefit-item">
-                <span class="material-icons">trending_up</span>
-                <h3>Track Progress</h3>
-                <p>Monitor your improvement with detailed analytics</p>
-            </div>
-            <div class="benefit-item">
-                <span class="material-icons">business</span>
-                <h3>Company-Specific</h3>
-                <p>Practice with real interview questions from major companies</p>
-            </div>
-        </div>
-    </div>
+
 </div>
 {% endblock %}
 
@@ -301,17 +277,17 @@
 /* Plans Container */
 .plans-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 2.5rem;
-    margin-bottom: 5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
 }
 
 /* Plan Cards */
 .plan-card {
     background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
     border: 2px solid var(--border-color);
-    border-radius: 20px;
-    padding: 2.5rem;
+    border-radius: 16px;
+    padding: 1.5rem;
     position: relative;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(20px);
@@ -368,21 +344,21 @@
 }
 
 .plan-header h3 {
-    font-size: 1.75rem;
-    margin-bottom: 0.75rem;
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
     color: var(--text-primary);
     font-weight: 700;
 }
 
 .plan-duration {
     color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
     font-weight: 500;
 }
 
 .plan-pricing {
-    margin-bottom: 2rem;
+    margin-bottom: 1.2rem;
     position: relative;
 }
 
@@ -406,7 +382,7 @@
 }
 
 .current-price {
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 800;
     background: linear-gradient(135deg, var(--primary-color), var(--info-color));
     -webkit-background-clip: text;
@@ -414,12 +390,12 @@
     background-clip: text;
     display: flex;
     align-items: baseline;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
 }
 
 .price-period {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -427,40 +403,40 @@
 /* Plan Content */
 .plan-description {
     color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
-    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
 }
 
 .plan-features h4 {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: var(--text-primary);
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .plan-features ul {
     list-style: none;
     padding: 0;
-    margin: 0 0 2.5rem 0;
+    margin: 0 0 1.5rem 0;
 }
 
 .plan-features li {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
     color: var(--text-secondary);
-    font-size: 0.95rem;
-    padding: 0.5rem 0;
+    font-size: 0.85rem;
+    padding: 0.25rem 0;
 }
 
 .plan-features .material-icons {
     color: var(--success-color);
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     background: var(--success-bg);
     border-radius: 50%;
-    padding: 0.25rem;
+    padding: 0.2rem;
 }
 
 /* Plan Action Button */
@@ -470,10 +446,10 @@
 
 .plan-action .btn {
     width: 100%;
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
+    padding: 0.8rem 1.5rem;
+    font-size: 0.95rem;
     font-weight: 700;
-    border-radius: 12px;
+    border-radius: 10px;
     background: linear-gradient(45deg, var(--primary-color), var(--info-color));
     color: white;
     border: none;
@@ -484,7 +460,7 @@
     transition: all 0.3s ease;
     box-shadow: var(--shadow-lg);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .plan-action .btn:hover {
@@ -520,65 +496,7 @@
     color: var(--primary-color);
 }
 
-/* Subscription Benefits */
-.subscription-benefits {
-    text-align: center;
-    margin-top: 5rem;
-}
 
-.subscription-benefits h2 {
-    margin-bottom: 3rem;
-    color: var(--text-primary);
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.benefits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2.5rem;
-}
-
-.benefit-item {
-    padding: 2rem;
-    text-align: center;
-    background: var(--bg-tertiary);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-}
-
-.benefit-item:hover {
-    transform: translateY(-5px);
-    background: var(--primary-light);
-    border-color: var(--primary-color);
-}
-
-.benefit-item .material-icons {
-    font-size: 3.5rem;
-    color: var(--primary-color);
-    margin-bottom: 1.5rem;
-    background: var(--primary-light);
-    border-radius: 50%;
-    padding: 1rem;
-}
-
-.benefit-item h3 {
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-    font-weight: 600;
-    font-size: 1.2rem;
-}
-
-.benefit-item p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -603,14 +521,7 @@
         font-size: 2.5rem;
     }
 
-    .subscription-benefits h2 {
-        font-size: 2rem;
-    }
 
-    .benefits-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
 }
 </style>
 {% endblock %}

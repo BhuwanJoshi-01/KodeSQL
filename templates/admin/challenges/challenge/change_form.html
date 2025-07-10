@@ -1,0 +1,183 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* Enhanced Multi-Database System Styling */
+.multi-database-header {
+    background: linear-gradient(135deg, #417690, #2c5aa0);
+    color: white;
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.multi-database-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.multi-database-header p {
+    margin: 8px 0 0 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.database-instructions {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.database-instructions h3 {
+    color: #417690;
+    margin-top: 0;
+    font-size: 16px;
+}
+
+.database-instructions ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.database-instructions li {
+    margin: 5px 0;
+    color: #495057;
+}
+
+.add-database-highlight {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+.add-database-highlight strong {
+    color: #856404;
+    font-size: 16px;
+}
+
+/* Inline table enhancements */
+.inline-group h2 {
+    background: #417690;
+    color: white;
+    padding: 12px 15px;
+    margin: 0;
+    border-radius: 6px 6px 0 0;
+    font-size: 16px;
+}
+
+.inline-group .tabular {
+    border: 2px solid #417690;
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="multi-database-header">
+    <h2>🗄️ MULTI-DATABASE CHALLENGE CREATOR</h2>
+    <p>Build powerful SQL challenges with multiple interconnected database tables and complex queries</p>
+</div>
+
+<div class="database-instructions">
+    <h3>🚀 QUICK START GUIDE - Add Multiple Database Tables:</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
+            <h4>1️⃣ BASIC INFO</h4>
+            <p>Fill in challenge title, description, question, hint, and reference query above</p>
+        </div>
+        <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
+            <h4>2️⃣ SCROLL DOWN</h4>
+            <p>Find the "Database Schemas" section below with the prominent ADD button</p>
+        </div>
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; border-left: 4px solid #4caf50;">
+            <h4>3️⃣ ADD TABLES</h4>
+            <p>Click "ADD ANOTHER DATABASE TABLE" for each table you want</p>
+        </div>
+        <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+            <h4>4️⃣ GENERATE</h4>
+            <p>Click "Generate Output JSON" to create expected results</p>
+        </div>
+    </div>
+</div>
+
+<div class="add-database-highlight">
+    <div style="text-align: center; padding: 20px;">
+        <h3 style="color: #d32f2f; margin: 0;">⚡ POWER USER TIPS ⚡</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <strong>🔗 Related Tables:</strong><br>
+                Add 2-3 tables with foreign key relationships for realistic JOIN scenarios
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <strong>📊 Different Data:</strong><br>
+                Run dataset = small test data, Submit dataset = comprehensive validation data
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <strong>🎯 Complex Queries:</strong><br>
+                Reference query can use JOINs, GROUP BY, subqueries across multiple tables
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ block.super }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll to database tables section when page loads if it's a new challenge
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('focus') === 'tables') {
+        setTimeout(() => {
+            const tablesSection = document.querySelector('.inline-group');
+            if (tablesSection) {
+                tablesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                tablesSection.style.border = '3px solid #ffc107';
+                setTimeout(() => {
+                    tablesSection.style.border = '';
+                }, 3000);
+            }
+        }, 500);
+    }
+    
+    // Add visual feedback when tables are added
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && node.classList && node.classList.contains('form-row')) {
+                        // New table form added
+                        node.style.background = '#d4edda';
+                        node.style.border = '2px solid #28a745';
+                        node.style.borderRadius = '6px';
+                        node.style.padding = '10px';
+                        
+                        setTimeout(() => {
+                            node.style.background = '';
+                            node.style.border = '';
+                            node.style.borderRadius = '';
+                            node.style.padding = '';
+                        }, 2000);
+                    }
+                });
+            }
+        });
+    });
+    
+    const inlineGroups = document.querySelectorAll('.inline-group');
+    inlineGroups.forEach(group => {
+        observer.observe(group, { childList: true, subtree: true });
+    });
+});
+</script>
+{% endblock %}

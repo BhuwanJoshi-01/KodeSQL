@@ -5,7 +5,7 @@ class SiteSettings(models.Model):
     """
     Global site settings.
     """
-    site_name = models.CharField(max_length=255, default="SQL Playground")
+    site_name = models.CharField(max_length=255, default="KodeSQL")
     site_description = models.TextField(default="Interactive SQL learning platform")
     maintenance_mode = models.BooleanField(default=False)
     allow_registration = models.BooleanField(default=True)

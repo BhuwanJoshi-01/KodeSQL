@@ -11,7 +11,7 @@
 {% block admin_content %}
 <div class="admin-header">
     <div class="tile-wrap">
-        <div class="admin-header-content">
+        <div class="admin-header-content" style="display: flex; justify-content: space-between; align-items: center;">
             <h1>
                 <span class="material-icons">card_membership</span>
                 Manage Challenge Subscription Plans
@@ -98,46 +98,45 @@
             <div class="plans-grid">
                 {% for plan in plans %}
                     <div class="plan-card {% if not plan.is_active %}inactive{% endif %}">
+                        {% if plan.is_recommended %}
+                            <div class="recommended-badge">
+                                <span class="material-icons">star</span>
+                                Recommended
+                            </div>
+                        {% endif %}
+
                         <div class="plan-header">
-                            <div class="plan-title">
-                                <h3>
-                                    <a href="{% url 'challenges:admin_subscription_plan_detail' plan.id %}">{{ plan.name }}</a>
-                                    {% if plan.is_recommended %}
-                                        <span class="badge badge-recommended">Recommended</span>
-                                    {% endif %}
-                                </h3>
-                                <div class="plan-meta">
-                                    <span class="plan-duration">{{ plan.get_duration_display }}</span>
-                                </div>
+                            <div class="plan-name">
+                                <a href="{% url 'challenges:admin_subscription_plan_detail' plan.id %}">{{ plan.name }}</a>
                             </div>
-                            <div class="plan-status">
-                                {% if plan.is_active %}
-                                    <span class="status-badge active">Active</span>
-                                {% else %}
-                                    <span class="status-badge inactive">Inactive</span>
-                                {% endif %}
-                            </div>
+                            <div class="plan-duration">{{ plan.get_duration_display }}</div>
                         </div>
-                        
+
+                        <div class="plan-status">
+                            {% if plan.is_active %}
+                                <span class="status-badge active">Active</span>
+                            {% else %}
+                                <span class="status-badge inactive">Inactive</span>
+                            {% endif %}
+                        </div>
+
                         <div class="plan-content">
                             <div class="plan-pricing">
                                 <div class="price">
-                                    <span class="current-price">${{ plan.price }}</span>
+                                    <span class="current-price">₹{{ plan.price }}</span>
                                     {% if plan.original_price and plan.original_price > plan.price %}
-                                        <span class="original-price">${{ plan.original_price }}</span>
+                                        <span class="original-price">₹{{ plan.original_price }}</span>
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <div class="plan-description">
                                 <p>{{ plan.description|truncatechars:100 }}{% if plan.description|length > 100 %}...{% endif %}</p>
                             </div>
-                            
+
                             <div class="plan-stats">
-                                <div class="stat">
-                                    <span class="material-icons">people</span>
-                                    <span>{{ plan.subscription_count }} subscribers</span>
-                                </div>
+                                <span class="material-icons">people</span>
+                                <span>{{ plan.subscription_count }} subscribers</span>
                             </div>
                         </div>
                         

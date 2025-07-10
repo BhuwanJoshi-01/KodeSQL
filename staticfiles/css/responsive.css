@@ -1,0 +1,449 @@
+/* Enhanced Modern CSS for SQL Playground */
+
+/* Modern Card Components */
+.modern-card {
+    background: rgba(var(--bg-secondary-rgb), 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(59, 130, 246, 0.5) 50%, 
+        transparent 100%);
+}
+
+.modern-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .modern-card {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced Buttons */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-modern:hover::before {
+    left: 100%;
+}
+
+.btn-modern-outline {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    box-shadow: none;
+}
+
+.btn-modern-outline:hover {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* Modern Form Elements */
+.form-modern {
+    position: relative;
+}
+
+.form-modern input,
+.form-modern textarea,
+.form-modern select {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: rgba(var(--bg-secondary-rgb), 0.8);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.form-modern input:focus,
+.form-modern textarea:focus,
+.form-modern select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+}
+
+.form-modern label {
+    position: absolute;
+    top: 1rem;
+    left: 1.5rem;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    background: var(--bg-primary);
+    padding: 0 0.5rem;
+}
+
+.form-modern input:focus + label,
+.form-modern input:not(:placeholder-shown) + label {
+    top: -0.5rem;
+    font-size: 0.875rem;
+    color: var(--primary-color);
+}
+
+/* Modern Navigation Pills */
+.nav-pills {
+    display: flex;
+    background: rgba(var(--bg-secondary-rgb), 0.8);
+    padding: 0.5rem;
+    border-radius: 50px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-pill {
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+}
+
+.nav-pill.active,
+.nav-pill:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Modern Progress Bar */
+.progress-modern {
+    width: 100%;
+    height: 8px;
+    background: rgba(var(--bg-tertiary-rgb), 0.5);
+    border-radius: 50px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 50px;
+    transition: width 0.5s ease;
+    width: var(--progress, 0%);
+}
+
+/* Modern Badge */
+.badge-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.badge-modern.secondary {
+    background: rgba(var(--bg-tertiary-rgb), 0.8);
+    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Alert */
+.alert-modern {
+    padding: 1.5rem;
+    border-radius: 16px;
+    border-left: 4px solid;
+    background: rgba(var(--bg-secondary-rgb), 0.8);
+    backdrop-filter: blur(10px);
+    margin: 1rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.alert-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.05) 0%, 
+        transparent 100%);
+    pointer-events: none;
+}
+
+.alert-modern.success {
+    border-left-color: var(--success-color);
+    color: var(--success-text);
+}
+
+.alert-modern.error {
+    border-left-color: var(--error-color);
+    color: var(--error-text);
+}
+
+.alert-modern.warning {
+    border-left-color: var(--warning-color);
+    color: var(--warning-text);
+}
+
+.alert-modern.info {
+    border-left-color: var(--info-color);
+    color: var(--info-text);
+}
+
+/* Modern Loading Spinner */
+.spinner-modern {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(var(--primary-color-rgb), 0.3);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Modern Tooltip */
+.tooltip-modern {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-modern::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.tooltip-modern:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modern Grid System */
+.grid-modern {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-modern.dense {
+    grid-auto-flow: dense;
+}
+
+/* Enhanced Adaptive Tile-Wrap Components */
+.tile-wrap-adaptive {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 4vw, 4rem);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Container queries for adaptive layouts */
+@container (max-width: 600px) {
+    .tile-wrap-adaptive {
+        padding: 0 1rem;
+    }
+}
+
+@container (min-width: 601px) and (max-width: 1200px) {
+    .tile-wrap-adaptive {
+        padding: 0 2rem;
+    }
+}
+
+@container (min-width: 1201px) {
+    .tile-wrap-adaptive {
+        padding: 0 3rem;
+    }
+}
+
+/* Adaptive grid system for tile-wrap */
+.tile-wrap-grid {
+    display: grid;
+    gap: clamp(1rem, 3vw, 2rem);
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 4vw, 4rem);
+}
+
+/* Adaptive flex layouts */
+.tile-wrap-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(1rem, 3vw, 2rem);
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 4vw, 4rem);
+}
+
+.tile-wrap-flex > * {
+    flex: 1 1 clamp(250px, 30%, 400px);
+}
+
+/* Responsive tile-wrap modifiers */
+.tile-wrap-mobile-full {
+    padding: 0 0.75rem;
+}
+
+.tile-wrap-tablet-comfortable {
+    padding: 0 1.5rem;
+}
+
+.tile-wrap-desktop-spacious {
+    padding: 0 3rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .tile-wrap-adaptive {
+        padding: 0 0.75rem;
+    }
+
+    .tile-wrap-grid {
+        padding: 0 0.75rem;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+    }
+
+    .tile-wrap-flex {
+        padding: 0 0.75rem;
+        gap: 1rem;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+
+    .btn-modern {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+    }
+
+    .grid-modern {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .nav-pills {
+        flex-direction: column;
+        border-radius: 16px;
+    }
+
+    .nav-pill {
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .tile-wrap-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .tile-wrap-flex {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tile-wrap-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+
+    .tile-wrap-flex > * {
+        flex: 1 1 clamp(300px, 45%, 500px);
+    }
+}
+
+@media (min-width: 1025px) {
+    .tile-wrap-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+
+    .tile-wrap-flex > * {
+        flex: 1 1 clamp(350px, 30%, 600px);
+    }
+}

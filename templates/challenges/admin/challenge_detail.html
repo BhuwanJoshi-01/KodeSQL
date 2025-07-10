@@ -1,11 +1,439 @@
 {% extends "admin_base.html" %}
 {% load static %}
+{% load timezone_filters %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
 {% block extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'css/admin-subscription-plans.css' %}">
+<style>
+/* Compact Challenge Detail Page CSS */
+
+/* Compact Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    border-left: 3px solid var(--primary-color);
+}
+
+.stat-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.stat-item h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0 0 0.25rem 0;
+}
+
+.stat-item p {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.8rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Compact Admin Cards */
+.admin-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+    border-left: 3px solid var(--primary-color);
+}
+
+.admin-card:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.admin-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-card h3 .material-icons {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+/* Compact Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.completed {
+    background: #10b981;
+    color: white;
+}
+
+.status-badge.difficulty-easy {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.difficulty-medium {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.difficulty-hard {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.difficulty-extreme {
+    background: linear-gradient(135deg, #7c2d12, #991b1b);
+    color: white;
+    box-shadow: 0 2px 8px rgba(124, 45, 18, 0.4);
+    border: 1px solid #7c2d12;
+}
+
+.status-badge.status-active {
+    background: #10b981;
+    color: white;
+}
+
+.status-badge.status-inactive {
+    background: #6b7280;
+    color: white;
+}
+
+/* Compact Code Display */
+.admin-card pre {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    overflow-x: auto;
+    color: var(--text-primary);
+    margin: 0.5rem 0;
+}
+
+/* Compact Table Styling */
+.admin-card table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.admin-card table th,
+.admin-card table td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.admin-card table th {
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    font-size: 0.85rem;
+}
+
+.admin-card table td {
+    color: var(--text-secondary);
+}
+
+/* Compact Content Spacing */
+.admin-card p {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.admin-card ul, .admin-card ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.admin-card li {
+    margin: 0.25rem 0;
+}
+
+/* Fix White Background Content Areas */
+.admin-card textarea,
+.admin-card input[type="text"],
+.admin-card input[type="number"],
+.admin-card select {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    border-radius: 6px;
+    padding: 0.5rem;
+}
+
+.admin-card textarea:focus,
+.admin-card input:focus,
+.admin-card select:focus {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--primary-color) !important;
+    outline: none;
+}
+
+/* Fix Content Display Areas */
+.admin-card .content-display,
+.admin-card .result-display,
+.admin-card .query-display {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin: 0.5rem 0;
+    min-height: 60px;
+}
+
+/* Fix Any Remaining White Backgrounds */
+.admin-card div[style*="background"],
+.admin-card div[style*="background-color"] {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Performance Analytics Styling */
+.admin-card .analytics-section {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+}
+
+.admin-card .analytics-section h4,
+.admin-card .analytics-section h5 {
+    color: var(--text-primary) !important;
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.admin-card .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.admin-card .analytics-item {
+    background: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.admin-card .analytics-item .number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color) !important;
+    margin-bottom: 0.25rem;
+}
+
+.admin-card .analytics-item .label {
+    font-size: 0.75rem;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Compact Responsive Design */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .stat-item {
+        padding: 0.75rem;
+    }
+
+    .stat-item h3 {
+        font-size: 1.25rem;
+    }
+
+    .stat-item p {
+        font-size: 0.7rem;
+    }
+
+    .admin-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .admin-card h3 {
+        font-size: 1rem;
+    }
+
+    .admin-card table th,
+    .admin-card table td {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-card .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+
+/* Additional Global Fixes for White Backgrounds */
+* {
+    box-sizing: border-box;
+}
+
+/* Force dark theme on all content areas */
+.admin-card *:not(.status-badge):not(.material-icons) {
+    background-color: transparent !important;
+}
+
+.admin-card .white-bg,
+.admin-card .bg-white,
+.admin-card [style*="background: white"],
+.admin-card [style*="background-color: white"],
+.admin-card [style*="background: #fff"],
+.admin-card [style*="background-color: #fff"] {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Specific fixes for common white background elements */
+.admin-card .card,
+.admin-card .panel,
+.admin-card .box,
+.admin-card .container {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Fix for any inline styles that might be setting white backgrounds */
+.admin-card [style] {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Exception for elements that should keep their styling */
+.admin-card .status-badge,
+.admin-card .btn,
+.admin-card .material-icons {
+    background: revert !important;
+    color: revert !important;
+}
+
+/* Ensure difficulty badges always work */
+.status-badge.difficulty-easy {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+.status-badge.difficulty-medium {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
+}
+
+.status-badge.difficulty-hard {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+}
+
+.status-badge.difficulty-extreme {
+    background: linear-gradient(135deg, #7c2d12, #991b1b) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(124, 45, 18, 0.4) !important;
+    border: 1px solid #7c2d12 !important;
+}
+
+/* Enhanced Challenge Info Grid */
+.challenge-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.info-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.info-value.xp-value {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.info-value.xp-value .material-icons {
+    color: #fbbf24;
+}
+</style>
 {% endblock %}
 
 {% block admin_content %}
@@ -73,21 +501,29 @@
         </div>
         
         <div>
-            <div style="display: grid; gap: 1rem;">
-                <div>
-                    <strong>Difficulty:</strong>
+            <div class="challenge-info-grid">
+                <div class="info-item">
+                    <span class="info-label">Difficulty:</span>
                     <span class="status-badge difficulty-{{ challenge.difficulty }}">
                         {{ challenge.get_difficulty_display }}
                     </span>
                 </div>
-                <div>
-                    <strong>Status:</strong>
+                <div class="info-item">
+                    <span class="info-label">Status:</span>
                     <span class="status-badge {% if challenge.is_active %}status-active{% else %}status-inactive{% endif %}">
                         {% if challenge.is_active %}Active{% else %}Inactive{% endif %}
                     </span>
                 </div>
-                <div>
-                    <strong>Order:</strong> {{ challenge.order }}
+                <div class="info-item">
+                    <span class="info-label">Order:</span>
+                    <span class="info-value">{{ challenge.order }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">XP Reward:</span>
+                    <span class="info-value xp-value">
+                        <span class="material-icons" style="font-size: 16px;">stars</span>
+                        {{ challenge.xp }} XP
+                    </span>
                 </div>
                 {% if challenge.sample_data %}
                     <div>
@@ -194,8 +630,8 @@
     <h3>Challenge Metadata</h3>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
         <div>
-            <p><strong>Created:</strong> {{ challenge.created_at|date:"F d, Y \a\t g:i A" }}</p>
-            <p><strong>Last Updated:</strong> {{ challenge.updated_at|date:"F d, Y \a\t g:i A" }}</p>
+            <p><strong>Created:</strong> {{ challenge.created_at|format_indian_datetime:"F d, Y \a\t g:i A" }}</p>
+            <p><strong>Last Updated:</strong> {{ challenge.updated_at|format_indian_datetime:"F d, Y \a\t g:i A" }}</p>
         </div>
         <div>
             <p><strong>Challenge ID:</strong> {{ challenge.id }}</p>

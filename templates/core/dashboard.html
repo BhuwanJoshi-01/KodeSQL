@@ -13,195 +13,322 @@
         <!-- Header -->
         <div class="dashboard-header">
             <div class="dashboard-title">
-                <h1>Welcome back, {% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %}!</h1>
-                <p class="dashboard-subtitle">Here's your SQL learning progress</p>
+                <h1>
+                    <span class="material-icons">dashboard</span>
+                    Welcome back, {% if request.user.first_name %}{{ request.user.first_name }}{% else %}{{ request.user.username }}{% endif %}!
+                </h1>
+                <p class="dashboard-subtitle">Master SQL challenges and climb the leaderboard</p>
             </div>
             <div class="dashboard-actions">
-                <a href="{% url 'core:home' %}" class="btn btn-primary">
-                    <span class="material-icons">code</span>
-                    Start Coding
+                <a href="{% url 'challenges:challenges_list' %}" class="btn btn-primary">
+                    <span class="material-icons">quiz</span>
+                    Start Challenges
                 </a>
             </div>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- XP Stats Grid -->
+        <div class="admin-stats-grid">
+            <div class="stat-card xp-card">
+                <div class="stat-icon">
+                    <span class="material-icons">stars</span>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ total_xp }}</h3>
+                    <p>Total XP Earned</p>
+                    {% if total_xp > 0 %}
+                    <div class="xp-breakdown" style="margin-top: 0.5rem;">
+                        <span>{{ total_xp|floatformat:0 }} XP from {{ completed_challenges }} challenges</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="stat-card">
                 <div class="stat-icon">
-                    <span class="material-icons">query_stats</span>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ stats.total_queries }}</div>
-                    <div class="stat-label">Total Queries</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon success">
-                    <span class="material-icons">check_circle</span>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ stats.successful_queries }}</div>
-                    <div class="stat-label">Successful Queries</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon warning">
-                    <span class="material-icons">bookmark</span>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ stats.saved_queries_count }}</div>
-                    <div class="stat-label">Saved Queries</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon info">
                     <span class="material-icons">emoji_events</span>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-number">{{ stats.completed_challenges }}</div>
-                    <div class="stat-label">Challenges Completed</div>
+                    <h3>{{ completed_challenges }}</h3>
+                    <p>Challenges Completed</p>
                 </div>
             </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-icons">local_fire_department</span>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ current_streak }}</h3>
+                    <p>Day Streak</p>
+                </div>
+            </div>
+
+            {% if user_rank %}
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-icons">leaderboard</span>
+                </div>
+                <div class="stat-content">
+                    <h3>#{{ user_rank }}</h3>
+                    <p>Global Rank</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-icons">trending_up</span>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ completion_percentage|floatformat:1 }}%</h3>
+                    <p>Progress</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Main Content Grid -->
-        <div class="dashboard-content grid grid-cols-1 lg:grid-cols-3">
-            <!-- Recent Activity -->
-            <div class="dashboard-section lg:col-span-2">
+        <div class="dashboard-content">
+            <!-- Difficulty Progress -->
+            <div class="dashboard-section">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Recent Query History</h3>
-                        <a href="{% url 'core:home' %}" class="btn btn-secondary btn-sm">View All</a>
+                        <h3 class="card-title">
+                            <span class="material-icons">trending_up</span>
+                            Progress by Difficulty
+                        </h3>
                     </div>
-                    <div class="recent-queries">
-                        {% if recent_queries %}
-                            {% for query in recent_queries %}
-                                <div class="query-item">
-                                    <div class="query-content">
-                                        <div class="query-text">{{ query.query|truncatechars:100 }}{% if query.query|length > 80 %}...{% endif %}</div>
-                                        <div class="query-meta">
-                                            <span class="query-time">{{ query.executed_at|date:"%b %d, %Y %H:%M" }}</span>
-                                            <span class="query-status {% if query.success %}success{% else %}error{% endif %}">
-                                                <span class="material-icons">
-                                                    {% if query.success %}check_circle{% else %}error{% endif %}
-                                                </span>
-                                                {% if query.success %}Success{% else %}Error{% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="empty-state">
-                                <span class="material-icons">history</span>
-                                <p>No queries executed yet</p>
-                                <a href="{% url 'core:home' %}" class="btn btn-primary">Start Writing SQL</a>
+                    <div class="difficulty-progress">
+                        {% for difficulty, stats in difficulty_stats.items %}
+                        <div class="difficulty-item">
+                            <div class="difficulty-header">
+                                <span class="difficulty-badge difficulty-{{ difficulty }}">{{ difficulty|title }}</span>
+                                <span class="difficulty-stats">{{ stats.completed }}/{{ stats.total }}</span>
                             </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ stats.percentage }}%"></div>
+                            </div>
+                            <div class="difficulty-details">
+                                <span>{{ stats.percentage|floatformat:1 }}% completed</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+
+                <!-- Leaderboard -->
+                <div class="card leaderboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="material-icons">leaderboard</span>
+                            XP Leaderboard
+                        </h3>
+                        <div class="leaderboard-info" style="font-size: 0.8rem; color: var(--text-secondary);">
+                            Top performers this month
+                        </div>
+                    </div>
+                    <div class="leaderboard-list">
+                        {% if leaderboard %}
+                        {% for entry in leaderboard %}
+                        <div
+                            class="leaderboard-item {% if entry.user.username == request.user.username %}current-user{% endif %}">
+                            <div class="rank">
+                                {% if forloop.counter <= 3 %}
+                                <span class="material-icons rank-icon rank-{{ forloop.counter }}">
+                                    {% if forloop.counter == 1 %}emoji_events{% elif forloop.counter == 2 %}military_tech{% else %}workspace_premium{% endif %}
+                                </span>
+                                    {% else %}
+                                    <span class="rank-number">#{{ forloop.counter }}</span>
+                                    {% endif %}
+                            </div>
+
+                            <!-- Profile Picture -->
+                            <div class="user-avatar">
+                                {% if entry.user.profile.profile_picture %}
+                                <img src="{{ entry.user.profile.profile_picture.url }}" alt="Profile Picture"
+                                    class="leaderboard-avatar">
+                                {% else %}
+                                <div class="leaderboard-default-avatar">
+                                    {% if entry.user.first_name %}
+                                    {{ entry.user.first_name|first|upper }}
+                                    {% else %}
+                                    {{ entry.user.username|first|upper }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="user-info">
+                                <div class="username">
+                                    {% if entry.user.first_name %}
+                                    {{ entry.user.first_name }} {{ entry.user.last_name|default:"" }}
+                                    {% else %}
+                                    {{ entry.user.username }}
+                                    {% endif %}
+                                    {% if entry.user.username == request.user.username %}
+                                    <span class="you-badge">You</span>
+                                    {% endif %}
+                                </div>
+                                <div class="user-stats">
+                                    <span class="xp-amount">
+                                        <span class="material-icons" style="font-size: 14px;">stars</span>
+                                        {{ entry.total_xp }} XP
+                                    </span>
+                                    <span class="challenges-count">
+                                        <span class="material-icons" style="font-size: 14px;">quiz</span>
+                                        {{ entry.challenges_completed }} solved
+                                    </span>
+                                </div>
+                            </div>
+                            {% if forloop.counter <= 3 %} <div class="achievement-badge">
+                                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}
+                        </div>
                         {% endif %}
                     </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <span class="material-icons">leaderboard</span>
+                        <p>No rankings yet</p>
+                        <p class="text-sm">Complete challenges to appear on the leaderboard!</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Progress & Quick Actions -->
-            <div class="dashboard-sidebar">
-                <!-- Progress Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Learning Progress</h3>
-                    </div>
-                    <div class="progress-content">
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Tutorials</span>
-                                <span>{{ stats.completed_tutorials }}/{{ stats.total_tutorials }}</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {% if stats.total_tutorials > 0 %}{{ stats.tutorial_progress_percentage }}%{% else %}0%{% endif %}"></div>
-                            </div>
-                        </div>
 
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Challenges</span>
-                                <span>{{ stats.completed_challenges }}/{{ stats.total_challenges }}</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: {% if stats.total_challenges > 0 %}{{ stats.challenge_progress_percentage }}%{% else %}0%{% endif %}"></div>
-                            </div>
-                        </div>
-
-                        <div class="progress-item">
-                            <div class="progress-label">
-                                <span>Success Rate</span>
-                                <span>{% if stats.total_queries > 0 %}{{ stats.success_rate_percentage }}%{% else %}0%{% endif %}</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill success" style="width: {% if stats.total_queries > 0 %}{{ stats.success_rate_percentage }}%{% else %}0%{% endif %}"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Quick Actions</h3>
-                    </div>
-                    <div class="quick-actions">
-                        <a href="{% url 'tutorials:tutorials_list' %}" class="action-item">
-                            <span class="material-icons">school</span>
-                            <div class="action-content">
-                                <div class="action-title">Continue Learning</div>
-                                <div class="action-subtitle">Browse tutorials</div>
-                            </div>
-                        </a>
-
-                        <a href="{% url 'challenges:challenges_list' %}" class="action-item">
-                            <span class="material-icons">emoji_events</span>
-                            <div class="action-content">
-                                <div class="action-title">Take Challenge</div>
-                                <div class="action-subtitle">Test your skills</div>
-                            </div>
-                        </a>
-
-                        <a href="{% url 'editor:sql_editor' %}" class="action-item">
-                            <span class="material-icons">code</span>
-                            <div class="action-content">
-                                <div class="action-title">SQL Editor</div>
-                                <div class="action-subtitle">Write and execute queries</div>
-                            </div>
-                        </a>
-
-                        <a href="{% url 'users:profile' %}" class="action-item">
-                            <span class="material-icons">settings</span>
-                            <div class="action-content">
-                                <div class="action-title">Settings</div>
-                                <div class="action-subtitle">Manage your account</div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
         </div>
+
+        <!-- Recent Achievements -->
+        <div class="dashboard-section" style="gap: 20px; display: flex; flex-direction: column;">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="material-icons">emoji_events</span>
+                        Recent Achievements
+                    </h3>
+                    <a href="{% url 'challenges:challenges_list' %}" class="btn btn-secondary btn-sm">View All</a>
+                </div>
+                <div class="achievements-list">
+                    {% if recent_achievements %}
+                    {% for progress in recent_achievements %}
+                    <div class="achievement-item">
+                        <div class="achievement-icon">
+                            <span class="material-icons">star</span>
+                        </div>
+                        <div class="achievement-content">
+                            <div class="achievement-title">{{ progress.challenge.title }}</div>
+                            <div class="achievement-meta">
+                                <span class="difficulty-badge difficulty-{{ progress.challenge.difficulty }}">
+                                    {{ progress.challenge.difficulty|title }}
+                                </span>
+                                <span class="xp-earned">+{{ progress.xp_earned }} XP</span>
+                                <span class="achievement-time">{{ progress.completed_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <span class="material-icons">emoji_events</span>
+                        <p>No challenges completed yet</p>
+                        <a href="{% url 'challenges:challenges_list' %}" class="btn btn-primary">Start Your First
+                            Challenge</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            <!-- Subscription Status -->
+            {% if user_subscription %}
+
+            <div class="card subscription-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="material-icons">workspace_premium</span>
+                        Premium Access
+                    </h3>
+                    <span class="status-badge active">Active</span>
+                </div>
+                <div class="subscription-content">
+                    <div class="subscription-info">
+                        <div class="plan-name">{{ user_subscription.plan.name }}</div>
+                        <div class="plan-details">
+                            {% if user_subscription.end_date %}
+                            <span>Expires: {{ user_subscription.end_date|date:"M d, Y" }}</span>
+                            {% else %}
+                            <span>Unlimited Access</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="subscription-actions">
+                        <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-secondary btn-sm">
+                            Manage Subscription
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="card upgrade-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="material-icons">lock</span>
+                        Unlock Premium Challenges
+                    </h3>
+                </div>
+                <div class="upgrade-content">
+                    <p>Get access to premium challenges and boost your SQL skills!</p>
+                    <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary">
+                        <span class="material-icons">upgrade</span>
+                        Upgrade Now
+                    </a>
+                </div>
+            </div>
+
+            {% endif %}
+
+
+        </div>
+
+
+
+
+
+
+
     </div>
+</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Animate progress bars
-    const progressBars = document.querySelectorAll('.progress-fill');
-    progressBars.forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0%';
-        setTimeout(() => {
-            bar.style.width = width;
-        }, 500);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Animate progress bars
+        const progressBars = document.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 500);
+        });
+
+        // Animate stat cards on load
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
     });
-});
 </script>
 {% endblock %}

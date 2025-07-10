@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load timezone_filters %}
 
 {% block title %}{{ page_title }} - SQL Playground{% endblock %}
 
@@ -41,24 +42,24 @@
                     </div>
                     <div class="item-price">
                         {% if plan.has_discount %}
-                            <div class="original-price">${{ plan.original_price }}</div>
+                            <div class="original-price">₹{{ plan.original_price }}</div>
                         {% endif %}
-                        <div class="current-price">${{ plan.effective_price }}</div>
+                        <div class="current-price">₹{{ plan.effective_price }}</div>
                     </div>
                 </div>
                 
                 <div class="summary-total">
                     <div class="total-row">
                         <span>Subtotal:</span>
-                        <span>${{ plan.effective_price }}</span>
+                        <span>₹{{ plan.effective_price }}</span>
                     </div>
                     <div class="total-row">
                         <span>Tax:</span>
-                        <span>$0.00</span>
+                        <span>₹0.00</span>
                     </div>
                     <div class="total-row final-total">
                         <span>Total:</span>
-                        <span>${{ plan.effective_price }}</span>
+                        <span>₹{{ plan.effective_price }}</span>
                     </div>
                 </div>
             </div>
@@ -68,24 +69,24 @@
                 <h2>Payment Information</h2>
 
                 <div class="payment-methods">
-                    <h3>Secure Payment with Stripe</h3>
-                    <div class="stripe-info">
+                    <h3>Secure Payment with Razorpay</h3>
+                    <div class="razorpay-info">
                         <div class="info-box">
                             <span class="material-icons">security</span>
                             <div>
                                 <h4>Secure Payment Processing</h4>
-                                <p>Your payment is processed securely through Stripe. We never store your credit card information.</p>
+                                <p>Your payment is processed securely through Razorpay. We never store your payment information.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <form method="post" action="{% url 'challenges:create_stripe_checkout' plan.id %}" id="stripe-checkout-form">
+                    <form method="post" action="{% url 'challenges:create_razorpay_checkout' subscription.id %}" id="razorpay-checkout-form">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary btn-large">
                             <span class="material-icons">credit_card</span>
-                            Pay with Stripe - ${{ plan.effective_price }}
+                            Pay with Razorpay - ₹{{ plan.effective_price }}
                         </button>
                     </form>
 
@@ -96,7 +97,7 @@
                     {% if subscription.pending_expires_at %}
                     <div class="expiration-notice">
                         <span class="material-icons">schedule</span>
-                        This payment link expires on {{ subscription.pending_expires_at|date:"M d, Y g:i A" }}
+                        This payment link expires on {{ subscription.pending_expires_at|format_indian_datetime:"M d, Y g:i A" }}
                     </div>
                     {% endif %}
                 </div>
@@ -366,6 +367,18 @@
     align-items: center;
 }
 
+.form-actions .btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
 .btn-large {
     padding: 1rem 2rem;
     font-size: 1.1rem;
@@ -453,12 +466,12 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('stripe-checkout-form');
+    const form = document.getElementById('razorpay-checkout-form');
     const submitBtn = form.querySelector('button[type="submit"]');
 
     form.addEventListener('submit', function(e) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Redirecting to Stripe...';
+        submitBtn.innerHTML = '<span class="material-icons">hourglass_empty</span> Redirecting to Razorpay...';
     });
 });
 </script>

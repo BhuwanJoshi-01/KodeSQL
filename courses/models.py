@@ -525,7 +525,12 @@ class SubscriptionPlan(models.Model):
     """Subscription plans for courses"""
     DURATION_CHOICES = [
         ('1_month', '1 Month'),
+        ('2_months', '2 Months'),
         ('3_months', '3 Months'),
+        ('6_months', '6 Months'),
+        ('9_months', '9 Months'),
+        ('12_months', '12 Months'),
+        ('24_months', '24 Months'),
         ('unlimited', 'Unlimited'),
     ]
 
@@ -578,7 +583,12 @@ class SubscriptionPlan(models.Model):
         """Get duration in days"""
         duration_map = {
             '1_month': 30,
+            '2_months': 60,
             '3_months': 90,
+            '6_months': 180,
+            '9_months': 270,
+            '12_months': 365,
+            '24_months': 730,
             'unlimited': None,
         }
         return duration_map.get(self.duration)

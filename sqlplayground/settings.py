@@ -35,8 +35,50 @@ SECRET_KEY = os.environ.get('SECRET_KEY', "django-insecure-s2e78lrr*0ta0brx-j2wi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else ['localhost', '127.0.0.1', 'testserver']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else ['kodesql.in', 'www.kodesql.in', 'localhost', '127.0.0.1', 'testserver']
 
+# =============================================================================
+# CORS CONFIGURATION
+# =============================================================================
+
+# CORS settings for production and development access
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else [
+    "https://kodesql.in",
+    "https://www.kodesql.in",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8007",
+    "http://localhost:8007",
+]
+
+# Allow all origins in development (be careful in production)
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False').lower() == 'true'
+
+# Allow credentials to be included in CORS requests
+CORS_ALLOW_CREDENTIALS = os.environ.get('CORS_ALLOW_CREDENTIALS', 'True').lower() == 'true'
+
+# Allow specific headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Allow specific methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 # Application definition
 
@@ -51,11 +93,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
 
     # Third-party apps
+    "corsheaders",
     "django_ckeditor_5",
     "import_export",
     "django_cleanup.apps.CleanupConfig",
+
+    # Django Allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 
     # Local apps
     "core",
@@ -68,12 +118,16 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # WhiteNoise for static files
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",  # Django Allauth middleware
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
 ]
 
 ROOT_URLCONF = "sqlplayground.urls"
@@ -97,19 +151,61 @@ TEMPLATES = [
 WSGI_APPLICATION = "sqlplayground.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+# Multi-database setup for SQL Playground:
+# - Primary PostgreSQL: Django models (users, challenges, progress, etc.)
+# - Query PostgreSQL: SQL challenge execution for PostgreSQL engine
+# - Query MySQL: SQL challenge execution for MySQL engine
 
 DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3'),
-        "NAME": BASE_DIR / os.environ.get('DATABASE_NAME', 'db.sqlite3') if os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3') == 'django.db.backends.sqlite3' else os.environ.get('DATABASE_NAME', ''),
-        "HOST": os.environ.get('DATABASE_HOST', ''),
-        "PORT": os.environ.get('DATABASE_PORT', ''),
-        "USER": os.environ.get('DATABASE_USER', ''),
-        "PASSWORD": os.environ.get('DATABASE_PASSWORD', ''),
+    # Primary database for all Django models and website data
+    'default': {
+        'ENGINE': os.environ.get('PRIMARY_DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.environ.get('PRIMARY_DB_NAME', 'sqlplayground_main'),
+        'HOST': os.environ.get('PRIMARY_DB_HOST', 'localhost'),
+        'PORT': os.environ.get('PRIMARY_DB_PORT', '5432'),
+        'USER': os.environ.get('PRIMARY_DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('PRIMARY_DB_PASSWORD', ''),
+        'OPTIONS': {},
+        'CONN_MAX_AGE': 0,
+        'CONN_HEALTH_CHECKS': False,
+    },
+
+    # Secondary PostgreSQL database for query execution
+    'query_postgres': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('QUERY_POSTGRES_DB_NAME', 'sqlplayground_queries_pg'),
+        'HOST': os.environ.get('QUERY_POSTGRES_HOST', 'localhost'),
+        'PORT': os.environ.get('QUERY_POSTGRES_PORT', '5432'),
+        'USER': os.environ.get('QUERY_POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.environ.get('QUERY_POSTGRES_PASSWORD', ''),
+        'OPTIONS': {},
+        'CONN_MAX_AGE': 0,
+        'CONN_HEALTH_CHECKS': False,
+    },
+
+    # MySQL database for query execution
+    # Note: Uncomment when deploying to hosting service with MySQL support
+    'query_mysql': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('QUERY_MYSQL_DB_NAME', 'sqlplayground_queries_mysql'),
+        'HOST': os.environ.get('QUERY_MYSQL_HOST', 'localhost'),
+        'PORT': os.environ.get('QUERY_MYSQL_PORT', '3306'),
+        'USER': os.environ.get('QUERY_MYSQL_USER', 'root'),
+        'PASSWORD': os.environ.get('QUERY_MYSQL_PASSWORD', 'forgex99'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+        'CONN_MAX_AGE': 0,
+        'CONN_HEALTH_CHECKS': False,
     }
 }
+
+# Database Router for directing queries to appropriate databases
+DATABASE_ROUTERS = ['sqlplayground.routers.DatabaseRouter']
 
 
 # Password validation
@@ -152,6 +248,9 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# WhiteNoise configuration for serving static files in production
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # Media files
 MEDIA_URL = os.environ.get('MEDIA_URL', '/media/')
 MEDIA_ROOT = BASE_DIR / "media"
@@ -166,8 +265,26 @@ AUTH_USER_MODEL = "users.User"
 
 # Login/Logout URLs
 LOGIN_URL = "/auth/login/"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
+
+# Django Sites Framework
+SITE_ID = 1
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+
+
+
+
+# Login/Logout URLs
+LOGIN_URL = '/auth/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/challenges/'
 
 # Email Configuration
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
@@ -176,20 +293,25 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')  # Your Gmail address
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # Your Gmail App Password
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SQL Playground <noreply@sqlplayground.com>')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'KodeSQL <noreply@kodesql.com>')
 
 # For development, you can also use console backend to see emails in terminal
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# Stripe Payment Gateway Settings
-STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "pk_test_51RfhCjRn9gJUDL8d3zAbYQmqBM4irMCtLdt9cTpAR7cBZCRIqG4TpItoGuoakHvT2Ao30blthxbwjJl2hNRje5T5002RfQDrZq")
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "sk_test_51RfhCjRn9gJUDL8dtKvoe4UsNByCLne2YXHs5sBg2718erSVB3ErbjbHxrIwGOlUzNSZ2ZZFRvwL2RL31OO4DMsc00IGNEEQbO")
-STRIPE_CURRENCY = os.environ.get("STRIPE_CURRENCY", "usd")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_LIVE_MODE = os.environ.get('STRIPE_LIVE_MODE', 'False').lower() == 'true'
+# Razorpay Payment Gateway Settings
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_Pga5LHwoLA4ii2")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "klHsZRbqTLLgWzwnB3G2bNhp")
+RAZORPAY_CURRENCY = os.environ.get("RAZORPAY_CURRENCY", "INR")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+RAZORPAY_LIVE_MODE = os.environ.get('RAZORPAY_LIVE_MODE', 'False').lower() == 'true'
 
-# Site URL for Stripe redirects
-SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+# Site URL for Razorpay redirects and email links
+# Production URL for kodesql.in
+SITE_URL = os.environ.get('SITE_URL', 'https://kodesql.in')
+
+# Base URL for email links (can be different from SITE_URL if needed)
+# This ensures verification emails and other email links use the correct domain/port
+EMAIL_BASE_URL = os.environ.get('EMAIL_BASE_URL', SITE_URL)
 
 # Messages Framework
 MESSAGE_TAGS = {
@@ -200,366 +322,51 @@ MESSAGE_TAGS = {
     messages.ERROR: 'error',
 }
 
-# User Database Settings
-USER_DATABASES_DIR = BASE_DIR / "user_databases"
-if not USER_DATABASES_DIR.exists():
-    USER_DATABASES_DIR.mkdir(exist_ok=True)
+# =============================================================================
+# SQL CHALLENGE EXECUTION SETTINGS
+# =============================================================================
 
-# Challenge Database Engine Settings
-CHALLENGE_POSTGRES_HOST = os.environ.get('CHALLENGE_POSTGRES_HOST', 'localhost')
-CHALLENGE_POSTGRES_PORT = int(os.environ.get('CHALLENGE_POSTGRES_PORT', '5432'))
-CHALLENGE_POSTGRES_USER = os.environ.get('CHALLENGE_POSTGRES_USER', 'postgres')
-CHALLENGE_POSTGRES_PASSWORD = os.environ.get('CHALLENGE_POSTGRES_PASSWORD', 'password')
+# Database connection settings for SQL challenge query execution
+# These settings are used by the challenge execution engine to connect to
+# the appropriate databases for running user SQL queries
 
-CHALLENGE_MYSQL_HOST = os.environ.get('CHALLENGE_MYSQL_HOST', 'localhost')
-CHALLENGE_MYSQL_PORT = int(os.environ.get('CHALLENGE_MYSQL_PORT', '3306'))
-CHALLENGE_MYSQL_USER = os.environ.get('CHALLENGE_MYSQL_USER', 'root')
-CHALLENGE_MYSQL_PASSWORD = os.environ.get('CHALLENGE_MYSQL_PASSWORD', 'password')
+# PostgreSQL connection settings for challenge execution
+POSTGRESQL_HOST = os.environ.get('QUERY_POSTGRES_HOST', 'localhost')
+POSTGRESQL_PORT = int(os.environ.get('QUERY_POSTGRES_PORT', '5432'))
+POSTGRESQL_USER = os.environ.get('QUERY_POSTGRES_USER', 'postgres')
+POSTGRESQL_PASSWORD = os.environ.get('QUERY_POSTGRES_PASSWORD', '')
+POSTGRESQL_DB = os.environ.get('QUERY_POSTGRES_DB_NAME', 'sqlplayground_queries_pg')
 
-# Predefined Database Schemas for Challenges
-CHALLENGE_DATABASE_SCHEMAS = {
-    'employees': {
-        'name': 'Employee Database',
-        'description': 'Standard employee database with departments and salaries',
-        'schema': {
-            "tables": {
-                "employees": {
-                    "columns": [
-                        {"name": "id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "name", "type": "TEXT"},
-                        {"name": "department", "type": "TEXT"},
-                        {"name": "salary", "type": "INTEGER"}
-                    ]
-                }
-            }
-        },
-        'initialization_sql': {
-            'sqlite': """
-                CREATE TABLE IF NOT EXISTS employees (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT,
-                    department TEXT,
-                    salary INTEGER
-                );
+# MySQL connection settings for challenge execution
+MYSQL_HOST = os.environ.get('QUERY_MYSQL_HOST', 'localhost')
+MYSQL_PORT = int(os.environ.get('QUERY_MYSQL_PORT', '3306'))
+MYSQL_USER = os.environ.get('QUERY_MYSQL_USER', 'root')
+MYSQL_PASSWORD = os.environ.get('QUERY_MYSQL_PASSWORD', 'forgex99')
+MYSQL_DB = os.environ.get('QUERY_MYSQL_DB_NAME', 'sqlplayground_queries_mysql')
 
-                INSERT OR REPLACE INTO employees (id, name, department, salary) VALUES
-                (1, 'John Doe', 'Engineering', 75000),
-                (2, 'Jane Smith', 'Marketing', 65000),
-                (3, 'Bob Johnson', 'Engineering', 80000),
-                (4, 'Alice Brown', 'HR', 60000),
-                (5, 'Charlie Wilson', 'Sales', 70000);
-            """,
-            'postgresql': """
-                CREATE TABLE IF NOT EXISTS employees (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255),
-                    department VARCHAR(255),
-                    salary INTEGER
-                );
 
-                INSERT INTO employees (id, name, department, salary) VALUES
-                (1, 'John Doe', 'Engineering', 75000),
-                (2, 'Jane Smith', 'Marketing', 65000),
-                (3, 'Bob Johnson', 'Engineering', 80000),
-                (4, 'Alice Brown', 'HR', 60000),
-                (5, 'Charlie Wilson', 'Sales', 70000)
-                ON CONFLICT (id) DO UPDATE SET
-                name = EXCLUDED.name,
-                department = EXCLUDED.department,
-                salary = EXCLUDED.salary;
-            """,
-            'mysql': """
-                CREATE TABLE IF NOT EXISTS employees (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    name VARCHAR(255),
-                    department VARCHAR(255),
-                    salary INTEGER
-                );
 
-                INSERT INTO employees (id, name, department, salary) VALUES
-                (1, 'John Doe', 'Engineering', 75000),
-                (2, 'Jane Smith', 'Marketing', 65000),
-                (3, 'Bob Johnson', 'Engineering', 80000),
-                (4, 'Alice Brown', 'HR', 60000),
-                (5, 'Charlie Wilson', 'Sales', 70000)
-                ON DUPLICATE KEY UPDATE
-                name = VALUES(name),
-                department = VALUES(department),
-                salary = VALUES(salary);
-            """
-        }
-    },
-    'ecommerce': {
-        'name': 'E-commerce Database',
-        'description': 'Orders and returns database for e-commerce challenges',
-        'schema': {
-            "tables": {
-                "orders": {
-                    "columns": [
-                        {"name": "customer_name", "type": "TEXT"},
-                        {"name": "order_date", "type": "DATE"},
-                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "sales", "type": "INTEGER"}
-                    ]
-                },
-                "returns": {
-                    "columns": [
-                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "return_date", "type": "DATE"}
-                    ]
-                }
-            }
-        },
-        'initialization_sql': {
-            'sqlite': """
-                CREATE TABLE IF NOT EXISTS orders (
-                    customer_name TEXT,
-                    order_date DATE,
-                    order_id INTEGER PRIMARY KEY,
-                    sales INTEGER
-                );
+# =============================================================================
+# SECURITY SETTINGS
+# =============================================================================
 
-                CREATE TABLE IF NOT EXISTS returns (
-                    order_id INTEGER PRIMARY KEY,
-                    return_date DATE
-                );
-
-                INSERT OR REPLACE INTO orders (customer_name, order_date, order_id, sales) VALUES
-                ('Alice Johnson', '2023-01-15', 1001, 250),
-                ('Bob Smith', '2023-01-16', 1002, 180),
-                ('Charlie Brown', '2023-01-17', 1003, 320),
-                ('Diana Prince', '2023-01-18', 1004, 150),
-                ('Eve Wilson', '2023-01-19', 1005, 275);
-
-                INSERT OR REPLACE INTO returns (order_id, return_date) VALUES
-                (1002, '2023-01-20'),
-                (1004, '2023-01-22');
-            """,
-            'postgresql': """
-                CREATE TABLE IF NOT EXISTS orders (
-                    customer_name VARCHAR(255),
-                    order_date DATE,
-                    order_id SERIAL PRIMARY KEY,
-                    sales INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS returns (
-                    order_id INTEGER PRIMARY KEY,
-                    return_date DATE
-                );
-
-                INSERT INTO orders (customer_name, order_date, order_id, sales) VALUES
-                ('Alice Johnson', '2023-01-15', 1001, 250),
-                ('Bob Smith', '2023-01-16', 1002, 180),
-                ('Charlie Brown', '2023-01-17', 1003, 320),
-                ('Diana Prince', '2023-01-18', 1004, 150),
-                ('Eve Wilson', '2023-01-19', 1005, 275)
-                ON CONFLICT (order_id) DO NOTHING;
-
-                INSERT INTO returns (order_id, return_date) VALUES
-                (1002, '2023-01-20'),
-                (1004, '2023-01-22')
-                ON CONFLICT (order_id) DO NOTHING;
-            """,
-            'mysql': """
-                CREATE TABLE IF NOT EXISTS orders (
-                    customer_name VARCHAR(255),
-                    order_date DATE,
-                    order_id INT AUTO_INCREMENT PRIMARY KEY,
-                    sales INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS returns (
-                    order_id INTEGER PRIMARY KEY,
-                    return_date DATE
-                );
-
-                INSERT IGNORE INTO orders (customer_name, order_date, order_id, sales) VALUES
-                ('Alice Johnson', '2023-01-15', 1001, 250),
-                ('Bob Smith', '2023-01-16', 1002, 180),
-                ('Charlie Brown', '2023-01-17', 1003, 320),
-                ('Diana Prince', '2023-01-18', 1004, 150),
-                ('Eve Wilson', '2023-01-19', 1005, 275);
-
-                INSERT IGNORE INTO returns (order_id, return_date) VALUES
-                (1002, '2023-01-20'),
-                (1004, '2023-01-22');
-            """
-        }
-    },
-    'students': {
-        'name': 'Student Database',
-        'description': 'Student enrollment and grades database',
-        'schema': {
-            "tables": {
-                "students": {
-                    "columns": [
-                        {"name": "student_id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "name", "type": "TEXT"},
-                        {"name": "major", "type": "TEXT"},
-                        {"name": "year", "type": "INTEGER"}
-                    ]
-                },
-                "courses": {
-                    "columns": [
-                        {"name": "course_id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "course_name", "type": "TEXT"},
-                        {"name": "credits", "type": "INTEGER"}
-                    ]
-                },
-                "enrollments": {
-                    "columns": [
-                        {"name": "student_id", "type": "INTEGER"},
-                        {"name": "course_id", "type": "INTEGER"},
-                        {"name": "grade", "type": "TEXT"}
-                    ]
-                }
-            }
-        },
-        'initialization_sql': {
-            'sqlite': """
-                CREATE TABLE IF NOT EXISTS students (
-                    student_id INTEGER PRIMARY KEY,
-                    name TEXT,
-                    major TEXT,
-                    year INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS courses (
-                    course_id INTEGER PRIMARY KEY,
-                    course_name TEXT,
-                    credits INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS enrollments (
-                    student_id INTEGER,
-                    course_id INTEGER,
-                    grade TEXT,
-                    FOREIGN KEY (student_id) REFERENCES students(student_id),
-                    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-                );
-
-                INSERT OR REPLACE INTO students VALUES
-                (1, 'Alice Johnson', 'Computer Science', 3),
-                (2, 'Bob Smith', 'Mathematics', 2),
-                (3, 'Charlie Brown', 'Physics', 4),
-                (4, 'Diana Prince', 'Computer Science', 1),
-                (5, 'Eve Wilson', 'Mathematics', 3);
-
-                INSERT OR REPLACE INTO courses VALUES
-                (101, 'Database Systems', 3),
-                (102, 'Algorithms', 4),
-                (103, 'Calculus I', 3),
-                (104, 'Physics I', 4);
-
-                INSERT OR REPLACE INTO enrollments VALUES
-                (1, 101, 'A'),
-                (1, 102, 'B+'),
-                (2, 103, 'A-'),
-                (3, 104, 'B'),
-                (4, 101, 'A-'),
-                (5, 103, 'A');
-            """,
-            'postgresql': """
-                CREATE TABLE IF NOT EXISTS students (
-                    student_id SERIAL PRIMARY KEY,
-                    name VARCHAR(255),
-                    major VARCHAR(255),
-                    year INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS courses (
-                    course_id SERIAL PRIMARY KEY,
-                    course_name VARCHAR(255),
-                    credits INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS enrollments (
-                    student_id INTEGER,
-                    course_id INTEGER,
-                    grade VARCHAR(10),
-                    FOREIGN KEY (student_id) REFERENCES students(student_id),
-                    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-                );
-
-                INSERT INTO students VALUES
-                (1, 'Alice Johnson', 'Computer Science', 3),
-                (2, 'Bob Smith', 'Mathematics', 2),
-                (3, 'Charlie Brown', 'Physics', 4),
-                (4, 'Diana Prince', 'Computer Science', 1),
-                (5, 'Eve Wilson', 'Mathematics', 3)
-                ON CONFLICT (student_id) DO NOTHING;
-
-                INSERT INTO courses VALUES
-                (101, 'Database Systems', 3),
-                (102, 'Algorithms', 4),
-                (103, 'Calculus I', 3),
-                (104, 'Physics I', 4)
-                ON CONFLICT (course_id) DO NOTHING;
-
-                INSERT INTO enrollments VALUES
-                (1, 101, 'A'),
-                (1, 102, 'B+'),
-                (2, 103, 'A-'),
-                (3, 104, 'B'),
-                (4, 101, 'A-'),
-                (5, 103, 'A');
-            """,
-            'mysql': """
-                CREATE TABLE IF NOT EXISTS students (
-                    student_id INT AUTO_INCREMENT PRIMARY KEY,
-                    name VARCHAR(255),
-                    major VARCHAR(255),
-                    year INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS courses (
-                    course_id INT AUTO_INCREMENT PRIMARY KEY,
-                    course_name VARCHAR(255),
-                    credits INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS enrollments (
-                    student_id INTEGER,
-                    course_id INTEGER,
-                    grade VARCHAR(10),
-                    FOREIGN KEY (student_id) REFERENCES students(student_id),
-                    FOREIGN KEY (course_id) REFERENCES courses(course_id)
-                );
-
-                INSERT IGNORE INTO students VALUES
-                (1, 'Alice Johnson', 'Computer Science', 3),
-                (2, 'Bob Smith', 'Mathematics', 2),
-                (3, 'Charlie Brown', 'Physics', 4),
-                (4, 'Diana Prince', 'Computer Science', 1),
-                (5, 'Eve Wilson', 'Mathematics', 3);
-
-                INSERT IGNORE INTO courses VALUES
-                (101, 'Database Systems', 3),
-                (102, 'Algorithms', 4),
-                (103, 'Calculus I', 3),
-                (104, 'Physics I', 4);
-
-                INSERT IGNORE INTO enrollments VALUES
-                (1, 101, 'A'),
-                (1, 102, 'B+'),
-                (2, 103, 'A-'),
-                (3, 104, 'B'),
-                (4, 101, 'A-'),
-                (5, 103, 'A');
-            """
-        }
-    }
-}
-
-# Security Settings
 SECURE_BROWSER_XSS_FILTER = os.environ.get('SECURE_BROWSER_XSS_FILTER', 'True').lower() == 'true'
 SECURE_CONTENT_TYPE_NOSNIFF = os.environ.get('SECURE_CONTENT_TYPE_NOSNIFF', 'True').lower() == 'true'
 X_FRAME_OPTIONS = os.environ.get('X_FRAME_OPTIONS', 'DENY')
 
+# HTTPS Security Settings for Production
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'False').lower() == 'true'
+SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'False').lower() == 'true'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if os.environ.get('SECURE_PROXY_SSL_HEADER') else None
+
 # Session Settings
 SESSION_COOKIE_AGE = int(os.environ.get('SESSION_COOKIE_AGE', '86400'))  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = os.environ.get('SESSION_SAVE_EVERY_REQUEST', 'True').lower() == 'true'
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
+SESSION_COOKIE_HTTPONLY = os.environ.get('SESSION_COOKIE_HTTPONLY', 'True').lower() == 'true'
+SESSION_COOKIE_SAMESITE = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
 
 # CSRF Settings
 CSRF_COOKIE_AGE = int(os.environ.get('CSRF_COOKIE_AGE', '31449600'))  # 1 year
@@ -567,6 +374,16 @@ CSRF_COOKIE_HTTPONLY = os.environ.get('CSRF_COOKIE_HTTPONLY', 'False').lower() =
 CSRF_COOKIE_SAMESITE = os.environ.get('CSRF_COOKIE_SAMESITE', 'Lax')
 CSRF_USE_SESSIONS = os.environ.get('CSRF_USE_SESSIONS', 'False').lower() == 'true'
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
+
+# CSRF Trusted Origins - Add production domain and development domains
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if os.environ.get('CSRF_TRUSTED_ORIGINS') else [
+    "https://kodesql.in",
+    "https://www.kodesql.in",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8007",
+    "http://localhost:8007",
+]
 
 # CKEditor 5 Configuration
 CKEDITOR_5_UPLOAD_PATH = os.environ.get('CKEDITOR_5_UPLOAD_PATH', 'uploads/')
@@ -625,6 +442,41 @@ CKEDITOR_5_CONFIGS = {
                 {'language': 'css', 'label': 'CSS'},
             ]
         }
+    },
+    'clean': {
+        'toolbar': [
+            'heading', '|',
+            'bold', 'italic', 'underline', '|',
+            'bulletedList', 'numberedList', '|',
+            'outdent', 'indent', '|',
+            'link', 'insertImage', '|',
+            'codeBlock', 'blockQuote', '|',
+            'undo', 'redo'
+        ],
+        'height': 300,
+        'width': '100%',
+        'removePlugins': ['WordCount', 'CharacterCount'],
+        'codeBlock': {
+            'languages': [
+                {'language': 'sql', 'label': 'SQL'},
+                {'language': 'javascript', 'label': 'JavaScript'},
+                {'language': 'python', 'label': 'Python'},
+                {'language': 'html', 'label': 'HTML'},
+                {'language': 'css', 'label': 'CSS'},
+            ]
+        },
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'},
+            ]
+        },
+        'wordCount': {
+            'displayCharacters': False,
+            'displayWords': False
+        }
     }
 }
 
@@ -635,27 +487,18 @@ SILENCED_SYSTEM_CHECKS = ["security.W019"]
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('FILE_UPLOAD_MAX_MEMORY_SIZE', '10485760'))  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', '10485760'))  # 10MB
 
-# Challenge Database Schemas - Predefined schemas for SQL challenges
+# =============================================================================
+# LEGACY SETTINGS (Kept for backward compatibility)
+# =============================================================================
+# Note: These settings are maintained for any legacy code that might reference them
+# The new dual-dataset system in challenges doesn't use these predefined schemas
+
+# Legacy predefined schemas (no longer used by new challenge system)
 CHALLENGE_DATABASE_SCHEMAS = {
     'employees': {
-        'name': 'Employee Database',
-        'description': 'Standard employee database with departments and salaries',
+        'name': 'Employee Database (Legacy)',
+        'description': 'Legacy employee database schema',
         'initialization_sql': {
-            'sqlite': """
-                CREATE TABLE IF NOT EXISTS employees (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT,
-                    department TEXT,
-                    salary INTEGER
-                );
-
-                INSERT OR REPLACE INTO employees (id, name, department, salary) VALUES
-                (1, 'John Doe', 'Engineering', 75000),
-                (2, 'Jane Smith', 'Marketing', 65000),
-                (3, 'Bob Johnson', 'Engineering', 80000),
-                (4, 'Alice Brown', 'HR', 60000),
-                (5, 'Charlie Wilson', 'Sales', 70000);
-            """,
             'postgresql': """
                 CREATE TABLE IF NOT EXISTS employees (
                     id SERIAL PRIMARY KEY,
@@ -663,17 +506,6 @@ CHALLENGE_DATABASE_SCHEMAS = {
                     department VARCHAR(255),
                     salary INTEGER
                 );
-
-                INSERT INTO employees (id, name, department, salary) VALUES
-                (1, 'John Doe', 'Engineering', 75000),
-                (2, 'Jane Smith', 'Marketing', 65000),
-                (3, 'Bob Johnson', 'Engineering', 80000),
-                (4, 'Alice Brown', 'HR', 60000),
-                (5, 'Charlie Wilson', 'Sales', 70000)
-                ON CONFLICT (id) DO UPDATE SET
-                name = EXCLUDED.name,
-                department = EXCLUDED.department,
-                salary = EXCLUDED.salary;
             """,
             'mysql': """
                 CREATE TABLE IF NOT EXISTS employees (
@@ -682,150 +514,72 @@ CHALLENGE_DATABASE_SCHEMAS = {
                     department VARCHAR(255),
                     salary INTEGER
                 );
-
-                INSERT INTO employees (id, name, department, salary) VALUES
-                (1, 'John Doe', 'Engineering', 75000),
-                (2, 'Jane Smith', 'Marketing', 65000),
-                (3, 'Bob Johnson', 'Engineering', 80000),
-                (4, 'Alice Brown', 'HR', 60000),
-                (5, 'Charlie Wilson', 'Sales', 70000)
-                ON DUPLICATE KEY UPDATE
-                name = VALUES(name),
-                department = VALUES(department),
-                salary = VALUES(salary);
             """
-        },
-        'schema': {
-            "tables": {
-                "employees": {
-                    "columns": [
-                        {"name": "id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "name", "type": "TEXT"},
-                        {"name": "department", "type": "TEXT"},
-                        {"name": "salary", "type": "INTEGER"}
-                    ]
-                }
-            }
         }
-    },
-    'ecommerce': {
-        'name': 'E-commerce Database',
-        'description': 'Orders and returns database for e-commerce challenges',
-        'initialization_sql': {
-            'sqlite': """
-                CREATE TABLE IF NOT EXISTS orders (
-                    customer_name TEXT,
-                    order_date DATE,
-                    order_id INTEGER PRIMARY KEY,
-                    sales INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS returns (
-                    order_id INTEGER PRIMARY KEY,
-                    return_date DATE
-                );
-
-                INSERT OR REPLACE INTO orders (customer_name, order_date, order_id, sales) VALUES
-                ('Alice Johnson', '2023-01-15', 1001, 250),
-                ('Bob Smith', '2023-01-16', 1002, 180),
-                ('Charlie Brown', '2023-01-17', 1003, 320),
-                ('Diana Prince', '2023-01-18', 1004, 150),
-                ('Eve Wilson', '2023-01-19', 1005, 280);
-
-                INSERT OR REPLACE INTO returns (order_id, return_date) VALUES
-                (1002, '2023-01-20'),
-                (1004, '2023-01-22');
-            """,
-            'postgresql': """
-                CREATE TABLE IF NOT EXISTS orders (
-                    customer_name VARCHAR(255),
-                    order_date DATE,
-                    order_id SERIAL PRIMARY KEY,
-                    sales INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS returns (
-                    order_id INTEGER PRIMARY KEY,
-                    return_date DATE
-                );
-
-                INSERT INTO orders (customer_name, order_date, order_id, sales) VALUES
-                ('Alice Johnson', '2023-01-15', 1001, 250),
-                ('Bob Smith', '2023-01-16', 1002, 180),
-                ('Charlie Brown', '2023-01-17', 1003, 320),
-                ('Diana Prince', '2023-01-18', 1004, 150),
-                ('Eve Wilson', '2023-01-19', 1005, 280)
-                ON CONFLICT (order_id) DO UPDATE SET
-                customer_name = EXCLUDED.customer_name,
-                order_date = EXCLUDED.order_date,
-                sales = EXCLUDED.sales;
-
-                INSERT INTO returns (order_id, return_date) VALUES
-                (1002, '2023-01-20'),
-                (1004, '2023-01-22')
-                ON CONFLICT (order_id) DO UPDATE SET
-                return_date = EXCLUDED.return_date;
-            """,
-            'mysql': """
-                CREATE TABLE IF NOT EXISTS orders (
-                    customer_name VARCHAR(255),
-                    order_date DATE,
-                    order_id INT AUTO_INCREMENT PRIMARY KEY,
-                    sales INTEGER
-                );
-
-                CREATE TABLE IF NOT EXISTS returns (
-                    order_id INT PRIMARY KEY,
-                    return_date DATE
-                );
-
-                INSERT INTO orders (customer_name, order_date, order_id, sales) VALUES
-                ('Alice Johnson', '2023-01-15', 1001, 250),
-                ('Bob Smith', '2023-01-16', 1002, 180),
-                ('Charlie Brown', '2023-01-17', 1003, 320),
-                ('Diana Prince', '2023-01-18', 1004, 150),
-                ('Eve Wilson', '2023-01-19', 1005, 280)
-                ON DUPLICATE KEY UPDATE
-                customer_name = VALUES(customer_name),
-                order_date = VALUES(order_date),
-                sales = VALUES(sales);
-
-                INSERT INTO returns (order_id, return_date) VALUES
-                (1002, '2023-01-20'),
-                (1004, '2023-01-22')
-                ON DUPLICATE KEY UPDATE
-                return_date = VALUES(return_date);
-            """
-        },
-        'schema': {
-            "tables": {
-                "orders": {
-                    "columns": [
-                        {"name": "customer_name", "type": "TEXT"},
-                        {"name": "order_date", "type": "DATE"},
-                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "sales", "type": "INTEGER"}
-                    ]
-                },
-                "returns": {
-                    "columns": [
-                        {"name": "order_id", "type": "INTEGER PRIMARY KEY"},
-                        {"name": "return_date", "type": "DATE"}
-                    ]
-                }
-            }
-        }
-    },
-    'custom': {
-        'name': 'Custom Schema',
-        'description': 'Use custom database schema (for advanced challenges)',
-        'initialization_sql': {
-            'sqlite': '',
-            'postgresql': '',
-            'mysql': ''
-        },
-        'schema': {}
     }
+}
+
+# ============================================================================
+# DJANGO ALLAUTH CONFIGURATION
+# ============================================================================
+
+# Allauth settings (updated for latest version)
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+ACCOUNT_RATE_LIMITS = {
+    'login_failed': '5/5m',  # 5 attempts per 5 minutes
+}
+ACCOUNT_LOGOUT_ON_GET = False
+ACCOUNT_PRESERVE_USERNAME_CASING = False
+ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_USERNAME_BLACKLIST = ['admin', 'root', 'administrator']
+
+# Social account settings
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Direct OAuth flow without intermediate pages
+
+# Google OAuth settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+        'FETCH_USERINFO': True,
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_OAUTH_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', ''),
+            'key': ''
+        }
+    }
+}
+
+# Custom adapter for handling OAuth user creation
+SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
+
+# Redirect URLs
+ACCOUNT_LOGIN_REDIRECT_URL = '/dashboard/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_SIGNUP_REDIRECT_URL = '/dashboard/'
+
+# Forms
+ACCOUNT_FORMS = {
+    'login': 'users.forms.CustomAllauthLoginForm',
+    'signup': 'users.forms.CustomAllauthSignupForm',
 }
 
 

@@ -23,13 +23,13 @@
                     <div class="filter-group">
                         <select id="difficulty">
                             <option value="">Difficulty</option>
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                            <option value="extreme">Extreme Hard</option>
+                            <option value="easy" {% if current_difficulty == 'easy' %}selected{% endif %}>Easy</option>
+                            <option value="medium" {% if current_difficulty == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="hard" {% if current_difficulty == 'hard' %}selected{% endif %}>Hard</option>
+                            <option value="extreme" {% if current_difficulty == 'extreme' %}selected{% endif %}>Extreme Hard</option>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <select id="tags">
                             <option value="">Select Tags</option>
@@ -39,44 +39,51 @@
                             <option value="window-functions">Window Functions</option>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <select id="company">
                             <option value="">Select Company</option>
-                            <option value="amazon">Amazon</option>
-                            <option value="google">Google</option>
-                            <option value="microsoft">Microsoft</option>
-                            <option value="netflix">Netflix</option>
-                            <option value="deloitte">Deloitte</option>
-                            <option value="tcs">TCS</option>
-                            <option value="infosys">Infosys</option>
+                            <option value="amazon" {% if current_company == 'amazon' %}selected{% endif %}>Amazon</option>
+                            <option value="google" {% if current_company == 'google' %}selected{% endif %}>Google</option>
+                            <option value="microsoft" {% if current_company == 'microsoft' %}selected{% endif %}>Microsoft</option>
+                            <option value="netflix" {% if current_company == 'netflix' %}selected{% endif %}>Netflix</option>
+                            <option value="deloitte" {% if current_company == 'deloitte' %}selected{% endif %}>Deloitte</option>
+                            <option value="tcs" {% if current_company == 'tcs' %}selected{% endif %}>TCS</option>
+                            <option value="infosys" {% if current_company == 'infosys' %}selected{% endif %}>Infosys</option>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <select id="status">
                             <option value="">Status</option>
-                            <option value="completed">Completed</option>
-                            <option value="attempted">Attempted</option>
-                            <option value="pending">Pending</option>
+                            <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="attempted" {% if current_status == 'attempted' %}selected{% endif %}>Attempted</option>
+                            <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <select id="subscription_type">
                             <option value="">All Challenges</option>
-                            <option value="free">Free Only</option>
-                            <option value="paid">Premium Only</option>
+                            <option value="free" {% if current_subscription == 'free' %}selected{% endif %}>Free Only</option>
+                            <option value="paid" {% if current_subscription == 'paid' %}selected{% endif %}>Premium Only</option>
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="search-section">
-                    <input type="text" class="search-input" placeholder="Search challenges..." id="searchInput">
+                    <input type="text" class="search-input" placeholder="Search challenges..." id="searchInput" value="{{ current_search }}">
                     <button class="btn btn-primary" onclick="searchChallenges()">Search</button>
                     <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
                 </div>
             </div>
+
+            <!-- Pagination Info -->
+            {% if is_paginated %}
+            <div class="pagination-info">
+                <span>Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }} challenges</span>
+            </div>
+            {% endif %}
 
             <!-- Challenges Table -->
             <div class="challenges-section">
@@ -84,6 +91,7 @@
                     <div>Challenge Title</div>
                     <div>Company</div>
                     <div>Difficulty</div>
+                    <div>XP Reward</div>
                     <div>Status</div>
                 </div>
                 
@@ -95,24 +103,85 @@
                              data-subscription="{{ challenge.subscription_type }}"
                              data-status="{% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}"
                              onclick="window.location.href='{% url 'challenges:challenge_detail' challenge.id %}'">
-                            <div class="challenge-title">
-                                {{ challenge.title }}
-                                {% if challenge.is_premium %}
-                                    <span class="premium-icon">🔒</span>
-                                {% endif %}
-                            </div>
-                            <div class="company">{{ challenge.company|default:"General" }}</div>
-                            <div class="difficulty {{ challenge.difficulty }}">{{ challenge.get_difficulty_display }}</div>
-                            <div class="status {% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}">
-                                {% if user.is_authenticated and challenge.progress_data %}
-                                    {% if challenge.progress_data.is_completed %}
-                                        ✓
+
+                            <!-- Desktop Layout (Grid) -->
+                            <div class="desktop-layout">
+                                <div class="challenge-title">
+                                    {{ challenge.title }}
+                                    {% if challenge.is_premium and not challenge.user_has_access_to_challenge %}
+                                        <span class="premium-icon">🔒</span>
+                                    {% endif %}
+                                </div>
+                                <div class="company">{{ challenge.company|default:"General" }}</div>
+                                <div class="difficulty {{ challenge.difficulty }}">{{ challenge.get_difficulty_display }}</div>
+                                <div class="xp-reward">
+                                    <span class="xp-badge">
+                                        <span class="material-icons">stars</span>
+                                        {{ challenge.xp }} XP
+                                    </span>
+                                </div>
+                                <div class="status {% if user.is_authenticated and challenge.progress_data %}{% if challenge.progress_data.is_completed %}completed{% else %}attempted{% endif %}{% else %}pending{% endif %}">
+                                    {% if user.is_authenticated and challenge.progress_data %}
+                                        {% if challenge.progress_data.is_completed %}
+                                            ✓ <span class="earned-xp">+{{ challenge.progress_data.xp_earned }} XP</span>
+                                        {% else %}
+                                            ⋯
+                                        {% endif %}
                                     {% else %}
                                         ⋯
                                     {% endif %}
-                                {% else %}
-                                    ⋯
-                                {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Mobile Layout (Card) -->
+                            <div class="mobile-layout">
+                                <div class="mobile-card-header">
+                                    <div class="mobile-title">
+                                        {{ challenge.title }}
+                                        {% if challenge.is_premium and not challenge.user_has_access_to_challenge %}
+                                            <span class="premium-icon">🔒</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mobile-status">
+                                        {% if user.is_authenticated and challenge.progress_data %}
+                                            {% if challenge.progress_data.is_completed %}
+                                                <span class="status-icon completed">✓</span>
+                                            {% else %}
+                                                <span class="status-icon attempted">⋯</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="status-icon pending">⋯</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mobile-card-body">
+                                    <div class="mobile-meta">
+                                        <div class="mobile-company">
+                                            <span class="meta-icon">🏢</span>
+                                            {{ challenge.company|default:"General" }}
+                                        </div>
+                                        <div class="mobile-difficulty">
+                                            <span class="difficulty-badge {{ challenge.difficulty }}">
+                                                {{ challenge.get_difficulty_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mobile-footer">
+                                        <div class="mobile-xp">
+                                            <span class="xp-badge-mobile">
+                                                <span class="material-icons">stars</span>
+                                                {{ challenge.xp }} XP
+                                            </span>
+                                        </div>
+                                        {% if user.is_authenticated and challenge.progress_data and challenge.progress_data.is_completed %}
+                                            <div class="mobile-earned">
+                                                <span class="earned-badge">+{{ challenge.progress_data.xp_earned }} XP</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     {% empty %}
@@ -129,6 +198,63 @@
                     <p>Try adjusting your search criteria or clearing filters</p>
                 </div>
             </div>
+
+            <!-- Pagination Controls -->
+            {% if is_paginated %}
+            <div class="pagination-container">
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="javascript:void(0)" onclick="goToPage(1)" class="pagination-btn pagination-first" title="First page">
+                            <span class="material-icons">first_page</span>
+                        </a>
+                        <a href="javascript:void(0)" onclick="goToPage({{ page_obj.previous_page_number }})" class="pagination-btn pagination-prev" title="Previous page">
+                            <span class="material-icons">chevron_left</span>
+                        </a>
+                    {% else %}
+                        <span class="pagination-btn pagination-first disabled">
+                            <span class="material-icons">first_page</span>
+                        </span>
+                        <span class="pagination-btn pagination-prev disabled">
+                            <span class="material-icons">chevron_left</span>
+                        </span>
+                    {% endif %}
+
+                    <div class="pagination-numbers">
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <span class="pagination-btn pagination-current">{{ num }}</span>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="javascript:void(0)" onclick="goToPage({{ num }})" class="pagination-btn">{{ num }}</a>
+                            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                                <a href="javascript:void(0)" onclick="goToPage({{ num }})" class="pagination-btn">{{ num }}</a>
+                            {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
+                                <span class="pagination-ellipsis">...</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% if page_obj.has_next %}
+                        <a href="javascript:void(0)" onclick="goToPage({{ page_obj.next_page_number }})" class="pagination-btn pagination-next" title="Next page">
+                            <span class="material-icons">chevron_right</span>
+                        </a>
+                        <a href="javascript:void(0)" onclick="goToPage({{ page_obj.paginator.num_pages }})" class="pagination-btn pagination-last" title="Last page">
+                            <span class="material-icons">last_page</span>
+                        </a>
+                    {% else %}
+                        <span class="pagination-btn pagination-next disabled">
+                            <span class="material-icons">chevron_right</span>
+                        </span>
+                        <span class="pagination-btn pagination-last disabled">
+                            <span class="material-icons">last_page</span>
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="pagination-info-bottom">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Right Column - Progress & Leaderboard -->
@@ -178,33 +304,22 @@
                 </div>
             </div>
 
-            <!-- Analytics Link -->
-            {% if user.is_authenticated %}
-            <div class="analytics-section">
-                <h3 class="analytics-title">Your Analytics</h3>
-                <div class="analytics-preview">
-                    <p>Track your detailed progress and performance</p>
-                    <a href="{% url 'challenges:analytics_dashboard' %}" class="btn btn-primary">View Analytics</a>
-                </div>
-            </div>
-            {% endif %}
-
             <!-- Subscription Status -->
             {% if user.is_authenticated %}
-            <div class="subscription-section">
-                <h3 class="subscription-title">Subscription Status</h3>
+            <div class="progress-section">
+                <h3 class="progress-title">Subscription Status</h3>
                 {% if user_subscription and user_subscription.is_active %}
-                    <div class="subscription-active">
-                        <div class="subscription-plan">{{ user_subscription.plan.name }}</div>
-                        <div class="subscription-time">{{ user_subscription.time_remaining }}</div>
+                    <div class="subscription-status-item">
+                        <span class="subscription-plan-name">{{ user_subscription.plan.name }}</span>
+                        <span class="subscription-time-remaining">{{ user_subscription.time_remaining }}</span>
                         {% if user_subscription.is_expiring_soon %}
                             <div class="subscription-warning">Expires soon!</div>
                         {% endif %}
                     </div>
                 {% else %}
-                    <div class="subscription-inactive">
-                        <p>No active subscription</p>
-                        <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary">Subscribe Now</a>
+                    <div class="subscription-status-item">
+                        <span class="subscription-plan-name">No active subscription</span>
+                        <a href="{% url 'challenges:subscription_plans' %}" class="btn btn-primary btn-sm">Subscribe Now</a>
                     </div>
                 {% endif %}
             </div>
@@ -396,20 +511,29 @@
     color: white;
     padding: 1rem;
     display: grid;
-    grid-template-columns: 2fr 1fr 120px 80px;
+    grid-template-columns: 2fr 1fr 120px 100px 80px;
     gap: 1rem;
     font-weight: 600;
 }
 
 .challenge-row {
     padding: 1rem;
-    display: grid;
-    grid-template-columns: 2fr 1fr 120px 80px;
-    gap: 1rem;
+    display: block;
     border-bottom: 1px solid var(--border-color);
-    align-items: center;
     transition: background-color 0.2s;
     cursor: pointer;
+}
+
+/* Desktop Layout */
+.desktop-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr 120px 100px 80px;
+    gap: 1rem;
+    align-items: center;
+}
+
+.mobile-layout {
+    display: none;
 }
 
 .challenge-row:hover {
@@ -423,6 +547,10 @@
 .challenge-title {
     font-weight: 500;
     color: var(--text-primary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.4;
 }
 
 .company {
@@ -431,26 +559,41 @@
 }
 
 .difficulty {
-    padding: 0.25rem 0.75rem;
-    border-radius: 16px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
     text-align: center;
 }
 
 .difficulty.easy {
-    background: #dcfce7;
-    color: #166534;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .difficulty.medium {
-    background: #fef3c7;
-    color: #92400e;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .difficulty.hard {
-    background: #fecaca;
-    color: #991b1b;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.difficulty.extreme {
+    background: linear-gradient(135deg, #7c2d12, #991b1b);
+    color: white;
+    box-shadow: 0 2px 8px rgba(124, 45, 18, 0.4);
+    border: 1px solid #7c2d12;
 }
 
 .status {
@@ -468,6 +611,47 @@
 
 .status.pending {
     color: #f59e0b;
+}
+
+/* XP Reward Styling */
+.xp-reward {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.xp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.xp-badge .material-icons {
+    font-size: 14px;
+}
+
+.xp-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.earned-xp {
+    font-size: 0.7rem;
+    color: var(--success-color);
+    font-weight: 500;
+    background: var(--success-bg);
+    padding: 0.125rem 0.375rem;
+    border-radius: 10px;
+    margin-top: 0.25rem;
+    display: block;
 }
 
 /* Right Column */
@@ -533,6 +717,42 @@
     text-align: right;
 }
 
+/* Subscription Status */
+.subscription-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.subscription-status-item:last-child {
+    margin-bottom: 0;
+}
+
+.subscription-plan-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.subscription-time-remaining {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.subscription-warning {
+    color: #ea580c;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.subscription-status-item .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+}
+
 /* Leaderboard */
 .leaderboard {
     background: var(--bg-primary);
@@ -590,6 +810,91 @@
     color: var(--text-primary);
 }
 
+/* Pagination Styles */
+.pagination-info {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.pagination-container {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-primary);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0 0.5rem;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.pagination-btn:hover:not(.disabled) {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.pagination-btn.pagination-current {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-tertiary);
+}
+
+.pagination-ellipsis {
+    padding: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.pagination-info-bottom {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
     .container {
@@ -617,7 +922,7 @@
 
 @media (max-width: 768px) {
     .container {
-        padding: 1rem;
+        padding: 0.75rem;
     }
 
     .table-header, .challenge-row {
@@ -625,8 +930,251 @@
         gap: 0.5rem;
     }
 
+    .table-header {
+        display: none; /* Hide header on mobile for better UX */
+    }
+
+    .challenge-row {
+        display: block;
+        padding: 0;
+        margin-bottom: 1rem;
+        border-radius: 16px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+
+    [data-theme="dark"] .challenge-row {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .challenge-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary-color);
+    }
+
+    [data-theme="dark"] .challenge-row:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .challenge-row:last-child {
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+
+    /* Challenge Card Header */
+    .challenge-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        padding: 1.25rem 1.25rem 0.75rem 1.25rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        line-height: 1.4;
+        white-space: normal;
+        max-width: 100%;
+        color: var(--text-primary);
+    }
+
+    /* Challenge Card Body */
+    .challenge-row .company,
+    .challenge-row .difficulty,
+    .challenge-row .xp-reward,
+    .challenge-row .status {
+        display: none; /* Hide the old layout */
+    }
+
+    /* Desktop/Mobile Layout Control */
+    .desktop-layout {
+        display: none;
+    }
+
+    .mobile-layout {
+        display: block;
+    }
+
+    /* Mobile Card Header */
+    .mobile-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 1.25rem 1.25rem 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+    }
+
+    .mobile-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.4;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        flex: 1;
+        margin-right: 1rem;
+    }
+
+    .mobile-status {
+        flex-shrink: 0;
+    }
+
+    .status-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .status-icon.completed {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .status-icon.attempted {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .status-icon.pending {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: 2px solid var(--border-color);
+    }
+
+    /* Mobile Card Body */
+    .mobile-card-body {
+        padding: 0 1.25rem 1.25rem 1.25rem;
+    }
+
+    .mobile-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .mobile-company {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .meta-icon {
+        font-size: 14px;
+    }
+
+    .mobile-difficulty .difficulty-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .mobile-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .xp-badge-mobile {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .xp-badge-mobile .material-icons {
+        font-size: 16px;
+    }
+
+    .earned-badge {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    }
+
     .filters-row {
         grid-template-columns: 1fr;
+    }
+
+    .pagination {
+        padding: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .pagination-btn {
+        min-width: 36px;
+        height: 36px;
+        font-size: 0.8rem;
+    }
+
+    .pagination-numbers {
+        margin: 0 0.25rem;
+    }
+
+    .pagination-info, .pagination-info-bottom {
+        font-size: 0.8rem;
+    }
+}
+
+/* Additional mobile optimizations for very small screens */
+@media (max-width: 480px) {
+    .challenge-title {
+        font-size: 1rem;
+        line-height: 1.3;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        max-width: 100%;
+        display: block;
+        /* Prevent text concatenation by ensuring proper spacing */
+        margin-bottom: 0.5rem;
+    }
+
+    .challenge-row {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+
+    .challenge-row .company,
+    .challenge-row .difficulty,
+    .challenge-row .xp-reward,
+    .challenge-row .status {
+        padding: 0.4rem 0;
+        font-size: 0.9rem;
     }
 }
 </style>
@@ -634,7 +1182,7 @@
 
 {% block extra_js %}
 <script>
-// Filter functionality
+// Filter functionality with pagination support
 function searchChallenges() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const difficulty = document.getElementById('difficulty').value;
@@ -642,53 +1190,31 @@ function searchChallenges() {
     const status = document.getElementById('status').value;
     const subscriptionType = document.getElementById('subscription_type').value;
 
-    const challenges = document.querySelectorAll('.challenge-row');
-    let visibleCount = 0;
+    // Build URL with filters and reset to page 1
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (difficulty) params.set('difficulty', difficulty);
+    if (company) params.set('company', company);
+    if (status) params.set('status', status);
+    if (subscriptionType) params.set('subscription_type', subscriptionType);
 
-    challenges.forEach(challenge => {
-        const title = challenge.querySelector('.challenge-title').textContent.toLowerCase();
-        const challengeDifficulty = challenge.dataset.difficulty;
-        const challengeCompany = challenge.dataset.company;
-        const challengeStatus = challenge.dataset.status;
-        const challengeSubscription = challenge.dataset.subscription;
+    // Reset to page 1 when filtering
+    params.set('page', '1');
 
-        const matchesSearch = title.includes(searchTerm);
-        const matchesDifficulty = !difficulty || challengeDifficulty === difficulty;
-        const matchesCompany = !company || challengeCompany === company;
-        const matchesStatus = !status || challengeStatus === status;
-        const matchesSubscription = !subscriptionType || challengeSubscription === subscriptionType;
-
-        if (matchesSearch && matchesDifficulty && matchesCompany && matchesStatus && matchesSubscription) {
-            challenge.style.display = 'grid';
-            visibleCount++;
-        } else {
-            challenge.style.display = 'none';
-        }
-    });
-
-    // Show/hide no results message
-    const noResults = document.getElementById('noResults');
-    if (visibleCount === 0) {
-        noResults.style.display = 'block';
-    } else {
-        noResults.style.display = 'none';
-    }
+    // Redirect with filters
+    window.location.href = '?' + params.toString();
 }
 
 function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('difficulty').value = '';
-    document.getElementById('tags').value = '';
-    document.getElementById('company').value = '';
-    document.getElementById('status').value = '';
-    document.getElementById('subscription_type').value = '';
+    // Redirect to page without any parameters
+    window.location.href = window.location.pathname;
+}
 
-    const challenges = document.querySelectorAll('.challenge-row');
-    challenges.forEach(challenge => {
-        challenge.style.display = 'grid';
-    });
-
-    document.getElementById('noResults').style.display = 'none';
+// Pagination function
+function goToPage(pageNumber) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('page', pageNumber);
+    window.location.href = '?' + params.toString();
 }
 
 // Add event listeners for real-time filtering

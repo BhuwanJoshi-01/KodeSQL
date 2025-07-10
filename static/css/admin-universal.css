@@ -60,32 +60,96 @@
     align-items: center;
     position: relative;
     z-index: 2;
+    width: 100%;
+    gap: 2rem;
 }
 
 .admin-header h1,
 .admin-title {
     font-size: 2.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #ffffff, #cbd5e1);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #ffffff !important;
     margin: 0;
     display: flex;
     align-items: center;
     gap: 1rem;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .admin-header h1 .material-icons,
 .admin-title .material-icons {
     font-size: 2.5rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+    color: #ffffff !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Ensure badges are visible in admin header */
+.admin-header .badge,
+.admin-header .badge-recommended,
+.admin-header .badge-inactive,
+.admin-header h1 .badge,
+.admin-header h1 .badge-recommended,
+.admin-header h1 .badge-inactive {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 20px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-left: 1rem !important;
+    white-space: nowrap !important;
+    color: white !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    text-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    z-index: 10 !important;
+    position: relative !important;
+}
+
+.admin-header .badge-recommended,
+.admin-header h1 .badge-recommended {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    border: 1px solid rgba(245, 158, 11, 0.5) !important;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
+}
+
+.admin-header .badge-inactive,
+.admin-header h1 .badge-inactive {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: white !important;
+    border: 1px solid rgba(239, 68, 68, 0.5) !important;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Override any gradient text effects on badges */
+.admin-header .badge *,
+.admin-header .badge-recommended *,
+.admin-header .badge-inactive *,
+.admin-header h1 .badge *,
+.admin-header h1 .badge-recommended *,
+.admin-header h1 .badge-inactive * {
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: initial !important;
+    background-clip: initial !important;
+    color: white !important;
+}
+
+/* Ensure badges don't inherit gradient text properties */
+.admin-header span.badge,
+.admin-header span.badge-recommended,
+.admin-header span.badge-inactive {
+    -webkit-background-clip: border-box !important;
+    -webkit-text-fill-color: white !important;
+    background-clip: border-box !important;
+    color: white !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 @keyframes glow {
@@ -348,6 +412,7 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+
 }
 
 .form-section {
@@ -356,6 +421,7 @@
     border-radius: 12px;
     padding: 2rem;
     transition: all 0.3s ease;
+        margin: 10px 0;
 }
 
 .form-section:hover {
@@ -700,6 +766,154 @@
     }
 }
 
+/* Enhanced Button Styling */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn .material-icons {
+    font-size: 1.2rem;
+}
+
+/* Primary Button - Update Plan */
+.btn-primary {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    border: 2px solid #475569;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(30, 41, 59, 0.3);
+    border-color: #64748b;
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(30, 41, 59, 0.2);
+}
+
+/* Secondary Button - Cancel */
+.btn-secondary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: 2px solid #1d4ed8;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    border-color: #1e40af;
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Danger Button - Delete Plan */
+.btn-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    border: 2px solid #991b1b;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+    border-color: #7f1d1d;
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+/* Outline Button Variants */
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.1);
+}
+
+/* Button Sizes */
+.btn-sm {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    min-width: 100px;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    min-width: 150px;
+}
+
+/* Button Groups */
+.btn-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Disabled State */
+.btn:disabled,
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn:disabled:hover,
+.btn.disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Form-specific responsive design */
 @media (max-width: 768px) {
     .form-grid {
@@ -716,5 +930,15 @@
 
     .form-actions {
         flex-wrap: wrap;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
     }
 }

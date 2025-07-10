@@ -5,9 +5,12 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.middleware.csrf import get_token
+from django.contrib.auth import get_user_model
 from editor.models import QueryHistory, SavedQuery
 from challenges.models import UserChallengeProgress
 from tutorials.models import UserTutorialProgress
+
+User = get_user_model()
 
 
 def landing_page(request):
@@ -56,44 +59,110 @@ def home(request):
 @login_required
 def dashboard(request):
     """
-    User dashboard with statistics and progress.
+    User dashboard with gamification and challenge-focused statistics.
     """
+    from challenges.models import Challenge, UserChallengeProgress, UserChallengeSubscription
+    from django.db.models import Sum, Count, Q, Avg
+    from django.utils import timezone
+    from datetime import timedelta
+
     user = request.user
 
-    # Get user statistics
-    total_queries = QueryHistory.objects.filter(user=user).count()
-    successful_queries = QueryHistory.objects.filter(user=user, success=True).count()
-    saved_queries_count = SavedQuery.objects.filter(user=user).count()
+    # Ensure user has a profile and XP is up-to-date
+    from users.models import UserProfile
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=user)
 
-    # Get challenge progress
-    completed_challenges = UserChallengeProgress.objects.filter(
-        user=user, is_completed=True
-    ).count()
-    total_challenges = UserChallengeProgress.objects.filter(user=user).count()
+    # Update total XP to ensure consistency
+    profile.update_total_xp()
 
-    # Get tutorial progress
-    completed_tutorials = UserTutorialProgress.objects.filter(
-        user=user, is_completed=True
-    ).count()
-    in_progress_tutorials = UserTutorialProgress.objects.filter(
-        user=user, is_completed=False
-    ).count()
+    # Challenge Statistics
+    total_challenges = Challenge.objects.filter(is_active=True).count()
+    user_progress = UserChallengeProgress.objects.filter(user=user)
+    completed_challenges = user_progress.filter(is_completed=True).count()
+    attempted_challenges = user_progress.count()
 
-    # Recent query history
-    recent_queries = QueryHistory.objects.filter(user=user).order_by('-executed_at')[:5]
+    # XP Statistics - use updated profile XP for consistency
+    total_xp = profile.total_xp
+
+    # Calculate current streak using the proven algorithm
+    from challenges.views import calculate_user_streak
+    current_streak = calculate_user_streak(user)
+
+    # Difficulty breakdown
+    difficulty_stats = {}
+    for difficulty in ['easy', 'medium', 'hard', 'extreme']:
+        total_diff = Challenge.objects.filter(is_active=True, difficulty=difficulty).count()
+        completed_diff = user_progress.filter(
+            is_completed=True,
+            challenge__difficulty=difficulty
+        ).count()
+        difficulty_stats[difficulty] = {
+            'total': total_diff,
+            'completed': completed_diff,
+            'percentage': (completed_diff / total_diff * 100) if total_diff > 0 else 0
+        }
+
+    # Leaderboard (top 10 users by XP) with profile pictures
+    # Get user IDs first, then fetch full user objects for profile pictures
+    # Exclude superusers from leaderboard
+    top_user_ids = UserChallengeProgress.objects.filter(
+        is_completed=True,
+        user__is_superuser=False  # Exclude superusers
+    ).values('user_id').annotate(
+        total_xp=Sum('xp_earned'),
+        challenges_completed=Count('id')
+    ).order_by('-total_xp')[:10]
+
+    # Create leaderboard with full user objects
+    leaderboard = []
+    for entry in top_user_ids:
+        try:
+            user = User.objects.select_related('profile').get(id=entry['user_id'])
+            leaderboard.append({
+                'user': user,
+                'total_xp': entry['total_xp'],
+                'challenges_completed': entry['challenges_completed']
+            })
+        except User.DoesNotExist:
+            continue
+
+    # Add current user rank (excluding superusers)
+    user_rank = None
+    if total_xp > 0:
+        higher_xp_users = UserChallengeProgress.objects.filter(
+            is_completed=True,
+            user__is_superuser=False  # Exclude superusers from ranking
+        ).values('user').annotate(
+            total_xp=Sum('xp_earned')
+        ).filter(total_xp__gt=total_xp).count()
+        user_rank = higher_xp_users + 1
+
+    # Recent achievements (last 5 completed challenges)
+    recent_achievements = user_progress.filter(
+        is_completed=True
+    ).select_related('challenge').order_by('-completed_at')[:5]
+
+    # Subscription status
+    user_subscription = UserChallengeSubscription.objects.filter(
+        user=user, status='active'
+    ).first()
 
     context = {
         'page_title': 'Dashboard',
-        'stats': {
-            'total_queries': total_queries,
-            'successful_queries': successful_queries,
-            'saved_queries_count': saved_queries_count,
-            'completed_challenges': completed_challenges,
-            'total_challenges': total_challenges,
-            'completed_tutorials': completed_tutorials,
-            'in_progress_tutorials': in_progress_tutorials,
-        },
-        'recent_queries': recent_queries,
+        'total_challenges': total_challenges,
+        'completed_challenges': completed_challenges,
+        'attempted_challenges': attempted_challenges,
+        'completion_percentage': (completed_challenges / total_challenges * 100) if total_challenges > 0 else 0,
+        'total_xp': total_xp,
+        'current_streak': current_streak,
+        'user_rank': user_rank,
+        'difficulty_stats': difficulty_stats,
+        'leaderboard': leaderboard,
+        'recent_achievements': recent_achievements,
+        'user_subscription': user_subscription,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -153,3 +222,23 @@ def csrf_test_form(request):
         })
 
     return render(request, 'core/csrf_test.html')
+
+
+def terms_of_service(request):
+    """
+    Terms of Service page.
+    """
+    context = {
+        'page_title': 'Terms of Service - SQLMaster',
+    }
+    return render(request, 'core/terms_of_service.html', context)
+
+
+def privacy_policy(request):
+    """
+    Privacy Policy page.
+    """
+    context = {
+        'page_title': 'Privacy Policy - SQLMaster',
+    }
+    return render(request, 'core/privacy_policy.html', context)

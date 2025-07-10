@@ -47,6 +47,8 @@ function toggleMobileMenu() {
     navMenu.classList.toggle('mobile-open');
 }
 
+
+
 // CSRF Token Helper
 function getCsrfToken() {
     return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
@@ -236,18 +238,72 @@ function closeModal(modal) {
     }
 }
 
+// Auto-hide messages after delay
+function autoHideMessages() {
+    const messages = document.querySelectorAll('.message');
+    messages.forEach((message, index) => {
+        // Auto-hide success and info messages after 5 seconds
+        if (message.classList.contains('message-success') || message.classList.contains('message-info')) {
+            setTimeout(() => {
+                if (message.parentElement) {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 300);
+                }
+            }, 5000 + (index * 500)); // Stagger the hiding
+        }
+        // Auto-hide warning messages after 8 seconds
+        else if (message.classList.contains('message-warning')) {
+            setTimeout(() => {
+                if (message.parentElement) {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 300);
+                }
+            }, 8000 + (index * 500));
+        }
+        // Error messages stay until manually closed
+    });
+}
+
+// Enhanced message display with better animations
+function enhanceMessages() {
+    const messages = document.querySelectorAll('.message');
+    messages.forEach((message, index) => {
+        // Add entrance animation delay
+        message.style.animationDelay = `${index * 0.1}s`;
+
+        // Add click to dismiss functionality
+        message.addEventListener('click', (e) => {
+            if (!e.target.closest('.message-close')) {
+                message.style.opacity = '0';
+                message.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    message.remove();
+                }, 300);
+            }
+        });
+    });
+}
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initKeyboardShortcuts();
-    
-    // Close mobile menu when clicking outside
+    autoHideMessages();
+    enhanceMessages();
+
+    // Close mobile menu and dropdowns when clicking outside
     document.addEventListener('click', (e) => {
         const navMenu = document.querySelector('.nav-menu');
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        
-        if (navMenu.classList.contains('mobile-open') && 
-            !navMenu.contains(e.target) && 
+
+        if (navMenu && navMenu.classList.contains('mobile-open') &&
+            !navMenu.contains(e.target) &&
             !mobileMenuBtn.contains(e.target)) {
             navMenu.classList.remove('mobile-open');
         }

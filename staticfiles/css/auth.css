@@ -183,6 +183,14 @@
     margin-top: 0.25rem;
 }
 
+/* Help Text */
+.field-help {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
 /* Submit Button */
 .auth-submit {
     width: 100%;

@@ -136,7 +136,7 @@ class Command(BaseCommand):
             'subscription': subscription,
             'plan': plan,
             'days_remaining': subscription.days_remaining,
-            'site_name': 'SQL Playground',
+            'site_name': 'KodeSQL',
             'renewal_url': f"{settings.SITE_URL}/challenges/subscription/",
         }
         

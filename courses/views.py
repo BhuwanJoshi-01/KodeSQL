@@ -15,7 +15,6 @@ from django.conf import settings
 from django.middleware.csrf import get_token
 from decimal import Decimal
 import json
-import stripe
 import uuid
 
 from .models import (
@@ -448,7 +447,7 @@ def api_course_enroll(request, slug):
         payment = CoursePayment.objects.create(
             enrollment=enrollment,
             amount=course.effective_price,
-            payment_method='stripe',  # Default to Stripe
+            payment_method='razorpay',  # Default to Razorpay
             status='pending'
         )
 
@@ -1083,7 +1082,7 @@ def admin_course_preview(request, course_slug):
 @login_required
 def payment_page(request, payment_id):
     """
-    Stripe payment page.
+    Razorpay payment page.
     """
     payment = get_object_or_404(CoursePayment, id=payment_id, enrollment__user=request.user)
 
@@ -1091,17 +1090,35 @@ def payment_page(request, payment_id):
         messages.info(request, 'This payment has already been processed.')
         return redirect('courses:course_detail', slug=payment.enrollment.course.slug)
 
-    # Get the client secret from the payment intent
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-    intent = stripe.PaymentIntent.retrieve(payment.transaction_id)
+    # Create Razorpay order for course payment
+    import razorpay
+
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+    # Create order if not already created
+    if not payment.transaction_id.startswith('order_'):
+        order_data = {
+            'amount': int(float(payment.amount) * 100),  # Convert to paise
+            'currency': settings.RAZORPAY_CURRENCY,
+            'receipt': f'course_{payment.enrollment.course.id}_{payment.id}',
+            'notes': {
+                'course_id': str(payment.enrollment.course.id),
+                'payment_id': str(payment.id),
+                'user_email': payment.enrollment.user.email,
+            }
+        }
+        order = client.order.create(data=order_data)
+        payment.transaction_id = order['id']
+        payment.save()
 
     context = {
         'page_title': f'Payment - {payment.enrollment.course.title}',
         'payment': payment,
         'course': payment.enrollment.course,
-        'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY,
-        'client_secret': intent.client_secret,
-        'amount_in_cents': int(float(payment.amount) * 100),
+        'razorpay_key': settings.RAZORPAY_KEY_ID,
+        'razorpay_order_id': payment.transaction_id,
+        'amount_in_paise': int(float(payment.amount) * 100),
+        'currency': settings.RAZORPAY_CURRENCY,
     }
     return render(request, 'courses/payment.html', context)
 
@@ -1109,20 +1126,22 @@ def payment_page(request, payment_id):
 @login_required
 def payment_success(request):
     """
-    Handle successful Stripe payment (both GET and POST).
+    Handle successful Razorpay payment (both GET and POST).
     """
     try:
-        # Get payment intent ID from request (GET or POST)
-        payment_intent_id = request.GET.get('payment_intent') or request.POST.get('payment_intent_id')
+        # Get payment details from request
+        razorpay_payment_id = request.GET.get('razorpay_payment_id')
+        razorpay_order_id = request.GET.get('razorpay_order_id')
+        razorpay_signature = request.GET.get('razorpay_signature')
 
-        if not payment_intent_id:
+        if not all([razorpay_payment_id, razorpay_order_id, razorpay_signature]):
             messages.error(request, 'Invalid payment data received.')
             return redirect('courses:courses_list')
 
         # Find the payment record
         payment = get_object_or_404(
             CoursePayment,
-            transaction_id=payment_intent_id,
+            transaction_id=razorpay_order_id,
             enrollment__user=request.user
         )
 
@@ -1131,43 +1150,39 @@ def payment_success(request):
             messages.info(request, f'You are already enrolled in {payment.enrollment.course.title}.')
             return redirect('courses:course_detail', slug=payment.enrollment.course.slug)
 
-        # Verify payment with Stripe
-        stripe.api_key = settings.STRIPE_SECRET_KEY
-        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        # Verify payment with Razorpay
+        import razorpay
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-        if intent.status == 'succeeded':
+        # Verify signature
+        params_dict = {
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        }
+
+        try:
+            client.utility.verify_payment_signature(params_dict)
+            # Payment is valid
             # Payment is valid, update records
             payment.status = 'completed'
             payment.completed_at = timezone.now()
-            payment.gateway_response = intent
+            payment.gateway_response = {'payment_id': razorpay_payment_id, 'order_id': razorpay_order_id}
             payment.save()
 
             # Update enrollment
             enrollment = payment.enrollment
             enrollment.status = 'active'
             enrollment.amount_paid = payment.amount
-            enrollment.payment_method = 'stripe'
-            enrollment.payment_reference = payment_intent_id
+            enrollment.payment_method = 'razorpay'
+            enrollment.payment_reference = razorpay_payment_id
             enrollment.save()
 
-            # Check if this is a subscription payment
-            subscription_id = intent.metadata.get('subscription_id')
-            if subscription_id:
-                try:
-                    subscription = UserSubscription.objects.get(id=subscription_id)
-                    subscription.activate()
-                    subscription.payment_reference = payment_intent_id
-                    subscription.save()
-
-                    messages.success(request, f'Subscription activated! You now have {subscription.plan.name} access to {enrollment.course.title}.')
-                except UserSubscription.DoesNotExist:
-                    messages.success(request, f'Payment successful! You are now enrolled in {enrollment.course.title}.')
-            else:
-                messages.success(request, f'Payment successful! You are now enrolled in {enrollment.course.title}.')
-
+            messages.success(request, f'Payment successful! You are now enrolled in {enrollment.course.title}.')
             return redirect('courses:course_detail', slug=enrollment.course.slug)
-        else:
-            messages.error(request, 'Payment was not successful. Please try again.')
+
+        except Exception as signature_error:
+            messages.error(request, 'Payment verification failed. Please contact support.')
             return redirect('courses:courses_list')
 
     except Exception as e:
@@ -1178,7 +1193,7 @@ def payment_success(request):
 @login_required
 def payment_failed(request):
     """
-    Handle failed Stripe payment.
+    Handle failed Razorpay payment.
     """
     payment_intent_id = request.GET.get('payment_intent_id')
 
@@ -1204,60 +1219,69 @@ def payment_failed(request):
 
 @csrf_exempt
 @require_POST
-def stripe_webhook(request):
+def razorpay_webhook(request):
     """
-    Handle Stripe webhooks for payment status updates.
+    Handle Razorpay webhooks for payment status updates.
     """
     try:
         payload = request.body
-        sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+        sig_header = request.META.get('HTTP_X_RAZORPAY_SIGNATURE')
 
         # Verify webhook signature if secret is configured
-        if settings.STRIPE_WEBHOOK_SECRET:
-            stripe.api_key = settings.STRIPE_SECRET_KEY
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-            )
-        else:
-            # For development without webhook secret
-            event = json.loads(payload)
+        if hasattr(settings, 'RAZORPAY_WEBHOOK_SECRET') and settings.RAZORPAY_WEBHOOK_SECRET:
+            import hmac
+            import hashlib
+
+            expected_signature = hmac.new(
+                settings.RAZORPAY_WEBHOOK_SECRET.encode('utf-8'),
+                payload,
+                hashlib.sha256
+            ).hexdigest()
+
+            if not hmac.compare_digest(expected_signature, sig_header or ''):
+                return JsonResponse({'status': 'error', 'message': 'Invalid signature'}, status=400)
+
+        # Parse the event
+        event = json.loads(payload.decode('utf-8'))
 
         # Handle the event
-        if event['type'] == 'payment_intent.succeeded':
+        if event.get('event') == 'payment.captured':
             # Handle successful payment
-            payment_intent = event['data']['object']
-            payment_intent_id = payment_intent['id']
+            payment_data = event.get('payload', {}).get('payment', {}).get('entity', {})
+            order_id = payment_data.get('order_id')
 
-            try:
-                payment = CoursePayment.objects.get(transaction_id=payment_intent_id)
-                if payment.status == 'pending':
-                    payment.status = 'completed'
-                    payment.completed_at = timezone.now()
-                    payment.gateway_response = payment_intent
+            if order_id:
+                try:
+                    payment = CoursePayment.objects.get(transaction_id=order_id)
+                    if payment.status == 'pending':
+                        payment.status = 'completed'
+                        payment.completed_at = timezone.now()
+                        payment.gateway_response = payment_data
+                        payment.save()
+
+                        # Update enrollment
+                        enrollment = payment.enrollment
+                        enrollment.status = 'active'
+                        enrollment.amount_paid = payment.amount
+                        enrollment.save()
+
+                except CoursePayment.DoesNotExist:
+                    pass
+
+        elif event.get('event') == 'payment.failed':
+            # Handle failed payment
+            payment_data = event.get('payload', {}).get('payment', {}).get('entity', {})
+            order_id = payment_data.get('order_id')
+
+            if order_id:
+                try:
+                    payment = CoursePayment.objects.get(transaction_id=order_id)
+                    payment.status = 'failed'
+                    payment.gateway_response = payment_data
                     payment.save()
 
-                    # Update enrollment
-                    enrollment = payment.enrollment
-                    enrollment.status = 'active'
-                    enrollment.amount_paid = payment.amount
-                    enrollment.save()
-
-            except CoursePayment.DoesNotExist:
-                pass
-
-        elif event['type'] == 'payment_intent.payment_failed':
-            # Handle failed payment
-            payment_intent = event['data']['object']
-            payment_intent_id = payment_intent['id']
-
-            try:
-                payment = CoursePayment.objects.get(transaction_id=payment_intent_id)
-                payment.status = 'failed'
-                payment.gateway_response = payment_intent
-                payment.save()
-
-            except CoursePayment.DoesNotExist:
-                pass
+                except CoursePayment.DoesNotExist:
+                    pass
 
         return JsonResponse({'status': 'success'})
 
@@ -1385,36 +1409,38 @@ def subscription_checkout(request, course_slug, plan_id):
             amount_paid=plan.effective_price,
         )
 
-    # Create Stripe payment intent
+    # Create Razorpay order
     try:
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        import razorpay
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-        # Convert price to cents (Stripe uses smallest currency unit)
-        amount_in_cents = int(float(plan.effective_price) * 100)
+        # Convert price to paise (Razorpay uses smallest currency unit)
+        amount_in_paise = int(float(plan.effective_price) * 100)
 
-        # Create payment intent
-        intent = stripe.PaymentIntent.create(
-            amount=amount_in_cents,
-            currency=settings.STRIPE_CURRENCY,
-            metadata={
-                'course_id': course.id,
-                'user_id': request.user.id,
-                'enrollment_id': enrollment.id,
-                'subscription_id': subscription.id,
-                'plan_id': plan.id,
-            },
-            description=f'Subscription: {plan.name} - {course.title}',
-        )
+        # Create order
+        order_data = {
+            'amount': amount_in_paise,
+            'currency': settings.RAZORPAY_CURRENCY,
+            'receipt': f'course_{course.id}_{subscription.id}',
+            'notes': {
+                'course_id': str(course.id),
+                'user_id': str(request.user.id),
+                'enrollment_id': str(enrollment.id),
+                'subscription_id': str(subscription.id),
+                'plan_id': str(plan.id),
+            }
+        }
+        order = client.order.create(data=order_data)
 
         # Create payment record
         payment = CoursePayment.objects.create(
             enrollment=enrollment,
             amount=plan.effective_price,
-            currency=settings.STRIPE_CURRENCY.upper(),
-            payment_method='stripe',
+            currency=settings.RAZORPAY_CURRENCY.upper(),
+            payment_method='razorpay',
             status='pending',
-            transaction_id=intent.id,
-            gateway_response=intent
+            transaction_id=order['id'],
+            gateway_response=order
         )
 
         # Redirect to payment page

@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - SQL Playground{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-header">
+        <div class="breadcrumb">
+            <a href="{% url 'challenges:subscription_checkout' plan.id %}">
+                <span class="material-icons">arrow_back</span>
+                Back to Checkout
+            </a>
+        </div>
+        
+        <div class="header-content">
+            <h1>
+                <span class="material-icons">payment</span>
+                Complete Payment
+            </h1>
+            <p>{{ plan.name }} Subscription</p>
+        </div>
+    </div>
+
+    <div class="payment-content">
+        <div class="payment-main">
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div class="summary-item">
+                    <div class="item-details">
+                        <h3>{{ plan.name }}</h3>
+                        <p>{{ plan.description }}</p>
+                    </div>
+                    <div class="item-price">
+                        <div class="current-price">₹{{ plan.effective_price }}</div>
+                    </div>
+                </div>
+                
+                <div class="summary-total">
+                    <div class="total-row final-total">
+                        <span>Total:</span>
+                        <span>₹{{ plan.effective_price }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="payment-form">
+                <h2>Payment Information</h2>
+                
+                <div class="payment-methods">
+                    <h3>Pay with Razorpay</h3>
+                    <div class="razorpay-info">
+                        <div class="info-box">
+                            <span class="material-icons">security</span>
+                            <div>
+                                <h4>Secure Payment Processing</h4>
+                                <p>Your payment is processed securely through Razorpay. We support UPI, Cards, Net Banking, and Wallets.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button id="razorpay-button" class="btn btn-primary btn-large">
+                        <span class="material-icons">credit_card</span>
+                        Pay ₹{{ plan.effective_price }} with Razorpay
+                    </button>
+
+                    <a href="{% url 'challenges:subscription_checkout' plan.id %}" class="btn btn-secondary">
+                        Back to Checkout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-sidebar">
+            <div class="security-info">
+                <h3>
+                    <span class="material-icons">security</span>
+                    Secure Checkout
+                </h3>
+                <ul>
+                    <li>256-bit SSL encryption</li>
+                    <li>PCI DSS compliant</li>
+                    <li>Multiple payment options</li>
+                    <li>Instant activation</li>
+                </ul>
+            </div>
+
+            <div class="payment-options">
+                <h3>
+                    <span class="material-icons">payment</span>
+                    Payment Options
+                </h3>
+                <ul>
+                    <li>Credit/Debit Cards</li>
+                    <li>UPI (Google Pay, PhonePe, etc.)</li>
+                    <li>Net Banking</li>
+                    <li>Digital Wallets</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--bg-color);
+    min-height: 100vh;
+}
+
+.payment-header {
+    margin-bottom: 2rem;
+}
+
+.breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    color: var(--primary-color);
+}
+
+.header-content h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.header-content p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.payment-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.payment-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.order-summary,
+.payment-form {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.order-summary h2,
+.payment-form h2 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem 0;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.item-details h3 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.item-details p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.item-price .current-price {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.summary-total {
+    padding: 1rem 0 0 0;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.final-total {
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+}
+
+.payment-methods h3 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.info-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.info-box .material-icons {
+    color: var(--success-color);
+    font-size: 1.5rem;
+}
+
+.info-box h4 {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.info-box p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.btn-large {
+    padding: 1.25rem 2rem;
+    font-size: 1.1rem;
+}
+
+.payment-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.security-info,
+.payment-options {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.security-info h3,
+.payment-options h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.security-info ul,
+.payment-options ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.security-info li,
+.payment-options li {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.security-info li:last-child,
+.payment-options li:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 968px) {
+    .payment-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .payment-sidebar {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .payment-container {
+        padding: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const razorpayButton = document.getElementById('razorpay-button');
+    
+    const options = {
+        "key": "{{ razorpay_key }}",
+        "amount": {{ amount_in_paise }},
+        "currency": "{{ currency }}",
+        "name": "SQL Playground",
+        "description": "{{ plan.name }} Subscription",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response) {
+            // Payment successful, redirect to success page
+            const successUrl = "{% url 'challenges:payment_success' subscription.id %}" + 
+                "?razorpay_payment_id=" + response.razorpay_payment_id +
+                "&razorpay_order_id=" + response.razorpay_order_id +
+                "&razorpay_signature=" + response.razorpay_signature;
+            
+            window.location.href = successUrl;
+        },
+        "prefill": {
+            "name": "{{ subscription.user.get_full_name|default:subscription.user.email }}",
+            "email": "{{ subscription.user.email }}",
+        },
+        "notes": {
+            "subscription_id": "{{ subscription.id }}",
+            "plan_name": "{{ plan.name }}"
+        },
+        "theme": {
+            "color": "#3B82F6"
+        },
+        "modal": {
+            "ondismiss": function() {
+                // Payment cancelled
+                console.log('Payment cancelled by user');
+            }
+        }
+    };
+
+    const rzp = new Razorpay(options);
+    
+    razorpayButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        rzp.open();
+    });
+    
+    rzp.on('payment.failed', function (response) {
+        alert('Payment failed: ' + response.error.description);
+    });
+});
+</script>
+{% endblock %}

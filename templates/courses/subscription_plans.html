@@ -332,9 +332,9 @@
 
                     <div class="plan-pricing">
                         <div class="plan-price">
-                            ${{ plan.effective_price }}
+                            ₹{{ plan.effective_price }}
                             {% if plan.has_discount %}
-                                <span class="plan-original-price">${{ plan.original_price }}</span>
+                                <span class="plan-original-price">₹{{ plan.original_price }}</span>
                                 <span class="plan-discount">{{ plan.discount_percentage }}% OFF</span>
                             {% endif %}
                         </div>

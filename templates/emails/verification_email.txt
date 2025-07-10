@@ -1,0 +1,17 @@
+KodeSQL - Verify Your Email
+===========================
+
+Hi {{ user.first_name|default:user.username }},
+
+Click the link below to verify your email and start learning SQL:
+
+{{ verification_url }}
+
+Link expires in 24 hours.
+
+What's included:
+✓ Interactive SQL challenges
+✓ MySQL, PostgreSQL & SQLite
+✓ Progress tracking
+
+© 2025 KodeSQL. All rights reserved.

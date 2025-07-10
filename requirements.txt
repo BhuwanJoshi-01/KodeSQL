@@ -18,8 +18,30 @@ django-cleanup==8.0.0
 # Development tools
 django-debug-toolbar==4.2.0
 
+# Authentication
+django-allauth==65.3.0
+
 # Security
 django-cors-headers==4.3.1
 
+# Static Files Serving
+whitenoise==6.9.0
+
+# Database Drivers
+psycopg2-binary==2.9.7
+mysqlclient==2.2.0
+
 # Payment Processing
-stripe==8.5.0
+razorpay==1.4.2
+
+# Production Server
+gunicorn==21.2.0
+
+# Production Monitoring & Logging
+sentry-sdk==1.38.0
+
+# Performance & Caching
+django-redis==5.4.0
+redis==5.0.1
+
+

@@ -20,13 +20,13 @@ class Command(BaseCommand):
         )
 
     def create_subscription_plans(self):
-        """Create subscription plans for challenges"""
+        """Create subscription plans for challenges with INR currency display"""
         plans_data = [
             {
                 'name': 'Monthly Premium',
                 'duration': '1_month',
-                'price': 19.99,
-                'original_price': 29.99,
+                'price': 19.99,  # Same USD amount but displayed as INR
+                'original_price': 29.99,  # Same USD amount but displayed as INR
                 'description': 'Perfect for getting started with premium challenges',
                 'features': [
                     'Access to all premium challenges',
@@ -40,8 +40,8 @@ class Command(BaseCommand):
             {
                 'name': 'Quarterly Premium',
                 'duration': '3_months',
-                'price': 49.99,
-                'original_price': 79.99,
+                'price': 49.99,  # Same USD amount but displayed as INR
+                'original_price': 79.99,  # Same USD amount but displayed as INR
                 'description': 'Best value for serious learners',
                 'features': [
                     'Access to all premium challenges',
@@ -56,8 +56,8 @@ class Command(BaseCommand):
             {
                 'name': 'Semi-Annual Premium',
                 'duration': '6_months',
-                'price': 89.99,
-                'original_price': 149.99,
+                'price': 89.99,  # Same USD amount but displayed as INR
+                'original_price': 149.99,  # Same USD amount but displayed as INR
                 'description': 'Extended access for comprehensive learning',
                 'features': [
                     'Access to all premium challenges',
@@ -73,8 +73,8 @@ class Command(BaseCommand):
             {
                 'name': 'Lifetime Premium',
                 'duration': 'unlimited',
-                'price': 199.99,
-                'original_price': 299.99,
+                'price': 199.99,  # Same USD amount but displayed as INR
+                'original_price': 299.99,  # Same USD amount but displayed as INR
                 'description': 'One-time payment for lifetime access',
                 'features': [
                     'Lifetime access to all premium challenges',
