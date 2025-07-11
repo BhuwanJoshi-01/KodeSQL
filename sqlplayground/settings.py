@@ -175,10 +175,7 @@ DATABASES = {
         'PORT': os.environ.get('PRIMARY_DB_PORT', '5432'),
         'USER': os.environ.get('PRIMARY_DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('PRIMARY_DB_PASSWORD', ''),
-        'OPTIONS': {
-            # Use pg8000 driver for cPanel Python App compatibility
-            'driver': 'pg8000',
-        },
+        'OPTIONS': {},
         'CONN_MAX_AGE': 0,
         'CONN_HEALTH_CHECKS': False,
     },
@@ -191,10 +188,7 @@ DATABASES = {
         'PORT': os.environ.get('QUERY_POSTGRES_PORT', '5432'),
         'USER': os.environ.get('QUERY_POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('QUERY_POSTGRES_PASSWORD', ''),
-        'OPTIONS': {
-            # Use pg8000 driver for cPanel Python App compatibility
-            'driver': 'pg8000',
-        },
+        'OPTIONS': {},
         'CONN_MAX_AGE': 0,
         'CONN_HEALTH_CHECKS': False,
     },
@@ -539,10 +533,15 @@ CHALLENGE_DATABASE_SCHEMAS = {
 # Allauth settings (updated for latest version - no deprecation warnings)
 # Email-only authentication configuration using new settings format
 
+# Core authentication settings (required for compatibility)
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+
 # New format settings (recommended for allauth 65.3.0+)
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # User model configuration
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None

@@ -145,6 +145,15 @@ SITE_URL=https://kodesql.in
 EMAIL_BASE_URL=https://kodesql.in
 
 # =============================================================================
+# GOOGLE OAUTH SETTINGS (Optional - for social login)
+# =============================================================================
+
+# Google OAuth 2.0 Credentials
+# Get these from Google Cloud Console > APIs & Services > Credentials
+GOOGLE_OAUTH_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_OAUTH_CLIENT_SECRET=your-google-oauth-client-secret
+
+# =============================================================================
 # SECURITY SETTINGS
 # =============================================================================
 
