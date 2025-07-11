@@ -14,6 +14,13 @@ import os
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
+# Configure PyMySQL to work as MySQLdb replacement for shared hosting
+try:
+    import pymysql
+    pymysql.install_as_MySQLdb()
+except ImportError:
+    pass
+
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv

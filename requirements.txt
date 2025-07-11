@@ -29,7 +29,7 @@ whitenoise==6.9.0
 
 # Database Drivers
 psycopg2-binary==2.9.7
-mysqlclient==2.2.0
+PyMySQL==1.1.0
 
 # Payment Processing
 razorpay==1.4.2

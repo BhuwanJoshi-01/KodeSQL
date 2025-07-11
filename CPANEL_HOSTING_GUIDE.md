@@ -34,10 +34,12 @@ Create one MySQL database in cPanel:
 
 #### MySQL Query Database (Challenge Execution)
 ```
-Database Name: kodesql_queries_mysql
+ Database Name: kodesql_queries_mysql
 Username: kodesql_mysql_user
 Password: [Generate strong password]
 ```
+
+> **⚠️ Important:** If you encounter `mysqlclient` compilation errors during installation, see [CPANEL_MYSQL_SETUP.md](CPANEL_MYSQL_SETUP.md) for the complete MySQL setup guide using PyMySQL.
 
 ### 3. **Database User Permissions**
 
@@ -83,7 +85,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Install additional production packages
-pip install gunicorn psycopg2-binary mysqlclient
+pip install gunicorn psycopg2-binary PyMySQL
 ```
 
 ## ⚙️ Environment Configuration
