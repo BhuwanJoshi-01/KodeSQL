@@ -27,8 +27,8 @@ django-cors-headers==4.3.1
 # Static Files Serving
 whitenoise==6.9.0
 
-# Database Drivers
-psycopg2-binary==2.9.7
+# Database Drivers (Pure Python - works in shared hosting)
+pg8000==1.30.3
 PyMySQL==1.1.0
 
 # Payment Processing

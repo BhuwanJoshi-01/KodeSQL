@@ -85,7 +85,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Install additional production packages
-pip install gunicorn psycopg2-binary PyMySQL
+pip install gunicorn pg8000 PyMySQL
 ```
 
 ## ⚙️ Environment Configuration
@@ -415,14 +415,13 @@ Set up monitoring for:
 
 ### Common Issues:
 
-1. **Django Allauth SystemCheckError**:
+1. **PostgreSQL Compilation Error**:
    ```
-   ACCOUNT_EMAIL_VERIFICATION = 'mandatory' requires ACCOUNT_EMAIL_REQUIRED = True
-   No ACCOUNT_USER_MODEL_USERNAME_FIELD, yet, ACCOUNT_AUTHENTICATION_METHOD requires it
+   Error: pg_config executable not found.
+   pg_config is required to build psycopg2 from source.
    ```
-   - **Solution**: Configuration is already fixed in settings.py
-   - Run `python manage.py check` to verify
-   - If still failing, copy settings from `allauth_production_config.py`
+   - **Solution**: Use pg8000 instead (already configured)
+   - See [SHARED_HOSTING_DATABASE_DRIVERS.md](SHARED_HOSTING_DATABASE_DRIVERS.md) for details
 
 2. **MySQL Compilation Error**:
    ```
@@ -431,6 +430,15 @@ Set up monitoring for:
    ```
    - **Solution**: Use PyMySQL instead (already configured)
    - See [CPANEL_MYSQL_SETUP.md](CPANEL_MYSQL_SETUP.md) for details
+
+3. **Django Allauth SystemCheckError**:
+   ```
+   ACCOUNT_EMAIL_VERIFICATION = 'mandatory' requires ACCOUNT_EMAIL_REQUIRED = True
+   No ACCOUNT_USER_MODEL_USERNAME_FIELD, yet, ACCOUNT_AUTHENTICATION_METHOD requires it
+   ```
+   - **Solution**: Configuration is already fixed in settings.py
+   - Run `python manage.py check` to verify
+   - If still failing, copy settings from `allauth_production_config.py`
 
 3. **500 Internal Server Error**:
    - Check error logs in cPanel

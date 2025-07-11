@@ -7,7 +7,7 @@ This script creates an employee table and runs sample queries to test database c
 import os
 import sys
 import django
-import psycopg2
+import pg8000
 import mysql.connector
 from django.db import connections, transaction
 from django.conf import settings
@@ -50,8 +50,8 @@ class DatabaseTester:
         print("="*60)
         
         try:
-            # Connect using psycopg2 directly
-            conn = psycopg2.connect(**self.postgres_config)
+            # Connect using pg8000 directly
+            conn = pg8000.connect(**self.postgres_config)
             cursor = conn.cursor()
             print("[OK] PostgreSQL connection successful!")
 

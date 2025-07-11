@@ -35,7 +35,7 @@
 - [ ] Python 3.8+ available
 - [ ] Virtual environment created
 - [ ] All dependencies installed from requirements.txt
-- [ ] Additional production packages installed (gunicorn, psycopg2-binary, PyMySQL)
+- [ ] Additional production packages installed (gunicorn, pg8000, PyMySQL)
 
 ### 2. **Python App Configuration**
 - [ ] Python app created in cPanel
