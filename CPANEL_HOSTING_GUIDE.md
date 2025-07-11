@@ -209,6 +209,11 @@ Generate a new secret key for production:
 python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
 ```
 
+Copy the generated key and update your .env file:
+```env
+SECRET_KEY=your-new-generated-secret-key-here
+```
+
 ## 🔧 Django Setup
 
 ### 1. **Database Migration**
