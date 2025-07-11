@@ -176,7 +176,7 @@ DATABASES = {
         'USER': os.environ.get('PRIMARY_DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('PRIMARY_DB_PASSWORD', ''),
         'OPTIONS': {
-            # Use pg8000 driver for shared hosting compatibility
+            # Use pg8000 driver for cPanel Python App compatibility
             'driver': 'pg8000',
         },
         'CONN_MAX_AGE': 0,
@@ -192,7 +192,7 @@ DATABASES = {
         'USER': os.environ.get('QUERY_POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('QUERY_POSTGRES_PASSWORD', ''),
         'OPTIONS': {
-            # Use pg8000 driver for shared hosting compatibility
+            # Use pg8000 driver for cPanel Python App compatibility
             'driver': 'pg8000',
         },
         'CONN_MAX_AGE': 0,

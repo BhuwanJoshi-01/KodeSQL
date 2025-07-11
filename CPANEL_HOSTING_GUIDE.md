@@ -1,12 +1,16 @@
-# 🚀 KodeSQL - cPanel Production Hosting Guide
+# 🚀 KodeSQL - cPanel Python App Hosting Guide
 
 ## 📋 Prerequisites
 
-- cPanel hosting account with Python support (3.8+)
+- cPanel hosting account with **Python App** support (3.8+)
 - Domain: kodesql.in
 - PostgreSQL and MySQL database access
 - SSL certificate (Let's Encrypt or purchased)
 - Email account for SMTP
+
+## 🎯 Deployment Method
+
+This guide uses **cPanel Python App** feature, which is the modern and recommended way to deploy Python applications on cPanel hosting. For detailed step-by-step instructions, see [CPANEL_PYTHON_APP_SETUP.md](CPANEL_PYTHON_APP_SETUP.md).
 
 ## 🗄️ Database Setup
 
@@ -84,8 +88,8 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Install additional production packages
-pip install gunicorn pg8000 PyMySQL
+# Dependencies include pure Python drivers for cPanel compatibility
+# pg8000 (PostgreSQL) and PyMySQL (MySQL) - no compilation required
 ```
 
 ## ⚙️ Environment Configuration

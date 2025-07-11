@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-WSGI configuration for KodeSQL Django application on cPanel.
+WSGI configuration for KodeSQL Django application on cPanel Python App.
 
-This module contains the WSGI application used by Django's development server
-and any production WSGI deployments. It should expose a module-level variable
-named ``application``. Django's ``runserver`` and ``runfcgi`` commands discover
-this application via the ``WSGI_APPLICATION`` setting.
+This module contains the WSGI application used by cPanel's Python App feature.
+It should expose a module-level variable named ``application``.
 
-For cPanel hosting, this file should be placed in the root directory of your
-Django project (same directory as manage.py).
+For cPanel Python App setup:
+1. Create Python App in cPanel
+2. Set Application Root to your Django project directory
+3. Set Application URL to your domain
+4. This file will be automatically detected by cPanel
 """
 
 import os

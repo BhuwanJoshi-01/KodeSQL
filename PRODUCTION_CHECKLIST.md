@@ -35,14 +35,15 @@
 - [ ] Python 3.8+ available
 - [ ] Virtual environment created
 - [ ] All dependencies installed from requirements.txt
-- [ ] Additional production packages installed (gunicorn, pg8000, PyMySQL)
+- [ ] Dependencies installed with cPanel-compatible drivers (pg8000, PyMySQL)
 
-### 2. **Python App Configuration**
-- [ ] Python app created in cPanel
-- [ ] Application root set to Django_Version
+### 2. **cPanel Python App Configuration**
+- [ ] Python App created in cPanel
+- [ ] Application root set to KodeSQL
 - [ ] Application URL set to kodesql.in
-- [ ] passenger_wsgi.py created and configured
-- [ ] Environment variables added to Python app settings
+- [ ] passenger_wsgi.py configured for Python App
+- [ ] Environment variables added to Python App settings
+- [ ] Virtual environment activated and dependencies installed
 
 ### 3. **File Structure**
 - [ ] Project files uploaded to public_html/Django_Version/

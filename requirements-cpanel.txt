@@ -15,8 +15,8 @@ django-colorfield==0.9.0
 # File Upload Enhancements
 django-cleanup==8.0.0
 
-# Development tools
-django-debug-toolbar==4.2.0
+# Development tools (optional in production)
+# django-debug-toolbar==4.2.0
 
 # Authentication
 django-allauth==65.3.0
@@ -27,22 +27,19 @@ django-cors-headers==4.3.1
 # Static Files Serving
 whitenoise==6.9.0
 
-# Database Drivers - cPanel Python App Compatible
-# Use pure Python drivers for shared hosting compatibility
+# Database Drivers - cPanel Compatible (Pure Python)
+# PostgreSQL - Pure Python driver (no compilation required)
 pg8000==1.30.3
+
+# MySQL - Pure Python driver (no compilation required)
 PyMySQL==1.1.0
 
 # Payment Processing
 razorpay==1.4.2
 
-# Production Server
-gunicorn==21.2.0
+# Production Monitoring & Logging (optional)
+# sentry-sdk==1.38.0
 
-# Production Monitoring & Logging
-sentry-sdk==1.38.0
-
-# Performance & Caching
-django-redis==5.4.0
-redis==5.0.1
-
-
+# Performance & Caching (optional - requires Redis)
+# django-redis==5.4.0
+# redis==5.0.1
