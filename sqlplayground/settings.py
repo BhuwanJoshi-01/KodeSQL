@@ -175,7 +175,10 @@ DATABASES = {
         'PORT': os.environ.get('PRIMARY_DB_PORT', '5432'),
         'USER': os.environ.get('PRIMARY_DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('PRIMARY_DB_PASSWORD', ''),
-        'OPTIONS': {},
+        'OPTIONS': {
+            'sslmode': 'prefer',
+            'connect_timeout': 10,
+        },
         'CONN_MAX_AGE': 0,
         'CONN_HEALTH_CHECKS': False,
     },
@@ -188,7 +191,10 @@ DATABASES = {
         'PORT': os.environ.get('QUERY_POSTGRES_PORT', '5432'),
         'USER': os.environ.get('QUERY_POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('QUERY_POSTGRES_PASSWORD', ''),
-        'OPTIONS': {},
+        'OPTIONS': {
+            'sslmode': 'prefer',
+            'connect_timeout': 10,
+        },
         'CONN_MAX_AGE': 0,
         'CONN_HEALTH_CHECKS': False,
     },
