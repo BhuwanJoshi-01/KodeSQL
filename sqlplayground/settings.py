@@ -176,7 +176,7 @@ DATABASES = {
         'USER': os.environ.get('PRIMARY_DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('PRIMARY_DB_PASSWORD', ''),
         'OPTIONS': {
-            'sslmode': 'prefer',
+            'sslmode': 'require',
             'connect_timeout': 10,
         },
         'CONN_MAX_AGE': 0,
@@ -192,7 +192,7 @@ DATABASES = {
         'USER': os.environ.get('QUERY_POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('QUERY_POSTGRES_PASSWORD', ''),
         'OPTIONS': {
-            'sslmode': 'prefer',
+            'sslmode': 'require',
             'connect_timeout': 10,
         },
         'CONN_MAX_AGE': 0,
