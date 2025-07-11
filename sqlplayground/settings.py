@@ -530,19 +530,13 @@ CHALLENGE_DATABASE_SCHEMAS = {
 # DJANGO ALLAUTH CONFIGURATION
 # ============================================================================
 
-# Allauth settings (compatible with multiple versions)
-# Email-only authentication configuration
-# Using both old and new settings for compatibility
+# Allauth settings (updated for latest version - no deprecation warnings)
+# Email-only authentication configuration using new settings format
 
-# Core authentication settings
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_USERNAME_REQUIRED = False
-
-# New format settings (for newer allauth versions)
+# New format settings (recommended for allauth 65.3.0+)
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # User model configuration
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
@@ -557,11 +551,19 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 # Security and rate limiting
 ACCOUNT_RATE_LIMITS = {
     'login_failed': '5/5m',  # 5 attempts per 5 minutes
+    'login': '30/5m',  # 30 login attempts per 5 minutes
+    'signup': '20/5m',  # 20 signup attempts per 5 minutes
+    'confirm_email': '1/3m',  # 1 email confirmation per 3 minutes
+    'reset_password': '20/5m',  # 20 password reset attempts per 5 minutes
 }
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_PRESERVE_USERNAME_CASING = False
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_USERNAME_BLACKLIST = ['admin', 'root', 'administrator']
+
+# Additional security settings
+ACCOUNT_PASSWORD_MIN_LENGTH = 8
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'  # Force HTTPS for email links in production
 
 # Social account settings
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Skip email verification for social accounts
