@@ -530,17 +530,31 @@ CHALLENGE_DATABASE_SCHEMAS = {
 # DJANGO ALLAUTH CONFIGURATION
 # ============================================================================
 
-# Allauth settings (updated for latest version)
-# Email-only authentication configuration using new settings format
+# Allauth settings (compatible with multiple versions)
+# Email-only authentication configuration
+# Using both old and new settings for compatibility
+
+# Core authentication settings
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_USERNAME_REQUIRED = False
+
+# New format settings (for newer allauth versions)
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+
+# User model configuration
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
 ACCOUNT_UNIQUE_EMAIL = True
+
+# Email and login behavior
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+# Security and rate limiting
 ACCOUNT_RATE_LIMITS = {
     'login_failed': '5/5m',  # 5 attempts per 5 minutes
 }

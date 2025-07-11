@@ -415,27 +415,46 @@ Set up monitoring for:
 
 ### Common Issues:
 
-1. **500 Internal Server Error**:
+1. **Django Allauth SystemCheckError**:
+   ```
+   ACCOUNT_EMAIL_VERIFICATION = 'mandatory' requires ACCOUNT_EMAIL_REQUIRED = True
+   No ACCOUNT_USER_MODEL_USERNAME_FIELD, yet, ACCOUNT_AUTHENTICATION_METHOD requires it
+   ```
+   - **Solution**: Configuration is already fixed in settings.py
+   - Run `python manage.py check` to verify
+   - If still failing, copy settings from `allauth_production_config.py`
+
+2. **MySQL Compilation Error**:
+   ```
+   error: Microsoft Visual C++ 14.0 is required
+   error: Failed building wheel for mysqlclient
+   ```
+   - **Solution**: Use PyMySQL instead (already configured)
+   - See [CPANEL_MYSQL_SETUP.md](CPANEL_MYSQL_SETUP.md) for details
+
+3. **500 Internal Server Error**:
    - Check error logs in cPanel
    - Verify .env file configuration
    - Ensure all dependencies are installed
+   - Run `python manage.py check` for Django errors
 
-2. **Database Connection Error**:
+4. **Database Connection Error**:
    - Verify database credentials
    - Check database user permissions
    - Test database connectivity
+   - Ensure PyMySQL is installed
 
-3. **Static Files Not Loading**:
+5. **Static Files Not Loading**:
    - Run `python manage.py collectstatic`
    - Check .htaccess configuration
    - Verify file permissions
 
-4. **Email Not Sending**:
+6. **Email Not Sending**:
    - Verify Gmail app password
    - Check SMTP settings
    - Test email configuration
 
-5. **Payment Issues**:
+7. **Payment Issues**:
    - Verify Razorpay live keys
    - Check webhook configuration
    - Monitor Razorpay dashboard

@@ -53,20 +53,20 @@ class DatabaseTester:
             # Connect using psycopg2 directly
             conn = psycopg2.connect(**self.postgres_config)
             cursor = conn.cursor()
-            print("✅ PostgreSQL connection successful!")
-            
+            print("[OK] PostgreSQL connection successful!")
+
             # Create employee table
-            print("\n📋 Creating employee table...")
+            print("\n[INFO] Creating employee table...")
            
          
             conn.commit()
-            print("✅ Employee table created successfully!")
-            
-        
-            print("✅ Sample data inserted successfully!")
-            
+            print("[OK] Employee table created successfully!")
+
+
+            print("[OK] Sample data inserted successfully!")
+
             # Run sample queries
-            print("\n🔍 Running sample queries...")
+            print("\n[QUERY] Running sample queries...")
             
             # Query 1: Get all employees
             print("\n1. All employees:")
@@ -89,7 +89,7 @@ class DatabaseTester:
                 print(f"   {row[0]}: ${row[1]:.2f} (Count: {row[2]})")
         
         except Exception as e:
-            print(f"❌ PostgreSQL Error: {str(e)}")
+            print(f"[ERROR] PostgreSQL Error: {str(e)}")
             return False
         
         return True
@@ -104,10 +104,10 @@ class DatabaseTester:
             # Connect using mysql-connector-python
             conn = mysql.connector.connect(**self.mysql_config)
             cursor = conn.cursor()
-            print("✅ MySQL connection successful!")
-            
+            print("[OK] MySQL connection successful!")
+
             # Create employee table
-            print("\n📋 Creating employee table...")
+            print("\n[INFO] Creating employee table...")
             create_table_sql = """
             DROP TABLE IF EXISTS employees;
             CREATE TABLE employees (
@@ -121,10 +121,10 @@ class DatabaseTester:
             """
             cursor.execute(create_table_sql)
             conn.commit()
-            print("✅ Employee table created successfully!")
-            
+            print("[OK] Employee table created successfully!")
+
             # Insert sample data
-            print("\n📝 Inserting sample employee data...")
+            print("\n[INFO] Inserting sample employee data...")
             insert_sql = """
             INSERT INTO employees (name, department, salary, hire_date, email) VALUES
             ('John Doe', 'Engineering', 75000.00, '2023-01-15', 'john.doe@company.com'),
@@ -135,10 +135,10 @@ class DatabaseTester:
             """
             cursor.execute(insert_sql)
             conn.commit()
-            print("✅ Sample data inserted successfully!")
-            
+            print("[OK] Sample data inserted successfully!")
+
             # Run sample queries
-            print("\n🔍 Running sample queries...")
+            print("\n[QUERY] Running sample queries...")
             
             # Query 1: Get all employees
             print("\n1. All employees:")
@@ -175,10 +175,10 @@ class DatabaseTester:
             
             cursor.close()
             conn.close()
-            print("\n✅ MySQL testing completed successfully!")
-            
+            print("\n[OK] MySQL testing completed successfully!")
+
         except Exception as e:
-            print(f"❌ MySQL Error: {str(e)}")
+            print(f"[ERROR] MySQL Error: {str(e)}")
             return False
         
         return True
@@ -191,31 +191,31 @@ class DatabaseTester:
         
         try:
             # Test PostgreSQL connection through Django
-            print("\n🔗 Testing Django PostgreSQL connection...")
+            print("\n[CONNECT] Testing Django PostgreSQL connection...")
             pg_conn = connections['query_postgres']
             with pg_conn.cursor() as cursor:
                 cursor.execute("SELECT version();")
                 version = cursor.fetchone()
-                print(f"✅ PostgreSQL version: {version[0]}")
-            
+                print(f"[OK] PostgreSQL version: {version[0]}")
+
             # Test MySQL connection through Django
-            print("\n🔗 Testing Django MySQL connection...")
+            print("\n[CONNECT] Testing Django MySQL connection...")
             mysql_conn = connections['query_mysql']
             with mysql_conn.cursor() as cursor:
                 cursor.execute("SELECT VERSION();")
                 version = cursor.fetchone()
-                print(f"✅ MySQL version: {version[0]}")
-            
-            print("\n✅ Django ORM connections tested successfully!")
+                print(f"[OK] MySQL version: {version[0]}")
+
+            print("\n[OK] Django ORM connections tested successfully!")
             return True
             
         except Exception as e:
-            print(f"❌ Django ORM Error: {str(e)}")
+            print(f"[ERROR] Django ORM Error: {str(e)}")
             return False
 
     def run_all_tests(self):
         """Run all database tests"""
-        print("🚀 Starting Database Connection Tests...")
+        print("Starting Database Connection Tests...")
         print("This will test PostgreSQL and MySQL connections and run sample queries.")
         
         # Test Django ORM connections first
@@ -231,10 +231,10 @@ class DatabaseTester:
         print("\n" + "="*60)
         print("TEST SUMMARY")
         print("="*60)
-        print(f"Django ORM Connections: {'✅ PASSED' if django_success else '❌ FAILED'}")
-        print(f"PostgreSQL Direct Connection: {'✅ PASSED' if postgres_success else '❌ FAILED'}")
-        print(f"MySQL Direct Connection: {'✅ PASSED' if mysql_success else '❌ FAILED'}")
-        print("\n💡 Tips:")
+        print(f"Django ORM Connections: {'[OK] PASSED' if django_success else '[ERROR] FAILED'}")
+        print(f"PostgreSQL Direct Connection: {'[OK] PASSED' if postgres_success else '[ERROR] FAILED'}")
+        print(f"MySQL Direct Connection: {'[OK] PASSED' if mysql_success else '[ERROR] FAILED'}")
+        print("\n[TIP] Tips:")
         print("   - Make sure your database servers are running")
         print("   - Check your environment variables or settings.py for correct database configs")
         print("   - Install required packages: pip install psycopg2 mysql-connector-python")
@@ -242,7 +242,7 @@ class DatabaseTester:
 
 def main():
     """Main function to run the database tests"""
-    print("📊 SQL Playground Database Tester")
+    print("SQL Playground Database Tester")
     print("This script will test your database connections and run sample queries.")
     
     # Create tester instance and run tests
